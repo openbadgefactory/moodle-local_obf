@@ -3,7 +3,9 @@ Open Badge Factory -plugin
 
 Open Badge Factory is a cloud platform that provides the tools your organization needs to implement a meaningful and sustainable Open Badges system.
 
-With the local_obf plugin you can issue Open Badges created in Open Badge Factory. To use the plugin, you need an account on [https://openbadgefactory.com](https://openbadgefactory.com) (You can register for free, see [https://openbadgefactory.com/faq](https://openbadgefactory.com/faq) for details about different service levels).
+With the local_obf plugin you can issue Open Badges created in Open Badge Factory. To use the plugin, you need an account on
+[https://openbadgefactory.com](https://openbadgefactory.com) (You can register for free, see
+[https://openbadgefactory.com/en/pricing/](https://openbadgefactory.com/en/pricing/) for details about different service levels).
 
 
 How to install
