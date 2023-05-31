@@ -23,6 +23,12 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace classes;
+use Exception;
+use moodle_database;
+use moodle_url;
+use stdClass;
+
 /**
  * User email -class.
  * Validation of user emails.
@@ -31,26 +37,41 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class obf_user_email {
-    const MAX_TOKEN_AGE = 86400; // 24*60*60 ~ 1 day
+    const MAX_TOKEN_AGE = 86400; // Maximum age of the token in seconds (24*60*60 ~ 1 day).
+
     /**
-     * @var bool Verification status. True if address is verified.
+     * Indicates the verification status of the address.
+     * Set to true if the address is verified.
+     *
+     * @var bool
      */
     protected $verified;
+
     /**
-     * @var int User id
+     * User ID
+     *
+     * @var int
      */
     protected $userid;
+
     /**
-     * @var string Token used for verification
+     * Token used for verification
+     *
+     * @var string
      */
     protected $token;
+
     /**
+     * Email address
      *
-     * @var string Email address
+     * @var string
      */
     protected $email;
+
     /**
-     * @var int Unix timestamp, when token was created.
+     * Unix timestamp when the token was created.
+     *
+     * @var int
      */
     protected $timestamp;
 
@@ -98,28 +119,27 @@ class obf_user_email {
         $this->timestamp = $timestamp;
         return $this;
     }
+
     public static function is_user_email_verified($userid, $email, $token = null, $updaterecords = true) {
-        /* @var $DB moodle_database */
         global $DB;
         $table = 'local_obf_user_emails';
         $record = $DB->get_record($table, array('user_id' => $userid, 'email' => $email, 'verified' => 1));
         if (!empty($token) && !$record) {
-            $mintimestamp = time()-self::MAX_TOKEN_AGE;
-            $sql = 'SELECT * FROM {'.$table.'} WHERE user_id = :user_id AND '
-                    . 'email = :email AND token = :token AND timestamp > :mintimestamp';
+            $mintimestamp = time() - self::MAX_TOKEN_AGE;
+            $sql = 'SELECT * FROM {' . $table . '} WHERE user_id = :user_id AND '
+                . 'email = :email AND token = :token AND timestamp > :mintimestamp';
             $record = $DB->get_record_sql($sql,
-                    array('user_id' => $userid, 'email' => $email, 'token' => $token, 'mintimestamp' => $mintimestamp)
-                    );
+                array('user_id' => $userid, 'email' => $email, 'token' => $token, 'mintimestamp' => $mintimestamp)
+            );
             if ($updaterecords && $record) {
                 $record->verified = 1;
                 $DB->update_record($table, $record);
             }
         }
-        return (boolean)$record;
+        return (boolean) $record;
     }
 
     public static function create_user_email_token($userid, $email, $sendemail = true) {
-        /* @var $DB moodle_database */
         global $DB;
         if (empty($userid) || empty($email)) {
             throw new Exception("User ID or Email is empty!", 1);
@@ -127,13 +147,12 @@ class obf_user_email {
         }
         $table = 'local_obf_user_emails';
         $token = generate_password();
-        //$token = hash('crc32b', $userid.$email.microtime().rand());
         $record = $DB->get_record($table, array('user_id' => $userid, 'email' => $email));
         if ($record && $record->verified != 1) {
             $record->token = $token;
             $record->timestamp = time();
             $DB->update_record($table, $record);
-        } else if(!$record) {
+        } else if (!$record) {
             $record = new stdClass();
             $record->user_id = $userid;
             $record->email = $email;
@@ -149,9 +168,9 @@ class obf_user_email {
         }
         return $token;
     }
+
     public static function send_token_email($userid, $email, $token) {
-        /* @var $DB moodle_database */
-        global $CFG, $DB, $USER;
+        global $CFG, $DB;
         $user = $DB->get_record('user', array('id' => $userid));
         if (preg_match('/^2.9/', $CFG->release)) {
             $message = new \core\message\message();
@@ -169,11 +188,10 @@ class obf_user_email {
                 'userid' => $userid,
                 'email' => $email
             ))
-            ));
+        ));
         $a->tokenurl = $tokenurl->out(false);
         $subject = get_string('emailverifytokenemailsubject', 'local_obf');
         $messagetext = get_string('emailverifytokenemailbody', 'local_obf', $a);
-        $status = email_to_user($user, $from, $subject, $messagetext);
-        return $status;
+        return email_to_user($user, $from, $subject, $messagetext);
     }
 }

@@ -21,10 +21,17 @@
  * @copyright  2013-2020, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-defined('MOODLE_INTERNAL') or die();
+
+use classes\obf_assertion;
+use classes\obf_blacklist;
+use classes\obf_client;
+use classes\obf_assertion_collection;
+
+defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__ . '/obfform.php');
 require_once(__DIR__ . '/../renderer.php');
+
 /**
  * Badge blacklisting form.
  *
@@ -51,7 +58,7 @@ class obf_blacklist_form extends local_obf_form_base {
         try {
             $assertions = obf_assertion::get_assertions_all($client, null, $user->email);
         } catch (Exception $ex) {
-            $mform->addElement('html', $OUTPUT->notification($ex->getMessage(), 'warning') );
+            $mform->addElement('html', $OUTPUT->notification($ex->getMessage(), 'warning'));
             return;
         }
         $uniqueassertions->add_collection($assertions);
@@ -60,8 +67,10 @@ class obf_blacklist_form extends local_obf_form_base {
 
         $this->add_action_buttons();
     }
+
     /**
      * Render badges that are blacklistable.
+     *
      * @param obf_assertion_collection $assertions
      * @param MoodleQuickForm& $mform
      */
@@ -77,9 +86,9 @@ class obf_blacklist_form extends local_obf_form_base {
         for ($i = 0; $i < count($assertions); $i++) {
             $assertion = $assertions->get_assertion($i);
             $badge = $assertion->get_badge();
-            $html = $OUTPUT->box(local_obf_html::div($renderer->render_single_simple_assertion($assertion, true) ));
-            $items[] = $mform->createElement('advcheckbox', 'blacklist['.$badge->get_id().']',
-                    '', $html);
+            $html = $OUTPUT->box(local_obf_html::div($renderer->render_single_simple_assertion($assertion, true)));
+            $items[] = $mform->createElement('advcheckbox', 'blacklist[' . $badge->get_id() . ']',
+                '', $html);
         }
         if (count($items) > 0) {
             $mform->addGroup($items, 'blacklist', '', array(' '), false);
@@ -87,7 +96,7 @@ class obf_blacklist_form extends local_obf_form_base {
 
         $badgeids = $this->blacklist->get_blacklist();
         foreach ($badgeids as $badgeid) {
-            $mform->setDefault('blacklist['.$badgeid.']', 1);
+            $mform->setDefault('blacklist[' . $badgeid . ']', 1);
         }
     }
 

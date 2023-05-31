@@ -21,9 +21,20 @@
  * @copyright  2013-2020, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-require_once(__DIR__ . '/item_base.php');
-require_once(__DIR__ . '/criterion.php');
-require_once(__DIR__ . '/course.php');
+
+namespace classes\criterion;
+
+use completion_info;
+use html_writer;
+use MoodleQuickForm;
+use Set;
+use stdClass;
+
+defined('MOODLE_INTERNAL') || die();
+
+require_once(__DIR__ . '/obf_criterion_item.php');
+require_once(__DIR__ . '/obf_criterion.php');
+require_once(__DIR__ . '/obf_criterion_course.php');
 require_once(__DIR__ . '/../badge.php');
 
 /**
@@ -47,6 +58,7 @@ class obf_criterion_activity extends obf_criterion_course {
      * @see obf_criterion_course::save_params
      */
     protected $optionalparams = array('completedby');
+
     /**
      * Get the instance of this class by id.
      *
@@ -66,7 +78,7 @@ class obf_criterion_activity extends obf_criterion_course {
     /**
      * Initializes this object with values from $record
      *
-     * @param \stdClass $record The record from Moodle's database
+     * @param stdClass $record The record from Moodle's database
      * @return \obf_criterion_activity
      */
     public function populate_from_record(\stdClass $record) {
@@ -137,13 +149,15 @@ class obf_criterion_activity extends obf_criterion_course {
         $cmrecord = $DB->get_record('course_modules', array('id' => $cminstance));
         if ($cmrecord) {
             $modulename = $DB->get_field('modules', 'name',
-                    array('id' => $cmrecord->module));
+                array('id' => $cmrecord->module));
             $activityname = $DB->get_field($modulename, 'name', array('id' => $cmrecord->instance));
         }
         return $activityname;
     }
+
     /**
      * Get name.
+     *
      * @return string
      */
     public function get_name() {
@@ -160,6 +174,7 @@ class obf_criterion_activity extends obf_criterion_course {
 
     /**
      * Get course activities.
+     *
      * @param int $courseid
      * @return stdClass[] Activities
      */
@@ -185,17 +200,19 @@ class obf_criterion_activity extends obf_criterion_course {
 
         if ($this->has_completion_date()) {
             $html .= ' ' . get_string('completedbycriterion', 'local_obf',
-                            userdate($this->completedby,
-                                    get_string('dateformatdate', 'local_obf')));
+                    userdate($this->completedby,
+                        get_string('dateformatdate', 'local_obf')));
         }
 
         return $html;
     }
+
     /**
      * Get an array of activity names.
+     *
      * @return array html encoded activity descriptions.
      */
-    public function get_text_array() {
+    public function get_text_array(): array {
         $params = $this->get_params();
         $modids = self::get_module_instanceids_from_params($params);
         $texts = array();
@@ -207,8 +224,8 @@ class obf_criterion_activity extends obf_criterion_course {
             $html = html_writer::tag('strong', $name);
             if (array_key_exists('completedby', $params[$modid])) {
                 $html .= ' ' . get_string('completedbycriterion', 'local_obf',
-                                userdate($params[$modid]['completedby'],
-                                        get_string('dateformatdate', 'local_obf')));
+                        userdate($params[$modid]['completedby'],
+                            get_string('dateformatdate', 'local_obf')));
             }
             $texts[] = $html;
         }
@@ -225,16 +242,18 @@ class obf_criterion_activity extends obf_criterion_course {
 
         if ($this->has_completion_date()) {
             $html .= ' ' . get_string('completedbycriterion', 'local_obf',
-                            userdate($this->completedby,
-                                    get_string('dateformatdate', 'local_obf')));
+                    userdate($this->completedby,
+                        get_string('dateformatdate', 'local_obf')));
         }
 
         $html .= '.';
 
         return $html;
     }
+
     /**
      * Prints criteria activity settings for criteria forms.
+     *
      * @param MoodleQuickForm& $mform
      * @param mixed& $obj
      */
@@ -246,8 +265,10 @@ class obf_criterion_activity extends obf_criterion_course {
 
         $this->get_form_activities($mform, $modules, $params);
     }
+
     /**
      * Prints required config fields for criteria forms.
+     *
      * @param MoodleQuickForm& $mform
      * @param mixed& $obj
      */
@@ -259,13 +280,16 @@ class obf_criterion_activity extends obf_criterion_course {
         $mform->createElement('hidden', 'picktype', 'no');
         $mform->setType('picktype', PARAM_TEXT);
     }
+
     /**
      * Activities do not support multiple courses.
+     *
      * @return boolean false
      */
     public function criteria_supports_multiple_courses() {
         return false;
     }
+
     /**
      * Reviews criteria for single user.
      *
@@ -293,7 +317,7 @@ class obf_criterion_activity extends obf_criterion_course {
         $completioninfo = new completion_info($course);
 
         $params = $this->get_params();
-        $modules = array_keys(array_filter($params, function ($v) {
+        $modules = array_keys(array_filter($params, function($v) {
             return array_key_exists('module', $v) ? true : false;
         }));
         $completedmodulecount = 0;
@@ -327,8 +351,10 @@ class obf_criterion_activity extends obf_criterion_course {
 
         return true;
     }
+
     /**
      * Print activities to form.
+     *
      * @param MoodleQuickForm& $mform
      * @param array $modules modules so the database is not accessed too much
      * @param array $params
@@ -338,12 +364,12 @@ class obf_criterion_activity extends obf_criterion_course {
 
         $existing = array();
         $completedby = array_map(
-                function($a) {
-                    if (array_key_exists('completedby', $a)) {
-                            return $a['completedby'];
-                    }
-                    return false;
-                }, $params);
+            function($a) {
+                if (array_key_exists('completedby', $a)) {
+                    return $a['completedby'];
+                }
+                return false;
+            }, $params);
         foreach ($params as $key => $param) {
             if (array_key_exists('module', $param)) {
                 $existing[] = $param['module'];
@@ -352,20 +378,22 @@ class obf_criterion_activity extends obf_criterion_course {
 
         foreach ($modules as $key => $mod) {
             $mform->addElement('advcheckbox', 'module_' . $key,
-                    $mod, null, array('group' => 1), array(0, $key));
+                $mod, null, array('group' => 1), array(0, $key));
             $mform->addElement('date_selector', 'completedby_' . $key,
-                    get_string('activitycompletedby', 'local_obf'),
-                    array('optional' => true, 'startyear' => date('Y')));
+                get_string('activitycompletedby', 'local_obf'),
+                array('optional' => true, 'startyear' => date('Y')));
         }
         foreach ($existing as $modid) {
-            $mform->setDefault('module_'.$modid, $modid);
+            $mform->setDefault('module_' . $modid, $modid);
         }
         foreach ($completedby as $key => $value) {
-            $mform->setDefault('completedby_'.$key, $value);
+            $mform->setDefault('completedby_' . $key, $value);
         }
     }
+
     /**
      * Get module instance ids this activity criterion item is asscociated to.
+     *
      * @param array $params
      * @return array ids of activity instances
      */

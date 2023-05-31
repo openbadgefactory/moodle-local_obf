@@ -21,8 +21,14 @@
  * @copyright  2013-2020, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+use classes\obf_assertion;
+use classes\obf_badge;
+use classes\obf_issuer;
+use classes\obf_assertion_collection;
+
 /**
- * Description of assertion_collection_test
+ * Description of obf_assertion_collection_test
  *
  * @author olli
  * @copyright  2013-2020, Open Badge Factory Oy
@@ -59,7 +65,7 @@ class local_obf_assertion_collection_testcase extends advanced_testcase {
         $collection->add_assertion($assertion3);
 
         $this->assertEquals(3, $collection->count());
-        $this->assertCount(3, $collection->toArray());
+        $this->assertCount(3, $collection->toarray());
 
         $collection->add_collection($collection2);
 

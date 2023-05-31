@@ -15,38 +15,42 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Blacklist tests.
+ * User preference tests.
  *
  * @package    local_obf
  * @copyright  2013-2020, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-require_once(__DIR__ . '/../class/blacklist.php');
+
+use classes\obf_user_preferences;
+
+defined('MOODLE_INTERNAL') || die();
+
+require_once(__DIR__ . '/../classes/user_preferences.php');
 
 /**
- * Blacklist testcase
+ * User preferences testcase.
  *
  * @group obf
  * @copyright  2013-2020, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class local_obf_blacklist_testcase extends advanced_testcase {
+class local_obf_user_preferences_testcase extends advanced_testcase {
     /**
-     * Test blacklist saving, adding and removing.
+     * Test user preferences.
      */
-    public function test_blacklist_preferences() {
+    public function test_user_preferences() {
         $this->resetAfterTest();
         $user = $this->getDataGenerator()->create_user();
-        $blacklist = new obf_blacklist($user->id);
-        $newbl = new stdClass();
-        $newbl = array('ASF', 'DFG');
-        $this->assertCount(0, $blacklist->get_blacklist());
-        $blacklist->save($newbl);
-        $this->assertCount(2, $blacklist->get_blacklist());
-        $blacklist->add_to_blacklist('NEW1');
-        $this->assertCount(3, $blacklist->get_blacklist());
-        $blacklist->remove_from_blacklist('NEW1');
-        $this->assertCount(2, $blacklist->get_blacklist());
+        $userprefs = new obf_user_preferences($user->id);
+        $newprefs = new stdClass();
+        $newprefs->badgesonprofile = 0;
+        $userprefs->save_preferences($newprefs);
+        $this->assertFalse($userprefs->get_preference('badgesonprofile') == 1);
+        $userprefs->set_preference('badgesonprofile', 1);
+        $this->assertTrue($userprefs->get_preference('badgesonprofile') == 1);
+        $userprefs->set_preference('badgesonprofile', 0);
+        $this->assertFalse($userprefs->get_preference('badgesonprofile') == 1);
 
     }
 }

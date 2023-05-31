@@ -16,11 +16,23 @@
 
 /**
  * Collection of assertions.
+ *
  * @package    local_obf
  * @copyright  2013-2020, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-require_once(__DIR__ . '/assertion.php');
+
+namespace classes;
+
+use ArrayIterator;
+use Countable;
+use IteratorAggregate;
+use stdClass;
+use Traversable;
+
+defined('MOODLE_INTERNAL') || die();
+
+require_once(__DIR__ . '/obf_assertion.php');
 require_once(__DIR__ . '/backpack.php');
 require_once(__DIR__ . '/blacklist.php');
 
@@ -68,11 +80,11 @@ class obf_assertion_collection implements Countable, IteratorAggregate {
      *
      * @return array The array.
      */
-    public function toArray() {
+    public function toarray() {
         $ret = array();
 
         foreach ($this->assertions as $assertion) {
-            $ret[] = $assertion->toArray();
+            $ret[] = $assertion->toarray();
         }
 
         return $ret;
@@ -154,14 +166,16 @@ class obf_assertion_collection implements Countable, IteratorAggregate {
                 // ... and then try to find the user by backpack email.
                 $backpack = obf_backpack::get_instance_by_backpack_email($recipient);
                 $ret[] = $backpack === false ? $recipient : $DB->get_record('user',
-                                array('id' => $backpack->get_user_id()));
+                    array('id' => $backpack->get_user_id()));
             }
         }
 
         return $ret;
     }
+
     /**
      * Remove badges from collection, that match those defined in users blacklist.
+     *
      * @param obf_blacklist $blacklist Blacklist object used for filtering.
      * @return obf_assertion_collection $this
      */
@@ -196,6 +210,7 @@ class obf_assertion_collection implements Countable, IteratorAggregate {
 
     /**
      * Get count as assertions.
+     *
      * @return int Assertion count
      */
     public function count(): int {
@@ -204,9 +219,10 @@ class obf_assertion_collection implements Countable, IteratorAggregate {
 
     /**
      * Get iterator for assertions.
+     *
      * @return ArrayIterator
      */
-    public function getIterator(): Traversable {
+    public function getiterator(): Traversable {
         return new ArrayIterator($this->assertions);
     }
 }

@@ -21,30 +21,32 @@
  * @copyright  2013-2021, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-defined('MOODLE_INTERNAL') or die();
+
+use classes\obf_client;
+
+defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
 
 /**
  * Plugin config / Authentication form.
+ *
  * @copyright  2013-2021, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class obf_config_oauth2_form extends moodleform {
     protected $isadding;
-
-    private $access_token  = '';
-    private $token_expires = 0;
-    private $client_name   = '';
+    private $accesstoken = '';
+    private $tokenexpires = 0;
+    private $clientname = '';
     private $roles = [];
-
-    function __construct($actionurl, $isadding, $roles) {
+    public function __construct($actionurl, $isadding, $roles) {
         $this->isadding = $isadding;
         $this->roles = $roles;
         parent::__construct($actionurl);
     }
 
-    function definition() {
+    public function definition() {
         $mform =& $this->_form;
 
         // Then show the fields about where this block appears.
@@ -65,8 +67,7 @@ class obf_config_oauth2_form extends moodleform {
             $mform->setType('client_secret', PARAM_NOTAGS);
             $mform->addRule('client_secret', null, 'required');
             $mform->addHelpButton('client_secret', 'clientsecret', 'local_obf');
-        }
-        else {
+        } else {
 
             $mform->addElement('text', 'client_name', get_string('clientname', 'local_obf'), array('size' => 60));
             $mform->setType('client_name', PARAM_NOTAGS);
@@ -77,28 +78,27 @@ class obf_config_oauth2_form extends moodleform {
             $mform->addElement('static', 'client_secret', get_string('clientsecret', 'local_obf'));
         }
 
-        $can_issue = $this->roles_available();
-        if (!empty($can_issue)) {
+        $canissue = $this->roles_available();
+        if (!empty($canissue)) {
             $mform->addElement('header', 'obfeditclientheader', get_string('issuerroles', 'local_obf'));
 
             $mform->addElement('static', 'role_help', '', get_string('issuerroles_help', 'local_obf'));
 
-            foreach ($can_issue AS $role_id => $role_name) {
-                $mform->addElement('advcheckbox', 'role_' . $role_id, null, $role_name, array('group' => 1));
-                $checked = $this->isadding || in_array($role_id, $this->roles) ? 1 : 0;
-                $mform->setDefault('role_' . $role_id, $checked);
+            foreach ($canissue as $roleid => $rolename) {
+                $mform->addElement('advcheckbox', 'role_' . $roleid, null, $rolename, array('group' => 1));
+                $checked = $this->isadding || in_array($roleid, $this->roles) ? 1 : 0;
+                $mform->setDefault('role_' . $roleid, $checked);
             }
         }
 
-        $submitlabel = null; // Default
+        $submitlabel = null; // Default.
         if ($this->isadding) {
             $submitlabel = get_string('addnewclient', 'local_obf');
         }
         $this->add_action_buttons(true, $submitlabel);
     }
 
-
-    function validation($data, $files) {
+    public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 
         if ($this->isadding && empty($errors)) {
@@ -107,13 +107,12 @@ class obf_config_oauth2_form extends moodleform {
                 $input = (object) $data;
                 $client->set_oauth2($input);
                 $res = $client->oauth2_access_token();
-                $this->access_token  = $res['access_token'];
+                $this->access_token = $res['access_token'];
                 $this->token_expires = $res['token_expires'];
 
                 $issuer = $client->get_issuer();
                 $this->client_name = $issuer['name'];
-            }
-            catch (Exception $e) {
+            } catch (Exception $e) {
                 $errors['client_secret'] = get_string('invalidclientsecret', 'local_obf');
             }
         }
@@ -121,12 +120,12 @@ class obf_config_oauth2_form extends moodleform {
         return $errors;
     }
 
-    function get_data() {
+    public function get_data() {
         $data = parent::get_data();
         if ($data && $this->isadding) {
-            $data->access_token  = $this->access_token;
+            $data->access_token = $this->access_token;
             $data->token_expires = $this->token_expires;
-            $data->client_name   = $this->client_name;
+            $data->client_name = $this->client_name;
         }
         return $data;
     }
@@ -139,20 +138,8 @@ class obf_config_oauth2_form extends moodleform {
                 WHERE rc.capability = ? AND rc.permission = 1
                 ORDER BY r.id";
 
-        $can_issue = $DB->get_records_sql_menu($sql, array('local/obf:issuebadge'));
+        $canissue = $DB->get_records_sql_menu($sql, array('local/obf:issuebadge'));
 
-        /*
-        $sql = "SELECT r.id FROM {role} r
-                INNER JOIN {role_capabilities} rc ON r.id = rc.roleid
-                WHERE rc.capability = ? AND rc.permission = 1";
-
-        $can_configure = $DB->get_fieldset_sql($sql, array('local/obf:configure'));
-
-        foreach ($can_configure as $id) {
-            unset($can_issue[$id]);
-        }
-         */
-
-        return $can_issue;
+        return $canissue;
     }
 }
