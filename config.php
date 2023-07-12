@@ -214,8 +214,6 @@ switch ($action) {
                 foreach ($rules as $key => $rule) {
                     $coursecategorieids = $data->{'coursecategorieid_' . $rule->ruleid};
                     $badgecategorienames = $data->{'badgecategoriename_' . $rule->ruleid};
-                    var_dump($coursecategorieids);
-                    var_dump($badgecategorienames);
 
                     // Delete the existing rule
                     $DB->delete_records('local_obf_rulescateg', ['ruleid' => $rule->ruleid]);
@@ -225,24 +223,13 @@ switch ($action) {
                         $allMoodleCategories = core_course_category::get_all();
 
                         foreach ($allMoodleCategories as $category) {
-                            if (empty($badgecategorienames)) {
-                                $badgecategoriename = null;
-
+                            foreach ($badgecategorienames as $badgecategoriename) {
                                 // Create a new rule
                                 $newRule = createNewRule($rule->ruleid,
                                     $oauth2Id, $category->id, $badgecategoriename);
 
                                 // Insert the new rule
                                 $DB->insert_record('local_obf_rulescateg', $newRule);
-                            } else {
-                                foreach ($badgecategorienames as $badgecategoriename) {
-                                    // Create a new rule
-                                    $newRule = createNewRule($rule->ruleid,
-                                        $oauth2Id, $category->id, $badgecategoriename);
-
-                                    // Insert the new rule
-                                    $DB->insert_record('local_obf_rulescateg', $newRule);
-                                }
                             }
                         }
                     } else if (!in_array(0, $coursecategorieids)) {

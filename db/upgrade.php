@@ -793,41 +793,43 @@ function xmldb_local_obf_upgrade($oldversion) {
     }
 
     if ($oldversion < 2023041802) {
-        // Create the table local_obf_rulescateg if it doesn't exist
-        $table = new xmldb_table('local_obf_rulescateg');
+        // Check if table local_obf_rulescateg exists
+        if (!$dbman->table_exists('local_obf_rulescateg')) {
+            // Define table local_obf_rulescateg
+            $table = new xmldb_table('local_obf_rulescateg');
 
-        if (!$dbman->table_exists($table)) {
-            $fieldId = new xmldb_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
-            $fieldRuleId = new xmldb_field('ruleid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, false);
-            $fieldBadgeCategorieId =
-                new xmldb_field('badgecategorieid', XMLDB_TYPE_INTEGER, '10', null, null, false);
-            $fieldCourseCategorieId =
-                new xmldb_field('coursecategorieid', XMLDB_TYPE_INTEGER, '10', null, null, false);
-            $fieldOauth2Id =
-                new xmldb_field('oauth2_id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, false);
+            // Adding fields to the table
+            $field_id = new xmldb_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE);
+            $field_ruleid = new xmldb_field('ruleid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL);
+            $field_badgecategoriename = new xmldb_field('badgecategoriename', XMLDB_TYPE_CHAR, '255', null, null, null, null, null);
+            $field_coursecategorieid = new xmldb_field('coursecategorieid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, null, null, null, null);
+            $field_oauth2_id = new xmldb_field('oauth2_id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL);
 
-            $table->addField($fieldId);
-            $table->addField($fieldRuleId);
-            $table->addField($fieldBadgeCategorieId);
-            $table->addField($fieldCourseCategorieId);
-            $table->addField($fieldOauth2Id);
+            // Adding fields to the table structure
+            $dbman->add_field($table, $field_id);
+            $dbman->add_field($table, $field_ruleid);
+            $dbman->add_field($table, $field_badgecategoriename);
+            $dbman->add_field($table, $field_coursecategorieid);
+            $dbman->add_field($table, $field_oauth2_id);
 
-            $keyId = new xmldb_key('primary', XMLDB_KEY_PRIMARY);
-            $keyId->setFields(['id']);
+            // Adding keys to the table
+            $key_primary = new xmldb_key('primary');
+            $key_fk_oauth2_id = new xmldb_key('fk_oauth2_id');
 
-            $keyOauth2Id = new xmldb_key('fk_oauth2_id', XMLDB_KEY_FOREIGN);
-            $keyOauth2Id->setFields(['oauth2_id']);
-            $keyOauth2Id->setRefTable('local_obf_oauth2');
-            $keyOauth2Id->setRefFields(['id']);
+            // Adding fields to the keys
+            $key_primary->set_attributes(XMLDB_KEY_PRIMARY, array('id'));
+            $key_fk_oauth2_id->set_attributes(XMLDB_KEY_FOREIGN, array('oauth2_id'), 'local_obf_oauth2', array('id'));
 
-            $table->addKey($keyId);
-            $table->addKey($keyOauth2Id);
+            // Adding keys to the table structure
+            $dbman->add_key($table, $key_primary);
+            $dbman->add_key($table, $key_fk_oauth2_id);
 
+            // Create the table
             $dbman->create_table($table);
         }
 
-        // Obf XMLDB upgrade savepoint reached
-        upgrade_plugin_savepoint(true, 2023041802, 'local', 'obf');
+        // Upgrade version
+        upgrade_plugin_savepoint(true, 2023041802, 'local', 'obf_rulescateg');
     }
 
     if ($oldversion < 2023041808) {
