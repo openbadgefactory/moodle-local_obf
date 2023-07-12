@@ -518,7 +518,7 @@ class obf_client {
             $hasZero = false; // Variable to track if at least one occurrence of zero is found.
 
             foreach ($rules as $rule) {
-                if ($rule->badgecategoriename === '0') {
+                if ($rule->badgecategoriename === '0' || $rule->badgecategoriename === null) {
                     $hasZero = true; // An occurrence of zero is found.
                     break; // Exit the loop as soon as an occurrence is found.
                 }

@@ -134,23 +134,7 @@ class obf_config_oauth2_form extends moodleform {
             ['oauth2_id' => optional_param('id', null, PARAM_INT)]);
 
         // Vérifier si $rules est null ou vide.
-        $ruleid = 0;
-        if (empty($rules)) {
-            // Aucune règle n'est associée, créer un seul ensemble de blocs
-            // Add header for Moodle categories
-            $mform->addElement('header', 'chooseurmoodlecategories', get_string('rules', 'local_obf'));
-            $mform->setExpanded('chooseurmoodlecategories');
-
-            // Add autocomplete field for Moodle course categories
-            $mform->addElement('autocomplete', 'coursecategorieid', get_string('choosecategories', 'local_obf'),
-                $categoryoptions, $options);
-            $mform->setType('coursecategorieid', PARAM_INT);
-
-            // Add autocomplete field for badge categories
-            $mform->addElement('autocomplete', 'badgecategoriename', get_string('chooseurbadgecategories', 'local_obf'),
-                $badgecategories, $options);
-            $mform->setType('badgecategoriename', PARAM_TEXT);
-        } else {
+        if (!empty($rules)) {
             $rulecount = 1;
 
             $mform->addElement('hidden', 'delete_rule', false);
@@ -158,6 +142,7 @@ class obf_config_oauth2_form extends moodleform {
             $mform->addElement('hidden', 'delete_rule_id', null);
             $mform->setType('delete_rule_id', PARAM_INT);
 
+            $numberofrule = 0;
             foreach ($rules as $rule) {
                 // Créer un nouveau bloc 'chooseurmoodlecategories' pour chaque règle.
                 $ruledatas = $DB->get_records('local_obf_rulescateg',
@@ -168,10 +153,10 @@ class obf_config_oauth2_form extends moodleform {
 
                 if (isset($ruledatas)) {
                     foreach($ruledatas as $ruledata) {
-                        if ($ruledata->badgecategoriename != null) {
+                        if (isset($ruledata->badgecategoriename) && $ruledata->badgecategoriename != null) {
                             $badgedefaultcateg[] = $ruledata->badgecategoriename;
                         }
-                        if ($ruledata->coursecategorieid != null) {
+                        if (isset($ruledata->coursecategorieid) && $ruledata->coursecategorieid != null) {
                             $coursedefaultcateg[] = $ruledata->coursecategorieid;
                         }
                     }

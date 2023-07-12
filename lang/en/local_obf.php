@@ -368,6 +368,7 @@ $string['exportrecipients'] = 'Recipients';
 $string['exportissuedon'] = 'Issued On';
 $string['exportexpiresby'] = 'Expires By';
 $string['exportissuedfrom'] = 'Issued From';
+$string['delete_rule_button'] = 'Delete this rule';
 
 $string['privacy:metadata:userid'] = 'User ID';
 $string['privacy:metadata:courseid'] = 'Course ID';
