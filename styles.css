@@ -1369,6 +1369,6 @@ ul.obf-categories li button.active {
     flex: 0;
 }
 
-.show-more-button {
-    display: none;
+.show-more-button .hidden {
+    display: none !important;
 }

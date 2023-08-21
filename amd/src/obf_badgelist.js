@@ -10,7 +10,7 @@ define(['jquery'], function($) {
                 var totalBadges = $badgeList.find("li").length;
 
                 if (totalBadges > badgesPerPage) {
-                    $badgeList.next(".show-more-button").show();
+                    $badgeList.next(".show-more-button").removeClass('hidden');
                     // Show the button only if there are more than 10 badges.
 
                     $badgeList.next(".show-more-button").click(function() {
@@ -21,7 +21,7 @@ define(['jquery'], function($) {
 
                         // If all badges are shown, hide the "Show More" button.
                         if (visibleBadges >= totalBadges) {
-                            $(this).hide();
+                            $(this).addClass('hidden');
                         }
                     });
                 }

@@ -368,7 +368,7 @@ function addUserBadges($tree, $user): void {
         $category = new core_user\output\myprofile\category('local_obf/badgesplatform', get_string('badgesplatform', 'local_obf'), null);
         $tree->add_category($category);
         $content = $renderer->render_user_assertions($assertions, $user, false);
-        $content .= html_writer::tag('button', get_string('showmore', 'local_obf'), ['class' => 'btn btn-primary show-more-button']);
+        $content .= html_writer::tag('button', get_string('showmore', 'local_obf'), ['class' => 'btn btn-primary show-more-button hidden']);
         $localnode = new core_user\output\myprofile\node('local_obf/badgesplatform', 'obfbadges',
             '', null, null, $content, null, 'local-obf');
         $tree->add_node($localnode);
