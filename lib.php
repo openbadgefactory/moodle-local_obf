@@ -269,6 +269,7 @@ function addObfBadges($tree, $user): void {
     if ($assertions !== false && count($assertions) > 0) {
         $renderer = $PAGE->get_renderer('local_obf');
         $content = $renderer->render_user_assertions($assertions, $user, false);
+        $content .= html_writer::tag('button', get_string('showmore', 'local_obf'), ['class' => 'btn btn-primary show-more-button hidden']);
         $localnode = new core_user\output\myprofile\node('local_obf/badges', 'obfbadges',
             '', null, null, $content, null, 'local-obf');
         $tree->add_node($localnode);
@@ -293,6 +294,7 @@ function addBackpackBadges($tree, $user): void {
             $title = get_string('profilebadgelistbackpackprovider', 'local_obf', $fullname);
             $renderer = $PAGE->get_renderer('local_obf');
             $content = $renderer->render_user_assertions($bpassertions, $user, false);
+            $content .= html_writer::tag('button', get_string('showmore', 'local_obf'), ['class' => 'btn btn-primary show-more-button hidden']);
             $localnode = new core_user\output\myprofile\node('local_obf/badges', 'obfbadges' . $name,
                 $title, null, null, $content, null, 'local-obf');
             $tree->add_node($localnode);
@@ -322,6 +324,7 @@ function addMoodleBadges($tree, $user): void {
             $sitename = $site ? format_string($site->fullname) : 'Moodle';
             $title = get_string('profilebadgelistbackpackprovider', 'local_obf', $sitename);
             $content = $renderer->render_user_assertions($moodleassertions, $user, false);
+            $content .= html_writer::tag('button', get_string('showmore', 'local_obf'), ['class' => 'btn btn-primary show-more-button hidden']);
             $localnode = new core_user\output\myprofile\node('local_obf/badges', 'obfbadgesmoodle',
                 $title, null, null, $content, null, 'local-obf');
             $tree->add_node($localnode);
