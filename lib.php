@@ -358,14 +358,14 @@ function addUserBadges($tree, $user): void {
                 $assertions->add_collection(obf_assertion::get_assertions_all($client, $email->email));
             }
 
-            $assertions->add_collection(obf_assertion::get_assertions_all($client,
-                $DB->get_field('user', 'email', array('id' => $user->id))));
-
             $assertions->apply_blacklist($blacklist);
 
         } catch (Exception $e) {
             debugging('Getting OBF assertions for user id: ' . $user->id . ' failed: ' . $e->getMessage());
         }
+
+        // Sort array of assertions.
+        $assertions->sort_assertions_byid('DESC');
 
         $renderer = $PAGE->get_renderer('local_obf');
         $category = new core_user\output\myprofile\category('local_obf/badgesplatform', get_string('badgesplatform', 'local_obf'), null);

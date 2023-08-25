@@ -242,4 +242,28 @@ class obf_assertion_collection implements Countable, IteratorAggregate {
     public function getiterator(): Traversable {
         return new ArrayIterator($this->assertions);
     }
+
+    /**
+     *
+     * Sort assertions data by id
+     *
+     * @param string $sort
+     * @return obf_assertion_collection $this
+     */
+    public function sort_assertions_byid($sort): obf_assertion_collection {
+
+        if ($sort === "ASC") {
+            // Sort the assertions by id in ascending order...
+            usort($this->assertions, function(obf_assertion $a1, obf_assertion $a2) {
+                return $a1->get_id() > $a2->get_id();
+            });
+        } else if ($sort === "DESC") {
+            // Sort the assertions by id in descending order...
+            usort($this->assertions, function(obf_assertion $a1, obf_assertion $a2) {
+                return $a2->get_id() > $a1->get_id();
+            });
+        }
+
+        return $this;
+    }
 }

@@ -24,8 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2023062711;
-$plugin->requires = 2022041909;
+$plugin->version = 2023082301;
+$plugin->requires = 2022041909; // Moodle 4.1 version check.
 $plugin->component = 'local_obf';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '0.9';
+$plugin->release = '2.1';
