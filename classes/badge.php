@@ -82,7 +82,7 @@ class obf_badge {
     /**
      * @var string The client id of the badge
      */
-    private $clientid = null;
+    private $client_id = null;
 
     /**
      * @var string The name of the badge
@@ -432,6 +432,8 @@ class obf_badge {
      * @param string $criteriaaddendum The criterai addendum.
      */
     public function issue(array $recipients, $issuedon, $email, $criteriaaddendum = '', $items = null) {
+        global $DB;
+
         if (empty($this->id)) {
             throw new Exception('Invalid or missing badge id');
         }
@@ -442,6 +444,47 @@ class obf_badge {
             $course = $items[0]->get_courseid();
             if ($items[0] instanceof obf_criterion_activity) {
                 $activity = $items[0]->get_name();
+            }
+        }
+
+        // TODO: It appears that the categories are not returned in the simple API request.
+        //  "Single badge by ID: GET /v1/badge/{client_id}/{badge_id}".
+        //  In the meantime, this piece of code serves as a workaround.
+        //  but it would be desirable to have the categories at the correct level.
+        // If any rules are define on site we will prevent issue badge
+        // in case there is no rule for current categ badge and at last one define on site.
+        $anyrulesdefinesql = "SELECT * FROM {local_obf_rulescateg}";
+        $anyrules = $DB->get_records_sql($anyrulesdefinesql);
+
+        if (!empty($anyrules)) {
+            $courserule = get_course($course);
+
+            $categoryid = $courserule->category;
+
+            // Get the category path.
+            $categorypath = $DB->get_field('course_categories', 'path', ['id' => $categoryid]);
+
+            // Split the category path into an array of category IDs.
+            $categoryids = explode('/', trim($categorypath, '/'));
+
+            // Add the current category ID to the array.
+            $categoryids[] = $categoryid;
+
+            // Prepare the placeholders for the SQL query.
+            $placeholders = implode(',', array_fill(0, count($categoryids), '?'));
+
+            $currentbadgecateg = [];
+            $badges = $this->get_client()->get_badges();
+
+            foreach ($badges as $badge) {
+                if ($badge['id'] == $this->get_id()) {
+                    $currentbadgecateg = $badge['category'];
+                    $placeholdersbadgecateg = implode(',', array_fill(0, count($badge['category']), '?'));
+                }
+            }
+
+            if (!isset($placeholdersbadgecateg)) {
+                return true;
             }
         }
 
@@ -600,14 +643,56 @@ class obf_badge {
      * @return obf_badge[] The badges.
      */
     public static function get_badges_in_course($courseid, $clientid = null) {
+        global $DB;
+
         $criteria = obf_criterion::get_course_criterion($courseid);
         $badges = array();
+
+        // TODO: It appears that the categories are not returned in the simple API request.
+        //  "Single badge by ID: GET /v1/badge/{client_id}/{badge_id}".
+        //  In the meantime, this piece of code serves as a workaround.
+        //  but it would be desirable to have the categories at the correct level.
+        // If any rules are define on site we will prevent issue badge
+        // in case there is no rule for current categ badge and at last one define on site.
+        $anyrulesdefinesql = "SELECT * FROM {local_obf_rulescateg}";
+        $anyrules = $DB->get_records_sql($anyrulesdefinesql);
+
+        $courserule = get_course($courseid);
+        $categoryid = $courserule->category;
+
+        // Get the category path.
+        $categorypath = $DB->get_field('course_categories', 'path', ['id' => $categoryid]);
+
+        // Split the category path into an array of category IDs.
+        $categoryids = explode('/', trim($categorypath, '/'));
+
+        // Add the current category ID to the array.
+        $categoryids[] = $categoryid;
+        // Prepare the placeholders for the SQL query.
+        $placeholders = implode(',', array_fill(0, count($categoryids), '?'));
 
         foreach ($criteria as $criterion) {
             if ($clientid && $clientid !== $criterion->get_clientid()) {
                 continue;
             }
-            $badges[] = $criterion->get_badge();
+
+            if (!empty($anyrules)) {
+
+                $currentbadgecateg = [];
+                $client = obf_client::get_instance();
+                $badgeslist = $client->get_badges();
+
+                foreach ($badgeslist as $badge) {
+                    if ($badge['id'] == $criterion->get_badge()->get_id()) {
+                        $currentbadgecateg = $badge['category'];
+                        $placeholdersbadgecateg = implode(',', array_fill(0, count($badge['category']), '?'));
+                    }
+                }
+            }
+
+            if (isset($placeholdersbadgecateg) || empty($anyrules)) {
+                $badges[] = $criterion->get_badge();
+            }
         }
 
         return $badges;

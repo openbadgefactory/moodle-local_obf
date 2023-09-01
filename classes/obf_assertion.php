@@ -401,16 +401,22 @@ class obf_assertion {
                     foreach ($recipientemails as $recipient) {
                         $user = $DB->get_record('user', array('email' => $recipient));
 
-                        if ($assertion->is_revoked_for_email($user->email)) {
+                        if (!$user || $assertion->is_revoked_for_email($user->email)) {
                             continue;
                         }
 
-                        $namematch = stripos($item['name'], $searchparams['query']) !== false;
-                        $recipientmatch = stripos($recipient, $searchparams['query']) !== false;
-                        $$fullnamematch =
-                            $user !== false && stripos($user->firstname . ' ' . $user->lastname, $searchparams['query']) !== false;
+                        if (isset($searchparams['query'])) {
+                            $namematch = stripos($item['name'], $searchparams['query']) !== false;
+                            $recipientmatch = stripos($recipient, $searchparams['query']) !== false;
+                            $fullnamematch =
+                                $user !== false && stripos($user->firstname . ' ' . $user->lastname, $searchparams['query']) !== false;
+                        } else {
+                            $namematch = true;
+                            $recipientmatch = true;
+                            $fullnamematch = true;
+                        }
 
-                        if ($namematch || $recipientmatch || $$fullnamematch) {
+                        if ($namematch || $recipientmatch || $fullnamematch) {
                             $validrecipients[] = $recipient;
                         }
                     }

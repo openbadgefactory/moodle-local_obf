@@ -245,6 +245,9 @@ function local_obf_myprofile_navigation(\core_user\output\myprofile\tree $tree, 
         );
 
     if ($showbadges) {
+        $category = new core_user\output\myprofile\category('local_obf/badges', get_string('profilebadgelist', 'local_obf'), null);
+        $tree->add_category($category);
+
         adduserbadges($tree, $user);
         addobfbadges($tree, $user);
         addbackpackbadges($tree, $user);
@@ -260,9 +263,6 @@ function local_obf_myprofile_navigation(\core_user\output\myprofile\tree $tree, 
  */
 function addobfbadges($tree, $user): void {
     global $PAGE, $DB;
-
-    $category = new core_user\output\myprofile\category('local_obf/badges', get_string('profilebadgelist', 'local_obf'), null);
-    $tree->add_category($category);
 
     $assertions = local_obf_myprofile_get_assertions($user->id, $DB);
 
@@ -358,7 +358,6 @@ function adduserbadges($tree, $user): void {
 
             // Get badges issued with previous emails.
             $historyemails = $DB->get_records('local_obf_history_emails', array('user_id' => $user->id), '', 'email');
-
             foreach ($historyemails as $email) {
                 $assertions->add_collection(obf_assertion::get_assertions_all($client, $email->email));
             }
@@ -373,12 +372,19 @@ function adduserbadges($tree, $user): void {
         $assertions->sort_assertions_byid('DESC');
 
         $renderer = $PAGE->get_renderer('local_obf');
+        $param['nameinstance'] = get_site()->fullname;
         $category = new core_user\output\myprofile\category('local_obf/badgesplatform',
-            get_string('badgesplatform', 'local_obf'), null);
+            get_string('badgesplatform', 'local_obf', $param), null);
         $tree->add_category($category);
-        $content = $renderer->render_user_assertions($assertions, $user, false);
-        $content .= html_writer::tag('button',
-            get_string('showmore', 'local_obf'), ['class' => 'btn btn-primary show-more-button hidden']);
+
+        if (count($assertions) > 0) {
+            $content = $renderer->render_user_assertions($assertions, $user, false);
+            $content .= html_writer::tag('button',
+                get_string('showmore', 'local_obf'), ['class' => 'btn btn-primary show-more-button hidden']);
+        } else {
+            $content = get_string('nobadgesearned', 'local_obf');
+        }
+
         $localnode = new core_user\output\myprofile\node('local_obf/badgesplatform', 'obfbadges',
             '', null, null, $content, null, 'local-obf');
         $tree->add_node($localnode);

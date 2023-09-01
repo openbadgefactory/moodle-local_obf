@@ -53,10 +53,11 @@ class obf_blacklist_form extends local_obf_form_base {
         $mform = $this->_form;
         $this->blacklist = $this->_customdata['blacklist'];
         $user = $this->_customdata['user'];
+
         $client = obf_client::get_instance();
         $uniqueassertions = new obf_assertion_collection();
         try {
-            $assertions = obf_assertion::get_assertions_all($client, null, $user->email);
+            $assertions = obf_assertion::get_assertions_all($client, $user->email);
         } catch (Exception $ex) {
             $mform->addElement('html', $OUTPUT->notification($ex->getMessage(), 'warning'));
             return;

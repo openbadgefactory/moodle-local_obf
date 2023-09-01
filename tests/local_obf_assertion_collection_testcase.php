@@ -23,9 +23,9 @@
  */
 
 use classes\obf_assertion;
+use classes\obf_assertion_collection;
 use classes\obf_badge;
 use classes\obf_issuer;
-use classes\obf_assertion_collection;
 
 /**
  * Description of obf_assertion_collection_test
@@ -73,5 +73,4 @@ class local_obf_assertion_collection_testcase extends advanced_testcase {
         $this->assertTrue($collection->has_assertion($assertion4));
         $this->assertFalse($collection2->has_assertion($assertion2));
     }
-
 }

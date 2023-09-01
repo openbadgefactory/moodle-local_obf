@@ -255,12 +255,12 @@ class obf_assertion_collection implements Countable, IteratorAggregate {
         if ($sort === "ASC") {
             // Sort the assertions by id in ascending order...
             usort($this->assertions, function(obf_assertion $a1, obf_assertion $a2) {
-                return $a1->get_id() > $a2->get_id();
+                return strcmp($a1->get_id(), $a2->get_id());
             });
         } else if ($sort === "DESC") {
             // Sort the assertions by id in descending order...
             usort($this->assertions, function(obf_assertion $a1, obf_assertion $a2) {
-                return $a2->get_id() > $a1->get_id();
+                return strcmp($a2->get_id(), $a1->get_id());
             });
         }
 

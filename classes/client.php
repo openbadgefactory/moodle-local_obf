@@ -1202,4 +1202,13 @@ class obf_client {
         global $CFG;
         return $CFG->dataroot . '/local_obf/pki/';
     }
+
+    /**
+     * Get absolute path of certificate directory.
+     *
+     * @return object
+     */
+    public function get_oauth2id() {
+        return $this->oauth2;
+    }
 }

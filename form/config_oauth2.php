@@ -134,6 +134,8 @@ class obf_config_oauth2_form extends moodleform {
             ['oauth2_id' => optional_param('id', null, PARAM_INT)]);
 
         // Vérifier si $rules est null ou vide.
+        $numberofrule = 0;
+
         if (!empty($rules)) {
             $rulecount = 1;
 
@@ -142,7 +144,6 @@ class obf_config_oauth2_form extends moodleform {
             $mform->addElement('hidden', 'delete_rule_id', null);
             $mform->setType('delete_rule_id', PARAM_INT);
 
-            $numberofrule = 0;
             foreach ($rules as $rule) {
                 // Créer un nouveau bloc 'chooseurmoodlecategories' pour chaque règle.
                 $ruledatas = $DB->get_records('local_obf_rulescateg',

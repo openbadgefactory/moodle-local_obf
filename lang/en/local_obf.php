@@ -250,7 +250,8 @@ $string['messageprovider:revokedbadgetostudent'] = "A student's badge has been r
 $string['minimumgrade'] = 'Minimum grade';
 $string['nobackpackgroups'] = 'You don’t have public badges in your Open Badge Passport. Please share your badges as public if you want to display them here.';
 $string['nobadgehistory'] = 'This badge hasn\'t been issued yet.';
-$string['nobadges'] = 'No badges yet.';
+$string['nobadges'] = 'No badge';
+$string['nobadgesearned'] = 'No badges earned yet';
 $string['nobadgesincourse'] = 'No related badges yet.';
 $string['nobadgestoexport'] = 'No badges to export.';
 $string['nocourseswithcompletionenabled'] = 'There are no courses with completion enabled.';
@@ -370,6 +371,7 @@ $string['exportrecipients'] = 'Recipients';
 $string['exportissuedon'] = 'Issued On';
 $string['exportexpiresby'] = 'Expires By';
 $string['exportissuedfrom'] = 'Issued From';
+$string['delete_rule'] = 'Delete rule';
 $string['delete_rule_button'] = 'Delete this rule';
 $string['addrulelabel'] = 'Here you can define where badges will be available, by matching OBF categories with Moodle categories.  By default, without specific rule, your OBF badges will be available on all your Moodle categories.';
 
@@ -417,6 +419,11 @@ $string['privacy:metadata:token'] = 'Token';
 $string['privacy:metadata:verified'] = 'Verified';
 $string['privacy:metadata:timestamp'] = 'Timestamp';
 
+$string['privacy:metadata:issue_events'] = 'Issue event';
+$string['privacy:metadata:event_id'] = 'Event id';
+
+$string['privacy:metadata:badge_blacklists'] = 'Badge blacklist';
+
 $string['privacy:metadata:history_emails'] = 'History email';
 $string['privacy:metadata:course_id'] = 'Course ID';
 
@@ -428,11 +435,11 @@ $string['privacy:metadata:email_templates'] = 'Email Templates';
 $string['privacy:metadata:criterion_met'] = 'Criterion Met';
 $string['privacy:metadata:backpack_emails'] = 'Backpack Emails';
 $string['privacy:metadata:remote_data'] = 'Remote Data sent to https://openbadgefactory.com/';
-$string['contact_openbadgefactory'] = 'Please contact https://openbadgefactory.com/ for more details.';
+$string['contact_openbadgefactory'] = 'Badge recipients can access personal data used by badge issuers to deliver them badges at: <a href"https://openbadgefactory.com/en/personal-data-request/" target="_blank">https://openbadgefactory.com/en/personal-data-request/</a> and can request that badge issuers delete their personal data.';
 
 $string['badgesonprofiledescri0'] = 'Do not display badge on profil';
 $string['badgesonprofiledescri1'] = 'Display badge on profil';
-$string['badgesplatform'] = 'Plateform badge';
+$string['badgesplatform'] = 'Badges earned on {$a->nameinstance}';
 $string['showmore'] = 'Show more';
 
 $string['congratsbadgeearned'] = 'Congrats! You earned a new badge: {$a}';

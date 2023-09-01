@@ -30,6 +30,7 @@ use Backpack;
 use cache_helper;
 use curl;
 use Email;
+use Exception;
 use Id;
 use moodle_database;
 use Mozilla;

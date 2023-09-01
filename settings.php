@@ -30,6 +30,7 @@ require_once(__DIR__ . '/classes/client.php');
 
 $hasobfconfig = $hassiteconfig || has_capability('local/obf:configure', context_system::instance());
 if ($hasobfconfig) {
+
     // OBF-category in site admin.
     $obf = new admin_category('obf', get_string('obf', 'local_obf'));
 
