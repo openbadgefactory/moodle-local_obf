@@ -178,17 +178,17 @@ function xmldb_local_obf_upgrade($oldversion) {
 
         // Rename criterion table.
         $criteriontable = new xmldb_table('obf_criterion_groups');
-        $dbman->rename_table($criteriontable, 'classes\criterion\obf_criterion');
+        $dbman->rename_table($criteriontable, 'obf_criterion');
 
         // Add the new index.
         $attributetable->add_key('fk_obf_criterion_id', XMLDB_KEY_FOREIGN,
-            array('obf_criterion_id'), 'classes\criterion\obf_criterion', array('id'));
+            array('obf_criterion_id'), 'obf_criterion', array('id'));
 
         upgrade_plugin_savepoint(true, 2013101000, 'local', 'obf');
     }
 
     if ($oldversion < 2013101001) {
-        $table = new xmldb_table('classes\criterion\obf_criterion');
+        $table = new xmldb_table('obf_criterion');
         $table->deleteKey('fk_obf_criterion_type_id');
         $field = new xmldb_field('obf_criterion_type_id', XMLDB_TYPE_INTEGER, '10', null,
             XMLDB_NOTNULL, null, null, 'id');
@@ -240,7 +240,7 @@ function xmldb_local_obf_upgrade($oldversion) {
         // Adding keys to table obf_criterion_met.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
         $table->add_key('fk_obf_criterion_id', XMLDB_KEY_FOREIGN, array('obf_criterion_id'),
-            'classes\criterion\obf_criterion', array('id'));
+            'obf_criterion', array('id'));
         $table->add_key('fk_user_id', XMLDB_KEY_FOREIGN, array('user_id'), 'user', array('id'));
 
         // Conditionally launch create table for obf_criterion_met.
@@ -316,7 +316,7 @@ function xmldb_local_obf_upgrade($oldversion) {
         // Adding keys to table obf_criterion_courses.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
         $table->add_key('fk_obf_criterion_id', XMLDB_KEY_FOREIGN, array('obf_criterion_id'),
-            'classes\criterion\obf_criterion', array('id'));
+            'obf_criterion', array('id'));
         $table->add_key('fk_course_id', XMLDB_KEY_FOREIGN, array('courseid'), 'course', array('id'));
 
         // Conditionally launch create table for obf_criterion_courses.
@@ -331,7 +331,7 @@ function xmldb_local_obf_upgrade($oldversion) {
     if ($oldversion < 2013103000) {
 
         // Define field criterion_type_id to be dropped from obf_criterion.
-        $table = new xmldb_table('classes\criterion\obf_criterion');
+        $table = new xmldb_table('obf_criterion');
         $field = new xmldb_field('criterion_type_id');
         $key = new xmldb_key('obf_critgrou_obf_ix', XMLDB_KEY_UNIQUE, array('criterion_type_id'));
 
@@ -427,7 +427,7 @@ function xmldb_local_obf_upgrade($oldversion) {
 
         // Adding keys to table obf_criterion_params.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
-        $table->add_key('fk_obf_criterion_id', XMLDB_KEY_FOREIGN, array('obf_criterion_id'), 'classes\criterion\obf_criterion',
+        $table->add_key('fk_obf_criterion_id', XMLDB_KEY_FOREIGN, array('obf_criterion_id'), 'obf_criterion',
             array('id'));
 
         // Conditionally launch create table for obf_criterion_params.
@@ -441,7 +441,7 @@ function xmldb_local_obf_upgrade($oldversion) {
     if ($oldversion < 2015061700) {
 
         // Define table obf_user_preferences to be created.
-        $table = new xmldb_table('classes\obf_user_preferences');
+        $table = new xmldb_table('obf_user_preferences');
 
         // Adding fields to table obf_user_preferences.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
@@ -499,7 +499,7 @@ function xmldb_local_obf_upgrade($oldversion) {
         // Adding keys to table obf_issue_events.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
         $table->add_key('fk_user_id', XMLDB_KEY_FOREIGN, array('user_id'), 'user', array('id'));
-        $table->add_key('fk_obf_criterion_id', XMLDB_KEY_FOREIGN, array('obf_criterion_id'), 'classes\criterion\obf_criterion',
+        $table->add_key('fk_obf_criterion_id', XMLDB_KEY_FOREIGN, array('obf_criterion_id'), 'obf_criterion',
             array('id'));
 
         // Conditionally launch create table for obf_issue_events.
@@ -525,9 +525,9 @@ function xmldb_local_obf_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2015062300, 'local', 'obf');
     }
     if ($oldversion < 2015062501) {
-        $oldtables = array('obf_criterion_courses', 'classes\criterion\obf_criterion',
+        $oldtables = array('obf_criterion_courses', 'obf_criterion',
             'obf_email_templates', 'obf_criterion_met', 'obf_backpack_emails',
-            'obf_criterion_params', 'classes\obf_user_preferences',
+            'obf_criterion_params', 'obf_user_preferences',
             'obf_user_badge_blacklist', 'obf_issue_events');
         foreach ($oldtables as $oldtable) {
             // Define table obf_criterion_courses to be renamed to NEWNAMEGOESHERE.
