@@ -1113,9 +1113,11 @@ class local_obf_renderer extends plugin_renderer_base {
             // Export to CSV.
             $courseid = optional_param('courseid', null, PARAM_INT);
             $search = optional_param('search', '', PARAM_TEXT);
+            $clientid = optional_param('clientid', null, PARAM_ALPHANUM);
 
             $html .= "<form action='export.php?courseid=$courseid' method='post'>";
             $html .= "<input type='hidden' name='search' value='$search' placeholder='Search'>";
+            $html .= "<input type='hidden' name='clientid' value='$clientid' placeholder='Client id'>";
             $html .= '<button type="submit" class="btn btn-secondary">Export to CSV</button>';
             $html .= '</form>';
 
