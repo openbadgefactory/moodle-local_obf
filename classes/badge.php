@@ -457,33 +457,16 @@ class obf_badge {
         $anyrules = $DB->get_records_sql($anyrulesdefinesql);
 
         if (!empty($anyrules)) {
-            $courserule = get_course($course);
 
-            $categoryid = $courserule->category;
-
-            // Get the category path.
-            $categorypath = $DB->get_field('course_categories', 'path', ['id' => $categoryid]);
-
-            // Split the category path into an array of category IDs.
-            $categoryids = explode('/', trim($categorypath, '/'));
-
-            // Add the current category ID to the array.
-            $categoryids[] = $categoryid;
-
-            // Prepare the placeholders for the SQL query.
-            $placeholders = implode(',', array_fill(0, count($categoryids), '?'));
-
-            $currentbadgecateg = [];
             $badges = $this->get_client()->get_badges();
 
             foreach ($badges as $badge) {
                 if ($badge['id'] == $this->get_id()) {
-                    $currentbadgecateg = $badge['category'];
-                    $placeholdersbadgecateg = implode(',', array_fill(0, count($badge['category']), '?'));
+                    $allowissue = true;
                 }
             }
 
-            if (!isset($placeholdersbadgecateg)) {
+            if (!isset($allowissue)) {
                 return true;
             }
         }
@@ -657,20 +640,6 @@ class obf_badge {
         $anyrulesdefinesql = "SELECT * FROM {local_obf_rulescateg}";
         $anyrules = $DB->get_records_sql($anyrulesdefinesql);
 
-        $courserule = get_course($courseid);
-        $categoryid = $courserule->category;
-
-        // Get the category path.
-        $categorypath = $DB->get_field('course_categories', 'path', ['id' => $categoryid]);
-
-        // Split the category path into an array of category IDs.
-        $categoryids = explode('/', trim($categorypath, '/'));
-
-        // Add the current category ID to the array.
-        $categoryids[] = $categoryid;
-        // Prepare the placeholders for the SQL query.
-        $placeholders = implode(',', array_fill(0, count($categoryids), '?'));
-
         foreach ($criteria as $criterion) {
             if ($clientid && $clientid !== $criterion->get_clientid()) {
                 continue;
@@ -678,19 +647,17 @@ class obf_badge {
 
             if (!empty($anyrules)) {
 
-                $currentbadgecateg = [];
                 $client = obf_client::get_instance();
                 $badgeslist = $client->get_badges();
 
                 foreach ($badgeslist as $badge) {
                     if ($badge['id'] == $criterion->get_badge()->get_id()) {
-                        $currentbadgecateg = $badge['category'];
-                        $placeholdersbadgecateg = implode(',', array_fill(0, count($badge['category']), '?'));
+                        $allowdisplay = true;
                     }
                 }
             }
 
-            if (isset($placeholdersbadgecateg) || empty($anyrules)) {
+            if (isset($allowdisplay) || empty($anyrules)) {
                 $badges[] = $criterion->get_badge();
             }
         }
