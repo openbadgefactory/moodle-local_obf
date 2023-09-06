@@ -788,9 +788,11 @@ class obf_client {
         $now = time();
         $sql = "INSERT INTO {local_obf_history_emails} (user_id, email, timestamp) VALUES (?,?,?)";
 
-        // Compose the message.
-        $messagemanagerbadgeissue = new message();
         $courseid = $badge->get_course_id(); // ID cours.
+
+        // Declare message content for managers notifications.
+        $managerfullmessage = '';
+        $managerfullmessagehtml = '';
 
         foreach ($users as $user) {
 
@@ -802,7 +804,7 @@ class obf_client {
                     throw $e;
                 }
             }
-            // Add user name, if available.
+            // Add username, if available.
             if ($user->firstname && $user->lastname && $user->email && !preg_match('/[><]/', $user->email)) {
                 $recipientsnameemail[] = fullname($user) . ' <' . $user->email . '>';
             } else {
@@ -839,20 +841,20 @@ class obf_client {
             $message->fullmessageformat = FORMAT_MARKDOWN;
 
             // Send the message.
-            message_send($message);
+            $usermessages[] = $message;
 
             $courseurl = new moodle_url('/course/view.php', array('id' => $courseid));
             $courselink = html_writer::link($courseurl, $coursename);
 
             // Prepare message for managers.
-            $messagemanagerbadgeissue->fullmessage = $messagemanagerbadgeissue->fullmessage . '<br>'
+            $managerfullmessage = $managerfullmessage . '<br>'
                 . get_string('badgeissuedbody', 'local_obf', [
                 'badgename' => $badgename,
                 'firstname' => $user->firstname,
                 'lastname' => $user->lastname,
                 'courselink' => $courselink,
             ]) . '<br>';
-            $messagemanagerbadgeissue->fullmessagehtml = $messagemanagerbadgeissue->fullmessagehtml . '<br>'
+            $managerfullmessagehtml = $managerfullmessagehtml . '<br>'
             . get_string('badgeissuedbody', 'local_obf', [
                 'badgename' => $badgename,
                 'firstname' => $user->firstname,
@@ -902,6 +904,9 @@ class obf_client {
         // Loop Users list.
         foreach ($managerusers as $manageruser) {
             // Access Users data.
+            // Compose the message.
+            $messagemanagerbadgeissue = new message();
+
             $userid = $manageruser->id;
 
             $messagemanagerbadgeissue->component = 'local_obf'; // The component triggering the message.
@@ -912,16 +917,18 @@ class obf_client {
             if (empty($courseid)) {
                 $courseid = 1;
             }
-            $coursename = get_course($courseid)->fullname;
 
             $messagemanagerbadgeissue->subject = get_string('badgeissuedsubject', 'local_obf', [
                 'badgename' => $badgename
             ]);
 
+            $messagemanagerbadgeissue->fullmessage = $managerfullmessage;
+            $messagemanagerbadgeissue->fullmessagehtml = $managerfullmessagehtml;
+
             $messagemanagerbadgeissue->fullmessageformat = FORMAT_MARKDOWN;
 
             // Send the message.
-            message_send($messagemanagerbadgeissue);
+            $managermessages[] = $messagemanagerbadgeissue;
         }
 
         $coursename = $badge->get_course_name($course);
@@ -954,6 +961,20 @@ class obf_client {
 
         $url = $this->obf_url() . '/v1/badge/' . $this->client_id() . '/' . $badge->get_id();
         $this->request('post', $url, $params);
+
+        // Sending notifications messages only if request is done with no error.
+        // At this point we assume that error are handle in the request method.
+        if (isset($usermessages)) {
+            foreach ($usermessages as $message) {
+                message_send($message);
+            }
+        }
+
+        if (isset($managermessages)) {
+            foreach ($managermessages as $message) {
+                message_send($message);
+            }
+        }
     }
 
     /**
