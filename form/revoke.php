@@ -48,7 +48,14 @@ class obf_revoke_form extends local_obf_form_base {
         $revokedemails = array_keys($assertion->get_revoked());
 
         $i = 0;
+        $anyuser = false;
+
         foreach ($users as $user) {
+            if ($user == 'userremoved') {
+                continue;
+            } else {
+                $anyuser = true;
+            }
             $name = $user instanceof stdClass ? fullname($user) : $user;
             $email = $user instanceof stdClass ? $user->email : $user;
             $attributes = array('group' => 1);
@@ -64,17 +71,23 @@ class obf_revoke_form extends local_obf_form_base {
 
             $i += 1;
         }
+
         if ($showrevoke && count($users) > 1) {
             $this->add_checkbox_controller(1, null, null, null);
         }
-        if ($showrevoke) {
-            $mform->addElement('submit', 'submitbutton',
-                get_string('revoke', 'local_obf'),
-                array('class' => 'revokebutton'));
-        } else if (!empty($showurl)) {
-            $mform->addElement('html', html_writer::tag('div',
-                html_writer::link($showurl, get_string('revokeuserbadges', 'local_obf'))));
-        }
 
+        if ($anyuser) {
+            if ($showrevoke) {
+                $mform->addElement('submit', 'submitbutton',
+                    get_string('revoke', 'local_obf'),
+                    array('class' => 'revokebutton'));
+            } else if (!empty($showurl)) {
+                $mform->addElement('html', html_writer::tag('div',
+                    html_writer::link($showurl, get_string('revokeuserbadges', 'local_obf'))));
+            }
+        } else {
+            $mform->addElement('html',  html_writer::tag('div',
+                get_string('alluseralreadyrevoke', 'local_obf')));
+        }
     }
 }

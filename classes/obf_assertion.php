@@ -353,16 +353,11 @@ class obf_assertion {
      */
     public static function get_assertions(obf_client $client, obf_badge $badge = null, $email = null, $limit = -1,
         $geteachseparately = false, $searchparams = array()) {
-        global $DB;
-
         $badgeid = is_null($badge) ? null : $badge->get_id();
         $arr = $client->get_assertions($badgeid, $email, $searchparams);
         $assertions = array();
 
         if (!$geteachseparately) {
-            // Using populated collection for assertions would result in getting.
-            // the latest badge data, might not match issued data (issued badge data with addendums and changes).
-
             $collection = new obf_badge_collection($client);
             $collection->populate(true);
         }
@@ -394,45 +389,17 @@ class obf_assertion {
                     if (array_key_exists('revoked', $item)) {
                         $assertion->set_revoked($item['revoked']);
                     }
-
-                    // Check if the recipient is a valid user email on the platform.
-                    $recipientemails = $assertion->get_recipients();
-                    $validrecipients = array();
-                    foreach ($recipientemails as $recipient) {
-                        $user = $DB->get_record('user', array('email' => $recipient));
-
-                        if (!$user || $assertion->is_revoked_for_email($user->email)) {
-                            continue;
-                        }
-
-                        if (isset($searchparams['query'])) {
-                            $namematch = stripos($item['name'], $searchparams['query']) !== false;
-                            $recipientmatch = stripos($recipient, $searchparams['query']) !== false;
-                            $fullnamematch =
-                                $user !== false && stripos($user->firstname . ' ' . $user->lastname, $searchparams['query']) !== false;
-                        } else {
-                            $namematch = true;
-                            $recipientmatch = true;
-                            $fullnamematch = true;
-                        }
-
-                        if ($namematch || $recipientmatch || $fullnamematch) {
-                            $validrecipients[] = $recipient;
-                        }
-                    }
-
-                    if (!empty($validrecipients) && !empty($user)) {
-                        $assertion->set_recipients($validrecipients);
-                        $assertions[] = $assertion;
-                    }
+                    $assertions[] = $assertion;
                 }
+
             }
         }
 
         // Sort the assertions by date...
-        usort($assertions, function(obf_assertion $a1, obf_assertion $a2) {
-            return $a1->get_issuedon() - $a2->get_issuedon();
-        });
+        usort($assertions,
+            function (obf_assertion $a1, obf_assertion $a2) {
+                return $a1->get_issuedon() - $a2->get_issuedon();
+            });
 
         // ... And limit the result set if that's what we want.
         if ($limit > 0) {

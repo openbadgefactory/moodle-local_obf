@@ -450,3 +450,6 @@ $string['badgerevokedbody'] = 'The <b>{$a->badgename}</b> badge has been revoked
 
 $string['badgeissuedsubject'] = 'The {$a->badgename} badge was issued to users ...';
 $string['badgeissuedbody'] = 'The <b>{$a->badgename}</b> badge was issued to <b>{$a->firstname} {$a->lastname}</b>.<br>The badge was issued in course <b>{$a->courselink}.</b>';
+
+$string['userremoved'] = 'User removed';
+$string['alluseralreadyrevoke'] = 'All users have either been revoked or are no longer registered on the platform';

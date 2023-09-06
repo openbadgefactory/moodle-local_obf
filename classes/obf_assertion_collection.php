@@ -165,7 +165,7 @@ class obf_assertion_collection implements Countable, IteratorAggregate {
             // Try to find the user by email.
             $user = $this->find_user_by_email($recipient);
 
-            if ($assertion->is_revoked_for_email($user->email)) {
+            if (!is_bool($user) && $assertion->is_revoked_for_email($user->email)) {
                 continue;
             }
 
@@ -176,7 +176,7 @@ class obf_assertion_collection implements Countable, IteratorAggregate {
                 $backpack = obf_backpack::get_instance_by_backpack_email($recipient);
 
                 if ($backpack === false) {
-                    $result[] = $recipient;
+                    $result[] = 'userremoved';
                 } else {
                     $result[] = $DB->get_record('user', array('id' => $backpack->get_user_id()));
                 }

@@ -24,6 +24,8 @@ require_once($CFG->libdir . '/csvlib.class.php');
 $courseid = optional_param('courseid', null, PARAM_INT);
 $action = optional_param('action', 'list', PARAM_ALPHANUM);
 
+global $DB;
+
 $url = new moodle_url('/local/obf/badge.php', array('action' => $action));
 // Site context.
 if (empty($courseid)) {
@@ -62,18 +64,23 @@ foreach ($history as $assertion) {
     $logs = $assertion->get_log_entry('course_id');
     $courses = '';
     if (!empty($logs)) {
-        $courses = get_course($logs)->fullname;
+        $course = $DB->get_record('course', array('id' => $courseid), '*');
+        $coursefullname = $course->fullname;
         $activity = $assertion->get_log_entry('activity_name');
 
         if (!empty($activity)) {
-            $courses .= ' (' . $activity . ')';
+            $coursefullname .= ' (' . $activity . ')';
         }
     }
 
     $recipients = array();
     foreach ($users as $user) {
         if (!isset($user->firstname) || !isset($user->lastname)) {
-            $recipients[] = $user;
+            if ($user == 'userremoved') {
+                $recipients[] = get_string('userremoved', 'local_obf');
+            } else {
+                $recipients[] = $user;
+            }
         } else {
             $recipients[] = $user->firstname . ' ' . $user->lastname;
         }
@@ -81,7 +88,7 @@ foreach ($history as $assertion) {
 
     if ((isset($courseid) && $courseid == $logs) || empty($courseid)) {
         $rowdata = array($assertion->get_badge()->get_name(), implode(', ', $recipients),
-            userdate($assertion->get_issuedon(), get_string('dateformatdate', 'local_obf')), $assertion->get_expires(), $courses);
+            userdate($assertion->get_issuedon(), get_string('dateformatdate', 'local_obf')), $assertion->get_expires(), $coursefullname);
 
         // Add a record to the CSV file.
         $csvfile->add_data($rowdata);

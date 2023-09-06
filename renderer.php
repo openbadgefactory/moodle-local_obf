@@ -1101,6 +1101,8 @@ class local_obf_renderer extends plugin_renderer_base {
      * @return string HTML
      */
     public function print_issuing_history(obf_client $client, context $context, $historysize, $currentpage, $history) {
+        global $PAGE;
+
         $historytable = new html_table();
         $historytable->attributes = array('class' => 'local-obf generaltable historytable');
         $html = $this->print_heading('history', 2);
@@ -1117,35 +1119,54 @@ class local_obf_renderer extends plugin_renderer_base {
             $html .= '<button type="submit" class="btn btn-secondary">Export to CSV</button>';
             $html .= '</form>';
 
-            // Search form.
-            $path = '/local/obf/badge.php';
+            // TODO: uncomment this when request with query param is allowed on /v1/event with a search on badge name and description.
+            //// Search form.
+            //$path = '/local/obf/badge.php';
+            //$urlparams = array('action' => 'history');
+            //
+            //$urlparams['clientid'] = $client->client_id();
+            //if ($context instanceof context_course) {
+            //    $urlparams['courseid'] = $context->instanceid;
+            //    $path = '/local/obf/courseuserbadges.php';
+            //}
+            //
+            //// Construct the search URL.
+            //$searchurl = new moodle_url($path, $urlparams);
+            //
+            //$html .= "<form action='$searchurl' method='post'>";
+            //$html .= "<input type='text' name='search' value='$search' placeholder='Search'>";
+            //$html .= "<button type='submit' class='btn btn-primary'>Search</button>";
+            //$html .= '</form>';
+
+            // Paging settings.
+            $perpage = 10;
+
+            if ($PAGE->pagetype == 'local-obf-courseuserbadges') {
+                $path = '/local/obf/courseuserbadges.php';
+            } else {
+                $path = '/local/obf/badge.php';
+            }
+
             $urlparams = array('action' => 'history');
 
             $urlparams['clientid'] = $client->client_id();
+
             if ($context instanceof context_course) {
                 $urlparams['courseid'] = $context->instanceid;
-                $path = '/local/obf/courseuserbadges.php';
             }
 
-            // Construct the search URL.
-            $searchurl = new moodle_url($path, $urlparams);
-
-            $html .= "<form action='$searchurl' method='post'>";
-            $html .= "<input type='text' name='search' value='$search' placeholder='Search'>";
-            $html .= "<button type='submit' class='btn btn-primary'>Search</button>";
-            $html .= '</form>';
-
-            // Paging settings.
-
-            $perpage = 10;
             $url = new moodle_url($path, $urlparams);
             $pager = new paging_bar($historysize, $currentpage, $perpage, $url, 'page');
             $htmlpager = $this->render($pager);
 
+            $startindex = $currentpage * $perpage;
+
             // Heading row.
             $headingrow = array();
+
             $headingrow[] = new local_obf_table_header('badgename');
             $historytable->headspan = array(2, 1, 1, 1, 1);
+
             $headingrow[] = new local_obf_table_header('recipients');
             $headingrow[] = new local_obf_table_header('issuedon');
             $headingrow[] = new local_obf_table_header('expiresby');
@@ -1153,17 +1174,10 @@ class local_obf_renderer extends plugin_renderer_base {
             $headingrow[] = new html_table_cell();
             $historytable->head = $headingrow;
 
-            // TODO: better rework API to prevent doing this in local.
-            $paginatedarray = array_chunk($history->get_assertions(), $perpage);
-
             // Add history rows.
-            foreach ($paginatedarray[$currentpage] as $assertion) {
+            foreach ($history as $assertion) {
                 $users = $history->get_assertion_users($assertion);
-
-                // Render the row for each assertion.
-                if ($users) {
-                    $historytable->data[] = $this->render_historytable_row($assertion, false, $path, $users);
-                }
+                $historytable->data[] = $this->render_historytable_row($assertion, false, $path, $users);
             }
 
             $html .= $htmlpager;
@@ -1315,8 +1329,14 @@ class local_obf_renderer extends plugin_renderer_base {
         $userlist = array();
 
         foreach ($users as $user) {
+
+
             if (is_string($user)) {
-                $userlist[] = $user;
+                if ($user == 'userremoved') {
+                    $userlist[] = get_string('userremoved', 'local_obf');
+                } else {
+                    $userlist[] = $user;
+                }
             } else {
                 if ($addlinks) {
                     $url = new moodle_url('/user/view.php', array('id' => $user->id));
