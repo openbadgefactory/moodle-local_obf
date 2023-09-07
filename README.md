@@ -55,7 +55,7 @@ Changelog
   - New web notification preferences for:
     - All users: New badge is issued
     - Teachers: New badge is issued to a student, A student’s badge has been revoked.
-  - Awarding history : new export button and search filters
+  - Awarding history : new export button
 - Minor Improvements:
   - Public badges selected by default when connecting OB Passport account
   - Change some inconsistent behaviors and look and feel

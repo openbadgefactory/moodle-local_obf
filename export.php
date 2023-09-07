@@ -82,7 +82,7 @@ foreach ($history as $assertion) {
     foreach ($users as $user) {
         if (!isset($user->firstname) || !isset($user->lastname)) {
             if ($user == 'userremoved') {
-                $recipients[] = get_string('userremoved', 'local_obf');
+                $recipients[] = '';
             } else {
                 $recipients[] = $user;
             }

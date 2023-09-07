@@ -1161,8 +1161,6 @@ class local_obf_renderer extends plugin_renderer_base {
             $pager = new paging_bar($historysize, $currentpage, $perpage, $url, 'page');
             $htmlpager = $this->render($pager);
 
-            $startindex = $currentpage * $perpage;
-
             // Heading row.
             $headingrow = array();
 
@@ -1335,7 +1333,7 @@ class local_obf_renderer extends plugin_renderer_base {
 
             if (is_string($user)) {
                 if ($user == 'userremoved') {
-                    $userlist[] = get_string('userremoved', 'local_obf');
+                    $userlist[] = '';
                 } else {
                     $userlist[] = $user;
                 }
