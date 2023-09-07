@@ -28,4 +28,4 @@ $plugin->version = 2023090701;
 $plugin->requires = 2022112805; // Moodle 4.1 version check.
 $plugin->component = 'local_obf';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '1.0';
+$plugin->release = '1.0.0';
