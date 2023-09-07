@@ -36,7 +36,8 @@ if (empty($courseid)) {
 }
 
 // Retrieve history data from the form.
-$client = obf_client::get_instance();
+$clientid = optional_param('clientid', null, PARAM_ALPHANUM);
+$client = obf_client::connect($clientid);
 
 $search = optional_param('search', null, PARAM_TEXT);
 $searchparams['query'] = $search;
@@ -65,7 +66,11 @@ foreach ($history as $assertion) {
     $courses = '';
     if (!empty($logs)) {
         $course = $DB->get_record('course', array('id' => $courseid), '*');
-        $coursefullname = $course->fullname;
+        if (is_bool($course)) {
+            $coursefullname = '';
+        } else {
+            $coursefullname = $course->fullname;
+        }
         $activity = $assertion->get_log_entry('activity_name');
 
         if (!empty($activity)) {
@@ -77,7 +82,7 @@ foreach ($history as $assertion) {
     foreach ($users as $user) {
         if (!isset($user->firstname) || !isset($user->lastname)) {
             if ($user == 'userremoved') {
-                $recipients[] = get_string('userremoved', 'local_obf');
+                $recipients[] = '';
             } else {
                 $recipients[] = $user;
             }
