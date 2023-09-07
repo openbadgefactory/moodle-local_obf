@@ -21,39 +21,44 @@
  * @copyright  2013-2020, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-defined('MOODLE_INTERNAL') or die();
+
+defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
 
 /**
  * This class is just to add support for older versions of Moodle.
+ *
  * @copyright  2013-2020, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class local_obf_form_base extends moodleform {
     /**
      * Render form.
+     *
      * @return string HTML.
      */
     public function render() {
         $oldclasses = $this->_form->getAttribute('class');
-        $this->_form->updateAttributes(array('class' => $oldclasses.' local-obf'));
+        $this->_form->updateAttributes(array('class' => $oldclasses . ' local-obf'));
         ob_start();
         $this->display();
         $out = ob_get_contents();
         ob_end_clean();
         return $out;
     }
+
     /**
      * Set expanded, if Moodle version supports the feature.
+     *
      * @param MoodleQuickForm& $mform
      * @param string $header
      * @param bool $expand
      */
-    public function setExpanded(&$mform, $header, $expand = true) {
-        // Moodle 2.2 doesn't have setExpanded.
-        if (method_exists($mform, 'setExpanded')) {
-            $mform->setExpanded($header, $expand);
+    public function setexpanded(&$mform, $header, $expand = true) {
+        // Moodle 2.2 doesn't have setexpanded.
+        if (method_exists($mform, 'setexpanded')) {
+            $mform->setexpanded($header, $expand);
         }
     }
 

@@ -21,7 +21,34 @@
  * @copyright  2013-2020, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 defined('MOODLE_INTERNAL') || die();
-$messageproviders = array (
-    'revoked' => array()
+
+$messageproviders = array(
+    'revoked' => array (
+        'defaults' => array(
+            'email' => MESSAGE_DISALLOWED,
+            'popup' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED,
+        ),
+    ),
+    'issued' => array (
+        'defaults' => array(
+            'email' => MESSAGE_DISALLOWED,
+            'popup' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED,
+        ),
+    ),
+    'issuedbadgetostudent' => array (
+        'defaults' => array(
+            'email' => MESSAGE_DISALLOWED,
+            'popup' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED,
+        ),
+        'capability' => 'local/obf:viewspecialnotif'
+    ),
+    'revokedbadgetostudent' => array (
+        'defaults' => array(
+            'email' => MESSAGE_DISALLOWED,
+            'popup' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED,
+        ),
+        'capability' => 'local/obf:viewspecialnotif'
+    )
 );

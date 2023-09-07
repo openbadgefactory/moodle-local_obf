@@ -22,10 +22,13 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use classes\obf_backpack;
+use classes\obf_user_preferences;
+
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/form/userconfig.php');
-require_once(__DIR__ . '/class/backpack.php');
-require_once(__DIR__ . '/class/user_preferences.php');
+require_once(__DIR__ . '/classes/backpack.php');
+require_once(__DIR__ . '/classes/user_preferences.php');
 
 $error = optional_param('error', '', PARAM_TEXT);
 $msg = optional_param('msg', '', PARAM_TEXT);
@@ -44,15 +47,14 @@ $content = $OUTPUT->header();
 $obfuserpreferences = new obf_user_preferences($USER->id);
 $formurl = new moodle_url('/local/obf/userconfig.php', array('action' => 'update'));
 
-$backpacks = array(
-    );
+$backpacks = array();
 foreach (obf_backpack::get_providers() as $provider) {
     $existing = obf_backpack::get_instance($USER, $provider);
     $backpacks[] = $existing ? $existing : new obf_backpack(null, $provider);
 }
 $form = new obf_userconfig_form($formurl,
-        array('backpacks' => $backpacks,
-              'userpreferences' => $obfuserpreferences));
+    array('backpacks' => $backpacks,
+        'userpreferences' => $obfuserpreferences));
 
 switch ($action) {
     case 'edit':
@@ -70,30 +72,37 @@ switch ($action) {
             $content = new stdClass();
             foreach ($backpacks as $backpack) {
                 $record = $DB->get_record('local_obf_history_emails',
-                    array('user_id' => $backpack->get_user_id(),'email' => $backpack->get_email()));
+                    array('user_id' => $backpack->get_user_id(), 'email' => $backpack->get_email()));
                 if (property_exists($submitteddata, 'cancelbackpack' . $backpack->get_providershortname())) {
                     if ($backpack->exists() && $backpack->requires_email_verification()) {
-                        if(!$record) {
+                        if (!$record) {
                             $content->user_id = $backpack->get_user_id();
                             $content->email = $backpack->get_email();
                             $content->timestamp = time();
                             $DB->insert_record('local_obf_history_emails', $content);
                         }
-                            $backpack->disconnect();
+                        $backpack->disconnect();
                     }
                 }
             }
             redirect($url);
-        } else if (($data = $form->get_data())) { // User configuration was saved.
+        } else if (($data = $form->get_data())) {
+            // User configuration was saved.
             $obfuserpreferences->save_preferences($data);
+
+            $userid = $USER->id; // ID de l'utilisateur.
+            $preferencename = 'local_obf_userprefsaved'; // Nom de la préférence.
+
+            set_user_preference($preferencename, true, $userid);
+
             $redirecturl = new moodle_url('/local/obf/userconfig.php', array('action' => 'edit'));
-            // If were saving backpack data, we can safely assume that the backpack exists, because it
+            // If were saving backpack data, we can safely assume that the backpack exists, because it.
             // had to be created before (via verifyemail.php).
             foreach ($backpacks as $backpack) {
                 if ($backpack->exists()) {
                     $propertyname = $backpack->get_providershortname() . 'backpackgroups';
                     if (isset($data->{$propertyname})) {
-                        // advcheckbox returns 0 values for unchecked, so lets use a filter
+                        // Advcheckbox returns 0 values for unchecked, so lets use a filter.
                         $groups = array_keys(array_filter($data->{$propertyname}));
                         $backpack->set_groups($groups);
                     }

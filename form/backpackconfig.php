@@ -16,16 +16,23 @@
 
 /**
  * Email template form.
+ *
  * @package    local_obf
  * @copyright  2013-2020, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+use classes\obf_backpack;
+use classes\obf_badge;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__ . '/obfform.php');
-require_once(__DIR__ . '/../class/backpack.php');
+require_once(__DIR__ . '/../classes/backpack.php');
+
 /**
  * Email template form -class.
+ *
  * @copyright  2013-2020, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -44,16 +51,15 @@ class obf_backpack_config extends local_obf_form_base {
         $backpack = $this->_customdata['backpack'];
 
         $mform->addElement('header', 'header_backpackconfig',
-                get_string('personalbadgecloudservices', 'local_obf'));
+            get_string('personalbadgecloudservices', 'local_obf'));
 
         $backpackuserids = !empty($backpack->id) ? obf_backpack::get_user_ids_with_backpack($backpack->id) : array();
 
         if (!empty($backpackuserids)) {
             $mform->addElement('html',
-                    $OUTPUT->notification(get_string('backpackprovideruserwarning',
-                                    'local_obf', count($backpackuserids)), 'warning'));
+                $OUTPUT->notification(get_string('backpackprovideruserwarning',
+                    'local_obf', count($backpackuserids)), 'warning'));
         }
-
 
         $mform->addElement('text', 'shortname', get_string('backpackprovidershortname', 'local_obf'));
         $mform->setType('shortname', PARAM_ALPHA);
@@ -71,7 +77,7 @@ class obf_backpack_config extends local_obf_form_base {
         $this->add_action_buttons();
     }
 
-    // Perform some extra validation
+    // Perform some extra validation.
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
         if (array_key_exists('url', $data)) {
@@ -81,7 +87,7 @@ class obf_backpack_config extends local_obf_form_base {
                 $errors['url'] = get_string('backpackproviderurlinvalid', 'local_obf');
             } else {
                 try {
-                    $reachable = obf_backpack::test_api_url($data['url']);
+                    obf_backpack::test_api_url($data['url']);
                 } catch (\Exception $ex) {
                     $errors['url'] = $ex->getMessage();
                 }

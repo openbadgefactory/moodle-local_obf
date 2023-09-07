@@ -46,6 +46,24 @@ On the API key -page click on `Generate new client secret` for OAuth2 Client Cre
 Changelog
 ------------------
 
+1.0
+- New features
+  - Pro customers (Auth2) - Set specific badge permissions on Moodle categories (link OBF categories with Moodle categories)
+  - Display OBF earned badges on student profile - this feature was moved from displayer block plugin to local-obf (the displayer block plugin had reached EOL End Of Life) to local-obf)
+- Major improvements 
+  - Awarding rule activity achievement: show only resources and activities with achievement, section names introduced, name and icon of resource/activity visible  
+  - New web notification preferences for:
+    - All users: New badge is issued
+    - Teachers: New badge is issued to a student, A student’s badge has been revoked.
+  - Awarding history : new export button and search filters
+- Minor Improvements:
+  - Public badges selected by default when connecting OB Passport account
+  - Change some inconsistent behaviors and look and feel
+  - Multiple translation modifications in AMOS (french mainly)
+- Privacy API implemented
+- Bugs fixes:
+  - Export Moodle badges to OBF account restored
+
 0.8.0
 
 - Badge issuing report fixes
