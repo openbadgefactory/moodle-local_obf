@@ -15,17 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information. See https://docs.moodle.org/dev/version.php for more info.
+ * Open Badge -class.
  *
  * @package    local_obf
- * @copyright  2013-2023 Open Badge Factory Oy
+ * @copyright  2013-2020, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
+require_once(__DIR__ . '/../classes/badge.php');
 
-$plugin->version = 2023090702;
-$plugin->requires = 2022112800; // Moodle 4.1 version check.
-$plugin->component = 'local_obf';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '1.0.0';
+/**
+ * Deprecated: The location of this class has been changed, so loading it via `class/...` is no longer valid.
+ * However, in order to maintain compatibility with the old version of `block_displayer`,
+ * it is advisable to keep this loading mechanism for at least one version to allow for the necessary updates.
+ * @copyright  2013-2020, Open Badge Factory Oy
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @deprecated Use the classes\obf_badge class instead.
+ */
+class obf_badge extends classes\obf_badge {
+}
