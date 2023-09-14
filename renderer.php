@@ -170,6 +170,8 @@ class local_obf_renderer extends plugin_renderer_base {
      * @return string
      */
     public function render_badge_categories($badges) {
+        global $COURSE, $DB;
+
         $html = '';
         $categories = array();
         $items = array();
@@ -179,8 +181,13 @@ class local_obf_renderer extends plugin_renderer_base {
         foreach ($badges as $badge) {
             foreach ($badge->get_categories() as $category) {
                 if (!in_array($category, $categories) && (!$filtercategories || in_array($category, $availablecategories))) {
-                    $items[] = html_writer::tag('button', s($category), array('class' => ''));
-                    $categories[] = $category;
+                    $anyrulesdefinesql = "SELECT badgecategoriename FROM {local_obf_rulescateg} WHERE coursecategorieid = ?";
+                    $anyrules = $DB->get_records_sql($anyrulesdefinesql, [$COURSE->category]);
+
+                    if ((!empty($anyrules) && key_exists($category, $anyrules)) || empty($anyrules)) {
+                        $items[] = html_writer::tag('button', s($category), array('class' => ''));
+                        $categories[] = $category;
+                    }
                 }
             }
         }

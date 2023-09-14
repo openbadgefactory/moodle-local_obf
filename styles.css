@@ -1276,6 +1276,12 @@ ul.obf-categories li button.active {
     border-color: darkred;
 }
 
+.delete-button button.btn.btn-secondary,
+.delete-button button.btn.btn-secondary:hover {
+    color: white;
+    font-weight: bold;
+}
+
 .delete-button button.btn.btn-secondary:hover {
     background-color: red;
     border-color: red;
