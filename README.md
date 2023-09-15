@@ -1,4 +1,4 @@
-Open Badge Factory -plugin
+Open Badge Factory plugin
 =================
 
 Open Badge Factory is a cloud platform that provides the tools your organization needs to implement a meaningful and sustainable Open Badges system.
@@ -45,6 +45,11 @@ On the API key -page click on `Generate new client secret` for OAuth2 Client Cre
 
 Changelog
 ------------------
+
+1.0.1
+
+- Bug fix for DB upgrade
+- Minor bug fixes
 
 1.0.0
 
