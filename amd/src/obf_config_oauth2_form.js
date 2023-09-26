@@ -6,7 +6,8 @@ define(['jquery'], function($) {
                 this.form.submit();
             });
 
-            $('.delete-button button').on('click', function() {
+            $('.delete-button').on('click', function(event) {
+                event.preventDefault();
                 $('input[name="delete_rule"]').val(true);
                 $('input[name="delete_rule_id"]').val($(this).attr('ruleid'));
                 this.form.submit();
