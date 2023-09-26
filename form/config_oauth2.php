@@ -180,7 +180,7 @@ class obf_config_oauth2_form extends moodleform {
                 $mform->setDefaults(['badgecategoriename_' . $rule->ruleid => $badgedefaultcateg]);
 
                 // Create the delete button element.
-                $deletebutton = $mform->addElement('button', 'delete_rule_button',
+                $deletebutton = $mform->addElement('submit', 'delete_rule_button',
                     get_string('delete_rule', 'local_obf'));
 
                 // Set the label for the delete button.

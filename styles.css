@@ -1271,22 +1271,6 @@ ul.obf-categories li button.active {
     display: none;
 }
 
-.delete-button button.btn.btn-secondary {
-    background-color: darkred;
-    border-color: darkred;
-}
-
-.delete-button button.btn.btn-secondary,
-.delete-button button.btn.btn-secondary:hover {
-    color: white;
-    font-weight: bold;
-}
-
-.delete-button button.btn.btn-secondary:hover {
-    background-color: red;
-    border-color: red;
-}
-
 .section-text {
     font-weight: bold;
     font-size: 18px;
