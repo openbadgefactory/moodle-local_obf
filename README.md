@@ -11,7 +11,7 @@ With the local_obf plugin you can issue Open Badges created in Open Badge Factor
 How to install
 --------------
 
-Moodle 2.7, 2.9, 3.0, 3.1 and up:
+Moodle 4.1 and up:
 
 1. Install the zip via Moodle's plugin page. Select "local" as the type of the plugin. (alternative: unzip to moodle's local subdirectory)
 2. Update the database using the notifications page
@@ -35,16 +35,20 @@ To generate the required API key, log in to Open Badge Factory. When logged in, 
 
 Legacy key:
 
-On the API key -page click on `Generate certificate signing request token` for legacy type key. Copy the generated token into OBF Moodle plugin settings, in `Site administration > Open Badges > Settings`.
+On the API key page click on `Generate certificate signing request token` for legacy type key. Copy the generated token into OBF Moodle plugin settings, in `Site administration > Open Badges > Settings`.
 
 OAuth2 key:
 
 Pro level clients can also connect with OAuth2. This supports multiple clients on one Moodle installation.
 
-On the API key -page click on `Generate new client secret` for OAuth2 Client Credentials. Give a description for the key and copy the client id and secret values into OBF Moodle plugin settings, in `Site administration > Open Badges > Settings`.
+On the API key page click on `Generate new client secret` for OAuth2 Client Credentials. Give a description for the key and copy the client id and secret values into OBF Moodle plugin settings, in `Site administration > Open Badges > Settings`.
 
 Changelog
 ------------------
+
+1.0.2
+
+- Fix deprecated code issues in Moodle 4.3
 
 1.0.1
 
