@@ -49,7 +49,7 @@ class obf_config_oauth2_form extends moodleform {
     }
 
     public function definition() {
-        global $DB, $PAGE;
+        global $DB, $PAGE, $USER;
 
         $mform = $this->_form;
 
@@ -116,7 +116,10 @@ class obf_config_oauth2_form extends moodleform {
         }
 
         // Generate an array of badge categories.
-        $client = obf_client::get_instance();
+        $oauthid = optional_param('id', null, PARAM_INT);
+        $oauth2 = $DB->get_record('local_obf_oauth2', ['id' => $oauthid]);
+        $client = obf_client::connect($oauth2->client_id, $USER);
+
         $badgecategories = array(
             0 => 'All'
         );
@@ -131,7 +134,7 @@ class obf_config_oauth2_form extends moodleform {
         }
 
         $rules = $DB->get_records_sql('SELECT ruleid FROM {local_obf_rulescateg} WHERE oauth2_id = ? GROUP BY ruleid',
-            ['oauth2_id' => optional_param('id', null, PARAM_INT)]);
+            ['oauth2_id' => $oauthid]);
 
         // Vérifier si $rules est null ou vide.
         $numberofrule = 0;

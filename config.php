@@ -175,23 +175,18 @@ switch ($action) {
                 $DB->execute('INSERT INTO {local_obf_oauth2_role} (oauth2_id, role_id) VALUES (?,?)', array($clientid, $r));
             }
 
-            $oauth2id = optional_param('id', null, PARAM_INT);
-            if ($oauth2id == 0) {
-                $oauth2id = $clientid;
-            }
-
             // Delete rule.
             if (isset($data->delete_rule) && $data->delete_rule == 1) {
                 // Delete record.
-                $DB->delete_records('local_obf_rulescateg', ['ruleid' => $data->delete_rule_id]);
+                $DB->delete_records('local_obf_rulescateg', ['ruleid' => $data->delete_rule_id, 'oauth2_id' => $clientid]);
 
                 // Reload the page and focus on the newly created rule.
-                redirect(new moodle_url('/local/obf/config.php?action=edit&id=' . $oauth2id));
+                redirect(new moodle_url('/local/obf/config.php?action=edit&id=' . $clientid));
             }
 
             // Save rules.
             $rules = $DB->get_records_sql('SELECT ruleid, id FROM {local_obf_rulescateg} WHERE oauth2_id = ? GROUP BY ruleid',
-                ['oauth2_id' => $oauth2id]);
+                ['oauth2_id' => $clientid]);
 
             // This code handles the creation and insertion of new rules based on the provided data.
             // If $rules is empty, it creates rules based on $data.
@@ -204,7 +199,7 @@ switch ($action) {
                     $badgecategorienames = $data->{'badgecategoriename_' . $rule->ruleid};
 
                     // Delete the existing rule.
-                    $DB->delete_records('local_obf_rulescateg', ['ruleid' => $rule->ruleid]);
+                    $DB->delete_records('local_obf_rulescateg', ['ruleid' => $rule->ruleid, 'oauth2_id' => $clientid]);
 
                     if (in_array(0, $coursecategorieids) && !empty($badgecategorienames)) {
                         // Loop through all Moodle categories.
@@ -213,7 +208,7 @@ switch ($action) {
                         foreach ($allmoodlecategories as $category) {
                             foreach ($badgecategorienames as $badgecategoriename) {
                                 // Create a new rule.
-                                $newrule = createnewrule($rule->ruleid, $oauth2id, $category->id, $badgecategoriename);
+                                $newrule = createnewrule($rule->ruleid, $clientid, $category->id, $badgecategoriename);
 
                                 // Insert the new rule.
                                 $DB->insert_record('local_obf_rulescateg', $newrule);
@@ -225,14 +220,14 @@ switch ($action) {
                             if (empty($badgecategorienames)) {
                                 $badgecategoriename = null;
                                 // Create a new rule.
-                                $newrule = createnewrule($rule->ruleid, $oauth2id, $categoryid, $badgecategoriename);
+                                $newrule = createnewrule($rule->ruleid, $clientid, $categoryid, $badgecategoriename);
 
                                 // Insert the new rule.
                                 $DB->insert_record('local_obf_rulescateg', $newrule);
                             } else {
                                 foreach ($badgecategorienames as $badgecategoriename) {
                                     // Create a new rule.
-                                    $newrule = createnewrule($rule->ruleid, $oauth2id, $categoryid, $badgecategoriename);
+                                    $newrule = createnewrule($rule->ruleid, $clientid, $categoryid, $badgecategoriename);
 
                                     // Insert the new rule.
                                     $DB->insert_record('local_obf_rulescateg', $newrule);
@@ -250,13 +245,13 @@ switch ($action) {
                 $newrule->ruleid = $data->numberofrule + 1;
                 $newrule->coursecategorieid = null;
                 $newrule->badgecategoriename = null;
-                $newrule->oauth2_id = $oauth2id;
+                $newrule->oauth2_id = $clientid;
 
                 // Insert the new rule into the database.
                 $DB->insert_record('local_obf_rulescateg', $newrule);
 
                 // Reload the page and focus on the newly created rule.
-                redirect(new moodle_url('/local/obf/config.php?action=edit&id=' . $oauth2id));
+                redirect(new moodle_url('/local/obf/config.php?action=edit&id=' . $clientid));
             }
 
             redirect($listclients, get_string('clientsaved', 'local_obf'));
