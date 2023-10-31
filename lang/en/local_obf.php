@@ -362,7 +362,7 @@ $string['coursereset'] = "Delete awarding rules when course is reset.";
 
 $string['image_not_found'] = 'Error: The link to the badge image could not be retrieved.';
 
-$string['rules'] = 'Rules';
+$string['rules'] = 'Rule';
 $string['addrules'] = 'Add a rule';
 $string['choosecategories'] = 'Choose your moodle categories';
 $string['chooseurbadgecategories'] = 'Choose your OBF categories';
