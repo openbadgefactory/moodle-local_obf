@@ -96,15 +96,17 @@ class obf_client {
      */
     public static function get_instance($transport = null) {
         global $DB;
+
         if (is_null(self::$client)) {
 
             self::$client = new self();
 
             $oauth2 = $DB->get_records('local_obf_oauth2', null, 'client_name');
             if (count($oauth2) > 0) {
-                // Use the first one by default.
+
                 $o2 = current($oauth2);
                 if (self::$clientid) {
+                    // Use the first one by default.
                     foreach ($oauth2 as $o) {
                         if ($o->client_id === self::$clientid) {
                             $o2 = $o;
