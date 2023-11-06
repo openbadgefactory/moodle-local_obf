@@ -46,6 +46,10 @@ On the API key page click on `Generate new client secret` for OAuth2 Client Cred
 Changelog
 ------------------
 
+1.0.3
+
+- Fix issues related to categories when multiple clients are connected
+
 1.0.2
 
 - Fix deprecated code issues in Moodle 4.3
