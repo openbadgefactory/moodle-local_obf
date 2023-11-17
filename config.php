@@ -135,6 +135,9 @@ switch ($action) {
         if ($clientid) {
             $isadding = false;
             $clientrecord = $DB->get_record('local_obf_oauth2', array('id' => $clientid), '*', MUST_EXIST);
+
+            obf_client::connect($clientrecord->client_id, $USER);
+
             $clientsecret = $clientrecord->client_secret;
             // Mask previusly set client secret in config form.
             $clientrecord->client_secret = '* * * * * * * * * * * * * * * * * *' . substr($clientsecret, -3, 3);

@@ -116,13 +116,12 @@ class obf_config_oauth2_form extends moodleform {
         }
 
         // Generate an array of badge categories.
-        $oauthid = optional_param('id', null, PARAM_INT);
-        $oauth2 = $DB->get_record('local_obf_oauth2', ['id' => $oauthid]);
-        $client = obf_client::connect($oauth2->client_id, $USER);
 
         $badgecategories = array(
             0 => 'All'
         );
+
+        $client = obf_client::get_instance();
 
         if ($client->client_id() && $client->oauth2_access_token()) {
             $clientcateg = $client->get_categories();
@@ -132,6 +131,8 @@ class obf_config_oauth2_form extends moodleform {
                 }
             }
         }
+
+        $oauthid = optional_param('id', null, PARAM_INT);
 
         $rules = $DB->get_records_sql('SELECT ruleid FROM {local_obf_rulescateg} WHERE oauth2_id = ? GROUP BY ruleid',
             ['oauth2_id' => $oauthid]);
