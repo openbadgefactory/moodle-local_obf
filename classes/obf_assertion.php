@@ -604,7 +604,7 @@ class obf_assertion {
      * @return string
      */
     public function get_client_id() {
-        return $this->client_id;
+        return $this->clientid;
     }
 
     /**
@@ -613,7 +613,7 @@ class obf_assertion {
      * @param string $id
      */
     public function set_client_id($clientid) {
-        $this->client_id = $clientid;
+        $this->clientid = $clientid;
         return $this;
     }
 
@@ -747,7 +747,7 @@ class obf_assertion {
      * @return mixed
      */
     public function get_log_entry($key) {
-        return isset($this->log_entry[$key]) ? $this->log_entry[$key] : null;
+        return isset($this->logentry[$key]) ? $this->logentry[$key] : null;
     }
 
     /**
@@ -755,7 +755,7 @@ class obf_assertion {
      * @return $this
      */
     public function set_log_entry($logentry) {
-        $this->log_entry = $logentry;
+        $this->logentry = $logentry;
         return $this;
     }
 

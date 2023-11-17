@@ -233,11 +233,11 @@ class obf_config_oauth2_form extends moodleform {
                 $input = (object) $data;
                 $client->set_oauth2($input);
                 $res = $client->oauth2_access_token();
-                $this->access_token = $res['access_token'];
-                $this->token_expires = $res['token_expires'];
+                $this->accesstoken = $res['access_token'];
+                $this->tokenexpires = $res['token_expires'];
 
                 $issuer = $client->get_issuer();
-                $this->client_name = $issuer['name'];
+                $this->clientname = $issuer['name'];
             } catch (Exception $e) {
                 $errors['client_secret'] = get_string('invalidclientsecret', 'local_obf');
             }
@@ -250,9 +250,9 @@ class obf_config_oauth2_form extends moodleform {
         $data = parent::get_data();
 
         if ($data && $this->isadding) {
-            $data->access_token = $this->access_token;
-            $data->token_expires = $this->token_expires;
-            $data->client_name = $this->client_name;
+            $data->access_token = $this->accesstoken;
+            $data->token_expires = $this->tokenexpires;
+            $data->client_name = $this->clientname;
         }
         return $data;
     }
