@@ -58,6 +58,7 @@ class obf_client {
      */
     private static $clientid = null;
 
+
     /**
      * @var curl|null Transport. Curl.
      */
@@ -85,6 +86,11 @@ class obf_client {
      */
     private $enablerawresponse = false;
 
+    /**
+     * @var array event id => api details lookup table
+     */
+    private $eventlookup = null;
+
     const RETRIEVE_ALL = 'all';
     const RETRIEVE_LOCAL = 'local';
 
@@ -96,17 +102,15 @@ class obf_client {
      */
     public static function get_instance($transport = null) {
         global $DB;
-
         if (is_null(self::$client)) {
 
             self::$client = new self();
 
             $oauth2 = $DB->get_records('local_obf_oauth2', null, 'client_name');
             if (count($oauth2) > 0) {
-
+                // Use the first one by default.
                 $o2 = current($oauth2);
                 if (self::$clientid) {
-                    // Use the first one by default.
                     foreach ($oauth2 as $o) {
                         if ($o->client_id === self::$clientid) {
                             $o2 = $o;
@@ -472,6 +476,9 @@ class obf_client {
      * @return int Returns the error code on failure and -1 on success.
      */
     public function test_connection() {
+        if (!self::has_client_id()) {
+            return 0;
+        }
         try {
             $url = $this->obf_url() . '/v1/ping/' . $this->client_id();
             $this->request('get', $url);
@@ -629,7 +636,6 @@ class obf_client {
         if (is_null($badgeid) && !is_null($email)) {
             return array();
         }
-
         if ($this->local_events()) {
             $params['api_consumer_id'] = OBF_API_CONSUMER_ID;
         }
@@ -669,6 +675,8 @@ class obf_client {
             return $this->decode_ldjson($res);
         }
 
+        $this->eventlookup = [];
+
         $prevo2 = $this->oauth2;
 
         $oauth2 = $DB->get_records('local_obf_oauth2');
@@ -678,10 +686,16 @@ class obf_client {
             foreach ($oauth2 as $o2) {
                 $this->set_oauth2($o2);
 
-                $url = $this->obf_url() . '/v1/event/' . $this->client_id();
+                $host = $this->obf_url();
+                $url = $host . '/v1/event/' . $this->client_id();
                 $res = $this->request('get', $url, $params);
 
-                $out = array_merge($out, $this->decode_ldjson($res));
+                foreach ($this->decode_ldjson($res) as $r) {
+                    // Collect host info and add to $out
+                    $this->eventlookup[$r['id']] = ['host' => $host];
+                    $out[] = $r;
+                }
+
             }
         }
         $this->set_oauth2($prevo2);
@@ -993,11 +1007,21 @@ class obf_client {
     }
 
     public function pub_get_badge($badgeid, $eventid) {
-        $url = $this->obf_url() . '/v1/badge/_/' . $badgeid . '.json';
-        $params = array('v' => '1.1', 'event' => $eventid);
-        $res = $this->request('get', $url, $params);
+        if ($this->eventlookup && isset($this->eventlookup[$eventid]['host'])) {
+            $host = $this->eventlookup[$eventid]['host'];
+        }
+        else {
+            $host = $this->obf_url();
+        }
 
-        return json_decode($res, true);
+        $url = $host . '/v1/badge/_/' . $badgeid . '.json';
+        $params = array('v' => '1.1', 'event' => $eventid);
+        try {
+            $res = $this->request('get', $url, $params);
+            return json_decode($res, true);
+        } catch (Exception $e) {
+            debugging('');
+        }
     }
 
     // LEGACY api auth.
