@@ -248,7 +248,6 @@ function local_obf_myprofile_navigation(\core_user\output\myprofile\tree $tree, 
         $category = new core_user\output\myprofile\category('local_obf/badges', get_string('profilebadgelist', 'local_obf'), null);
         $tree->add_category($category);
 
-        adduserbadges($tree, $user);
         addobfbadges($tree, $user);
         addbackpackbadges($tree, $user);
         addmoodlebadges($tree, $user);
@@ -266,15 +265,23 @@ function addobfbadges($tree, $user): void {
 
     $assertions = local_obf_myprofile_get_assertions($user->id, $DB);
 
+    $param['nameinstance'] = get_site()->fullname;
+    $category = new core_user\output\myprofile\category('local_obf/badgesplatform',
+        get_string('badgesplatform', 'local_obf', $param), null);
+    $tree->add_category($category);
+
     if ($assertions !== false && count($assertions) > 0) {
         $renderer = $PAGE->get_renderer('local_obf');
         $content = $renderer->render_user_assertions($assertions, $user, false);
         $content .= html_writer::tag('button',
             get_string('showmore', 'local_obf'), ['class' => 'btn btn-primary show-more-button hidden']);
-        $localnode = new core_user\output\myprofile\node('local_obf/badges', 'obfbadges',
-            '', null, null, $content, null, 'local-obf');
-        $tree->add_node($localnode);
+    } else {
+        $content = get_string('nobadgesearned', 'local_obf');
     }
+
+    $localnode = new core_user\output\myprofile\node('local_obf/badgesplatform', 'obfbadges',
+        '', null, null, $content, null, 'local-obf');
+    $tree->add_node($localnode);
 }
 
 /**
@@ -337,59 +344,6 @@ function addmoodlebadges($tree, $user): void {
     }
 }
 
-/**
- * Adds user badges to the profile tree.
- *
- * @param \core_user\output\myprofile\tree $tree
- * @param stdClass $user
- */
-function adduserbadges($tree, $user): void {
-    global $PAGE, $DB;
-
-    $clientid = obf_client::get_instance()->client_id();
-
-    if (!empty($clientid)) {
-        // Get user's badges in OBF.
-        $assertions = new obf_assertion_collection();
-
-        try {
-            $client = obf_client::get_instance();
-            $blacklist = new obf_blacklist($user->id);
-
-            // Get badges issued with previous emails.
-            $historyemails = $DB->get_records('local_obf_history_emails', array('user_id' => $user->id), '', 'email');
-            foreach ($historyemails as $email) {
-                $assertions->add_collection(obf_assertion::get_assertions_all($client, $email->email));
-            }
-
-            $assertions->apply_blacklist($blacklist);
-
-        } catch (Exception $e) {
-            debugging('Getting OBF assertions for user id: ' . $user->id . ' failed: ' . $e->getMessage());
-        }
-
-        // Sort array of assertions.
-        $assertions->sort_assertions_byid('DESC');
-
-        $renderer = $PAGE->get_renderer('local_obf');
-        $param['nameinstance'] = get_site()->fullname;
-        $category = new core_user\output\myprofile\category('local_obf/badgesplatform',
-            get_string('badgesplatform', 'local_obf', $param), null);
-        $tree->add_category($category);
-
-        if (count($assertions) > 0) {
-            $content = $renderer->render_user_assertions($assertions, $user, false);
-            $content .= html_writer::tag('button',
-                get_string('showmore', 'local_obf'), ['class' => 'btn btn-primary show-more-button hidden']);
-        } else {
-            $content = get_string('nobadgesearned', 'local_obf');
-        }
-
-        $localnode = new core_user\output\myprofile\node('local_obf/badgesplatform', 'obfbadges',
-            '', null, null, $content, null, 'local-obf');
-        $tree->add_node($localnode);
-    }
-}
 
 /**
  * Returns (cached) assertions for user
@@ -403,36 +357,33 @@ function local_obf_myprofile_get_assertions($userid, $db) {
     $assertions = get_config('local_obf', 'disableassertioncache') ? null : $cache->get($userid);
 
     if (!$assertions) {
-        require_once(__DIR__ . '/classes/blacklist.php');
         // Get user's badges in OBF.
         $assertions = new obf_assertion_collection();
+
         try {
             $client = obf_client::get_instance();
             $blacklist = new obf_blacklist($userid);
-            $historyemailscount = $db->count_records('local_obf_history_emails', array('user_id' => $userid));
-            $historyemails = $db->get_records('local_obf_history_emails', array('user_id' => $userid), '', 'email');
-            $deleted = array();
-            foreach ($historyemails as $key => $email) {
-                $deleted[] = $key;
-            }
-            $assertions->add_collection(obf_assertion::get_assertions($client,
-                null, $db->get_record('user', array('id' => $userid))->email, -1, true));
+
+            $useremails = [];
+            $useremails[] = $db->get_record('user', array('id' => $userid))->email;
 
             // Get badges issued with previous emails.
-            if ($historyemailscount >= 1) {
-                foreach ($deleted as $email) {
-                    $assertions->add_collection(obf_assertion::get_assertions($client, null,
-                        $db->get_record('local_obf_history_emails',
-                            array('user_id' => $userid, 'email' => $email))->email, -1, true));
-                }
+            $historyemails = $db->get_records('local_obf_history_emails', array('user_id' => $userid), '', 'email');
+            foreach ($historyemails as $email) {
+                $useremails[] = $email->email;
             }
+            foreach (array_unique($useremails) as $email) {
+                $assertions->add_collection(obf_assertion::get_assertions_all($client, $email));
+            }
+
             $assertions->apply_blacklist($blacklist);
+
+            $assertions->toarray(); // This makes sure issuer objects are populated and cached.
+            $cache->set($userid, $assertions);
+
         } catch (Exception $e) {
             debugging('Getting OBF assertions for user id: ' . $userid . ' failed: ' . $e->getMessage());
         }
-
-        $assertions->toarray(); // This makes sure issuer objects are populated and cached.
-        $cache->set($userid, $assertions);
     }
     return $assertions;
 }
