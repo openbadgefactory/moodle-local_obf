@@ -46,6 +46,11 @@ On the API key page click on `Generate new client secret` for OAuth2 Client Cred
 Changelog
 ------------------
 
+1.0.4
+
+- User profile page badge list fixes
+- Minor bug fixes
+
 1.0.3
 
 - Fix issues related to categories when multiple clients are connected
