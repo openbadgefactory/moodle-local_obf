@@ -626,6 +626,8 @@ class obf_criterion {
         $selfreviewusers = array();
         $selfreviewsupported = true;
 
+        $requireall = $this->get_completion_method() == self::CRITERIA_COMPLETION_ALL;
+
         foreach ($criterioncourses as $crit) {
             $reviewresult = $crit->review($this, $criterioncourses,
                 $selfreviewextra);
