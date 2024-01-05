@@ -438,7 +438,7 @@ class obf_badge {
             throw new Exception('Invalid or missing badge id');
         }
 
-        $course = $this->course_id;
+        $course = $this->courseid;
         $activity = null;
         if (!empty($items)) {
             $course = $items[0]->get_courseid();
@@ -1033,7 +1033,7 @@ class obf_badge {
      * @return int
      */
     public function get_course_id() {
-        return $this->course_id;
+        return $this->courseid;
     }
 
     /**
@@ -1043,7 +1043,7 @@ class obf_badge {
      * @return $this
      */
     public function set_course_id($courseid) {
-        $this->course_id = $courseid;
+        $this->courseid = $courseid;
         return $this;
     }
 

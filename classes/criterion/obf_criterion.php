@@ -864,8 +864,8 @@ class obf_criterion {
      */
     public function set_badge(obf_badge $badge) {
         $this->badge = $badge;
-        $this->badge_id = $badge->get_id();
-        $this->client_id = $badge->get_client_id();
+        $this->badgeid = $badge->get_id();
+        $this->clientid = $badge->get_client_id();
         return $this;
     }
 
