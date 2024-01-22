@@ -46,6 +46,10 @@ On the API key page click on `Generate new client secret` for OAuth2 Client Cred
 Changelog
 ------------------
 
+1.0.6
+
+- Small fixes to plugin config and activity awarding rules
+
 1.0.5
 
 - Course completion awarding rule fix
