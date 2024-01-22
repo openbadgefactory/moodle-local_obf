@@ -196,9 +196,13 @@ class obf_criterion_activity extends obf_criterion_course {
                 $activities[$cmrecord->id]['sectionname'] = $section->name;
             }
 
-            $imageicon = html_writer::empty_tag('img',
-                ['src' => get_fast_modinfo($courseid)->get_cms()[$cmrecord->id]->get_icon_url(),
-                'class' => 'activityicon', 'alt' => '', 'role' => 'presentation', 'aria-hidden' => 'true']);
+            try {
+                $imageicon = html_writer::empty_tag('img',
+                    ['src' => get_fast_modinfo($courseid)->get_cm($cmrecord->id)->get_icon_url(),
+                    'class' => 'activityicon', 'alt' => '', 'role' => 'presentation', 'aria-hidden' => 'true']);
+            } catch (\moodle_exception $e) {
+                $imageicon = '';
+            }
 
             $activities[$cmrecord->id]['name'] =
                 $imageicon . ' ' .
