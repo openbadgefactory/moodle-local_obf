@@ -188,7 +188,7 @@ switch ($action) {
             }
 
             // Save rules.
-            $rules = $DB->get_records_sql('SELECT ruleid, id FROM {local_obf_rulescateg} WHERE oauth2_id = ? GROUP BY ruleid',
+            $rules = $DB->get_records_sql('SELECT DISTINCT ruleid FROM {local_obf_rulescateg} WHERE oauth2_id = ?',
                 ['oauth2_id' => $clientid]);
 
             // This code handles the creation and insertion of new rules based on the provided data.
