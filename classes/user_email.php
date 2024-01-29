@@ -179,19 +179,8 @@ class obf_user_email {
         }
         $user->email = $email;
         $from = get_admin();
-        $a = new stdClass();
-        $a->token = $token;
-        $tokenurl = new moodle_url('/local/obf/verifyemail.php', array(
-            'action' => 'verify_token',
-            'assertion' => json_encode(array(
-                'token' => $token,
-                'userid' => $userid,
-                'email' => $email
-            ))
-        ));
-        $a->tokenurl = $tokenurl->out(false);
         $subject = get_string('emailverifytokenemailsubject', 'local_obf');
-        $messagetext = get_string('emailverifytokenemailbody', 'local_obf', $a);
+        $messagetext = get_string('emailverifytokenemailbody2', 'local_obf') . "\n\n" . $token . "\n";
         return email_to_user($user, $from, $subject, $messagetext);
     }
 }

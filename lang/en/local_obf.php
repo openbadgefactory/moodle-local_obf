@@ -201,8 +201,7 @@ $string['emailsubject'] = 'Email subject';
 $string['emailtemplatesaved'] = 'Email template was successfully saved.';
 $string['emailtemplatedescription'] =
     'Here you can set the default template for the email that will be sent to the user receiving this badge. The email can be customized before the badge is awarded.';
-$string['emailverifytokenemailbody'] =
-    "You must verify your email address.\nVerification code: {\$a->token} \nVerification url: {\$a->tokenurl}";
+$string['emailverifytokenemailbody2'] = 'Please verify your email address. Verification code:';
 $string['emailverifytokenemailsubject'] = 'Email verification';
 $string['eventrevoked'] = 'Event revoked for {$a}.';
 $string['evidence'] = 'Evidence';
