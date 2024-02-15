@@ -217,7 +217,7 @@ class obf_assertion_collection implements Countable, IteratorAggregate {
      */
     private function find_user_by_email($email) {
         foreach ($this->users as $user) {
-            if ($user->email == $email) {
+            if (mb_strtolower($user->email) == mb_strtolower($email)) {
                 return $user;
             }
         }
