@@ -627,15 +627,23 @@ class obf_criterion {
         $selfreviewsupported = true;
 
         $requireall = $this->get_completion_method() == self::CRITERIA_COMPLETION_ALL;
+        $first_crit = true;
 
         foreach ($criterioncourses as $crit) {
-            $reviewresult = $crit->review($this, $criterioncourses,
-                $selfreviewextra);
+            $reviewresult = $crit->review($this, $criterioncourses, $selfreviewextra);
 
-            if (count($selfreviewusers) == 0 || !$requireall) {
-                $selfreviewusers = array_merge($selfreviewusers, $reviewresult);
-            } else { // Require all courses complete.
+            if ($first_crit) {
+                // first loop, initialize user list
+                $selfreviewusers = $reviewresult;
+                $first_crit = false;
+            }
+            else if ($requireall) {
+                // Require all courses complete.
                 $selfreviewusers = array_intersect_key($selfreviewusers, $reviewresult);
+            }
+            else {
+                // Require some courses.
+                $selfreviewusers = array_merge($selfreviewusers, $reviewresult);
             }
         }
 
