@@ -203,7 +203,7 @@ $string['emailtemplatedescription'] =
     'Here you can set the default template for the email that will be sent to the user receiving this badge. The email can be customized before the badge is awarded.';
 $string['emailverifytokenemailbody2'] = 'Please verify your email address. Verification code:';
 $string['emailverifytokenemailsubject'] = 'Email verification';
-$string['eventrevoked'] = 'Event revoked for {$a}.';
+$string['eventrevoked'] = 'The badge has been successfully revoked for {$a}.';
 $string['evidence'] = 'Evidence';
 $string['expiresby'] = 'Expires';
 $string['expired'] = 'Expired';
@@ -295,17 +295,17 @@ $string['pubkeyrequestfailed'] = 'There was an error while requesting the public
 $string['readmeenablecompletion'] = 'Badge earning criteria';
 $string['readmeenablecompletion_help'] =
     '<p>In order for the automatic badge earning criteria to function properly, the completion tracking has to be enabled. </p><p>Easiest way to enable completion tracking is:</p><ol><li>Locate the "Settings" -block.</li><li>Type "enablecompletion" into the search box, and hit search.</li><li>Enable completion tracking: Yes.</li><li>Optional, but recommended: Enable completion tracking on course default settings.</li></ol><strong>Course settings</strong><p>If completion tracking is not enabled on course default settings, or course tracking is disabled on a course, the completion tracking can be enabled via the <i>Course administration-&gt;Edit settings</i> -page.</p>';
-$string['recipients'] = 'Recipients';
+$string['recipients'] = 'Recipient(s)';
 $string['recipientcandidates'] = 'Users matching the search';
 $string['requesttoken'] = 'OBF request token';
 $string['requesttoken_help'] =
     '<p>Paste here the token that is used to connect to Open Badge Factory API.</p><p>To generate the required API key, log in to <a href="https://openbadgefactory.com">Open Badge Factory</a>,  in the \'<i>Admin tools</i>\' -page, open the \'<i>API key</i>\' -link, and click on \'<i>Generate certificate signing request token</i>\'. Copy the generated token into Moodle.</p>';
 $string['resetfilter'] = 'Reset filter';
-$string['reviewcriterionaftersave'] = 'Review rule after saving';
+$string['reviewcriterionaftersave'] = 'Examine the rule retroactively';
 $string['reviewcriterionaftersave_help'] =
     'If this checkbox is checked, the rule will be reviewed after saving and if someone has already met this rule earlier, this badge will then be automatically awarded.';
 $string['revoke'] = 'Revoke';
-$string['revokeuserbadges'] = 'Revoke user badges';
+$string['revokeuserbadges'] = 'Revoke badge';
 $string['saveconfiguration'] = 'Continue';
 $string['savecriteria'] = 'Save';
 $string['savesettings'] = 'Save';
@@ -442,7 +442,8 @@ $string['badgesplatform'] = 'Badges earned on {$a->nameinstance}';
 $string['showmore'] = 'Show more';
 
 $string['congratsbadgeearned'] = 'Congrats! You earned a new badge: {$a}';
-$string['newbadgeearned'] = '<b>{$a->courselink}</b><br><hr><br>You earned a new badge: <b>{$a->badgelink}</b><br><br>Please check your email for more information';
+$string['newbadgeearned'] = '<b>{$a->courselink}</b><br><hr><br>You have earned a new badge:<b>{$a->badgelink}</b><br><br>You have received an email explaining how to
+obtain your badge. <br>If you cannot find this email, we invite you to check your spam or junk mail folders.';
 
 $string['badgerevokedsubject'] = 'The {$a->badgename} badge has been revoked for users ...';
 $string['badgerevokedbody'] = 'The <b>{$a->badgename}</b> badge has been revoked to <b>{$a->firstname} {$a->lastname}</b>.';
