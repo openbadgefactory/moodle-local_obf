@@ -562,7 +562,13 @@ class obf_client {
         $url = $this->obf_url() . '/v1/badge/' . $this->client_id();
         $res = $this->request('get', $url, $params);
 
-        return $this->decode_ldjson($res);
+        $out = $this->decode_ldjson($res);
+
+        usort($out, function ($a, $b) {
+            return strcasecmp($a['name'], $b['name']);
+        });
+
+        return $out;
     }
 
     /**

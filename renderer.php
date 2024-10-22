@@ -525,8 +525,9 @@ class local_obf_renderer extends plugin_renderer_base {
             $items = '';
 
             foreach ($badges as $badge) {
+                $name = s($badge->get_name());
                 $badgeimage = $this->print_badge_image($badge, -1);
-                $badgename = html_writer::tag('p', s($badge->get_name()), array('class' => 'badgename'));
+                $badgename = html_writer::tag('p', $name, array('class' => 'badgename'));
 
                 $url = new moodle_url('/local/obf/badge.php',
                     array('clientid' => $this->get_client_id(), 'id' => $badge->get_id(), 'action' => 'show'));
@@ -536,7 +537,7 @@ class local_obf_renderer extends plugin_renderer_base {
                 }
 
                 $items .= html_writer::tag('li',
-                    local_obf_html::div(html_writer::link($url, $badgeimage . $badgename), 'obf-badge'),
+                    local_obf_html::div(html_writer::link($url, $badgeimage . $badgename, array('title' => $name)), 'obf-badge'),
                     array('data-categories' => json_encode($badge->get_categories())));
             }
 
