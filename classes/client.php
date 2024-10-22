@@ -35,6 +35,7 @@ use html_writer;
 use local_obf_html;
 use moodle_url;
 use url;
+use \Collator;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -564,8 +565,10 @@ class obf_client {
 
         $out = $this->decode_ldjson($res);
 
-        usort($out, function ($a, $b) {
-            return strcasecmp($a['name'], $b['name']);
+        $coll = new Collator('root');
+        $coll->setStrength( Collator::PRIMARY );
+        usort($out, function ($a, $b) use ($coll) {
+            return $coll->compare($a['name'], $b['name']);
         });
 
         return $out;
