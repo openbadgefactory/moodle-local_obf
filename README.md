@@ -46,6 +46,10 @@ On the API key page click on `Generate new client secret` for OAuth2 Client Cred
 Changelog
 ------------------
 
+1.0.10
+
+- Minor improvements to badge listing: sorting, show full name
+
 1.0.8
 
 - Badge awarding rules and history fixes
