@@ -133,6 +133,7 @@ $string['confirmdelete'] = 'Are you sure you want to delete the record {$a} ?';
 $string['confirmcriteriondeletion'] = 'Are you sure you want to delete this awarding rule?';
 $string['confirmrevokation'] = 'Are you sure you want to revoke the users badge?';
 $string['connect'] = 'Connect {$a}';
+$string['connectionerror'] = "An error occurred during the attempt to connect to the server. This can happen if your subscription has been revoked or if our servers are unreachable. If the problem persists, please contact your support.";
 $string['connectionisworking'] = 'OBF connection is up and working. The client certificate expires in <strong>{$a}</strong>.';
 $string['connectionstatus'] = 'Connection status';
 $string['coursealreadyincriterion'] =

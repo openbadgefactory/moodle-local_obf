@@ -209,4 +209,12 @@ class obf_email {
         return $this;
     }
 
+    /**
+     * Serializes the object to a JSON-compatible representation.
+     *
+     * @return object An object containing all public properties of the current object.
+     */
+    public function jsonSerialize() {
+        return (object) get_object_vars($this);
+    }
 }

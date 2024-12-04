@@ -193,6 +193,11 @@ class obf_client {
         return $DB->get_records_sql_menu($sql, array($user->id));
     }
 
+    /**
+     * Checks if there is at least one client_id stored in the database or if the obfclientid config is not empty.
+     *
+     * @return bool Returns true if at least one client_id is found, false otherwise.
+     */
     public static function has_client_id() {
         global $DB;
         return $DB->count_records('local_obf_oauth2') > 0 || !empty(get_config('local_obf', 'obfclientid'));
@@ -803,6 +808,13 @@ class obf_client {
 
     public function issue_badge(obf_badge $badge, $recipients, $issuedon, $email, $criteriaaddendum, $course, $activity) {
         global $CFG, $DB;
+
+        // Before doing anything we test connection.
+        // If test_connection failed we throw an Error.
+        $httpcode = $this->test_connection();
+        if ($httpcode >= 300) {
+            throw new Exception(get_string('connectionerror', 'local_obf'), $httpcode);
+        }
 
         $recipientsnameemail = [];
 

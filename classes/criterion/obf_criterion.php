@@ -32,6 +32,7 @@ use classes\obf_email;
 use classes\obf_issue_event;
 use completion_completion;
 use completion_info;
+use Exception;
 use moodle_database;
 use stdClass;
 
@@ -243,7 +244,13 @@ class obf_criterion {
 
         $criteriaaddendum = $this->get_use_addendum() ? $this->get_criteria_addendum() : '';
 
-        $eventid = $badge->issue($recipients, time(), $email, $criteriaaddendum, $this->items);
+        try {
+            $eventid = $badge->issue($recipients, time(), $email, $criteriaaddendum, $this->items);
+        } catch (Exception $e) {
+            $this->handle_issuefailed($recipients, time(), $email, $criteriaaddendum, $this->items);
+            return false;
+        }
+
         $this->set_met_by_user($user->id);
 
         if ($eventid && !is_bool($eventid)) {
@@ -679,7 +686,13 @@ class obf_criterion {
             }
 
             $criteriaaddendum = $this->get_use_addendum() ? $this->get_criteria_addendum() : '';
-            $eventid = $badge->issue($recipientemails, time(), $email, $criteriaaddendum, $this->get_items());
+
+            try {
+                $eventid = $badge->issue($recipientemails, time(), $email, $criteriaaddendum, $this->get_items());
+            } catch (Exception $e) {
+                $this->handle_issuefailed($recipients, time(), $email, $criteriaaddendum, $this->get_items());
+                return false;
+            }
 
             if ($eventid && !is_bool($eventid)) {
                 $issuevent = new obf_issue_event($eventid, $DB);
@@ -1034,5 +1047,37 @@ class obf_criterion {
     public function set_criteria_addendum($criteriaaddendum) {
         $this->criteriaaddendum = $criteriaaddendum;
         return $this;
+    }
+
+    /**
+     * Handle issue failed by storing relevant data into the database
+     *
+     * @param array $recipients An array containing recipients of the issue
+     * @param int $time The timestamp when the issue failed occurred
+     * @param obf_email $email The email object associated with the failed issue
+     * @param string $criteriaaddendum Additional criteria or notes related to the issue failure
+     * @param mixed $items Items related to the failed issue
+     *
+     * @return void
+     */
+    public function handle_issuefailed(array $recipients, int $time, obf_email $email, string $criteriaaddendum, $items) {
+        global $DB;
+
+        // Create a new object to store your data
+        $record = new stdClass();
+
+        // Then, for each variable, assign its value to the corresponding field in the record object
+        // Make sure the names of these properties match the columns of your database table
+        $record->recipients = json_encode($recipients);
+        $record->time = $time;
+        $record->email = json_encode($email->jsonSerialize());
+        $record->criteriaaddendum = $criteriaaddendum;
+        $itemsArray = array_map(function ($item) {
+            return (array) $item->jsonSerialize();
+        }, $items);
+        $record->items = serialize($itemsArray);
+
+        // Then, use the insert_record function to insert the new record into your database table
+        $DB->insert_record('local_obf_issuefailedrecord', $record);
     }
 }

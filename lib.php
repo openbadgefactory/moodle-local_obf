@@ -509,3 +509,21 @@ function createnewrule($ruleid, $oauth2id, $coursecategorieid, $badgecategoriena
     return $newrule;
 }
 
+/**
+ * Deletes a failed record from database.
+ *
+ * @param int $id The ID of the failed record.
+ * @return void
+ */
+function obf_delete_failed_record(int $id) {
+    global $DB;
+
+    $record = $DB->get_record('local_obf_issuefailedrecord', ['id' => $id]);
+
+    if (!$record) {
+        print_error('invalidrecordid', 'local_obf', '', $id);
+    }
+
+    $recordObject = new obf_issuefailedrecord($record);
+    $recordObject->delete();
+}

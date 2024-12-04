@@ -30,6 +30,7 @@ use context_course;
 use context_coursecat;
 use context_system;
 use core\message\message;
+use Exception;
 use stdClass;
 use type;
 

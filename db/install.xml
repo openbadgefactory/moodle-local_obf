@@ -201,6 +201,19 @@
                 <KEY NAME="fk_oauth2_id" TYPE="foreign" FIELDS="oauth2_id" REFTABLE="local_obf_oauth2" REFFIELDS="id" />
             </KEYS>
         </TABLE>
+        <TABLE NAME="local_obf_issuefailedrecord" COMMENT="Stores failed issue handling records">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="Unique ID"/>
+                <FIELD NAME="recipients" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="JSON encoded string of recipients"/>
+                <FIELD NAME="time" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Timestamp of the record"/>
+                <FIELD NAME="email" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="JSON encoded string of email content object"/>
+                <FIELD NAME="criteriaaddendum" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Additional criteria string"/>
+                <FIELD NAME="items" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="JSON encoded string of items array"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            </KEYS>
+        </TABLE>
     </TABLES>
 </XMLDB>
 
