@@ -1,0 +1,55 @@
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Recipients</th>
+            <th>Date</th>
+            <th>Info</th>
+            <th>Criteria Addendum</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{#records}}
+            <tr>
+                <td>{{id}}</td>
+                <td>{{recipients}}</td>
+                <td>{{timestamp}}</td>
+                <td>
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#emailModal-{{id}}">
+                        show content
+                    </button>
+                    <div class="modal fade" id="emailModal-{{id}}" tabindex="-1" role="dialog" aria-labelledby="emailModalLabel-{{id}}" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="emailModalLabel-{{id}}">{{email.subject}}</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <p><strong>Badge ID :</strong> {{email.badgeid}}</p>
+                                    <p><strong>Body :</strong> {{email.body}}</p>
+                                    <p><strong>Footer :</strong> {{email.footer}}</p>
+                                    <p><strong>Link Text :</strong> {{email.linktext}}</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td>{{criteriaAddendum}}</td>
+                <td>
+                    <a href="{{deleteUrl}}" class="btn btn-danger">
+                        Delete
+                    </a>
+                </td>
+            </tr>
+        {{/records}}
+        </tbody>
+    </table>
+</div>
