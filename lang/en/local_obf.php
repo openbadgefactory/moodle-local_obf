@@ -291,6 +291,7 @@ $string['profilebadgelist'] = 'Badges';
 $string['profilebadgelistbackpackprovider'] = '{$a} badges';
 $string['profilebadgelistmoz'] = 'Mozilla Backpack badges';
 $string['profilebadgelistobp'] = 'Open Badge Passport badges';
+$string['processobfissuefailedrecord'] = 'Process failed issued obf badges';
 $string['pubkeyextractionfailed'] = 'There was an error while extracting public key from certificate.';
 $string['pubkeyrequestfailed'] = 'There was an error while requesting the public key from the API';
 $string['readmeenablecompletion'] = 'Badge earning criteria';

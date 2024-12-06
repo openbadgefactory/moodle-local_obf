@@ -208,7 +208,7 @@
                 <FIELD NAME="time" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Timestamp of the record"/>
                 <FIELD NAME="email" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="JSON encoded string of email content object"/>
                 <FIELD NAME="criteriaaddendum" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Additional criteria string"/>
-                <FIELD NAME="items" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="JSON encoded string of items array"/>
+                <FIELD NAME="status" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Status of record, can be 'STATUS_PENDING', 'STATUS_ERROR', 'STATUS_SUCCESS'"/>
             </FIELDS>
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

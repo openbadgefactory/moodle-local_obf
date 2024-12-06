@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace classes;
+
 /**
  * Class to handle obf_issuefailedrecord elements.
  *
@@ -30,16 +32,22 @@ class obf_issuefailedrecord {
     protected $timestamp;
     protected $email;
     protected $criteriaAddendum;
-    protected $badgeId;
-    protected $badgeName;
+    protected $status;
     protected $items;
 
+    /**
+     * Constructor for initializing object properties from a given record.
+     *
+     * @param object $record An object containing properties for initialization.
+     * @return void
+     */
     public function __construct($record) {
         $this->id = $record->id;
         $this->recipients = $record->recipients;
         $this->timestamp = $record->time;
         $this->email = $record->email;
         $this->criteriaAddendum = $record->criteriaaddendum;
+        $this->status = $record->status;
     }
 
     public function getId() {
@@ -47,7 +55,7 @@ class obf_issuefailedrecord {
     }
 
     public function getRecipients() {
-        return $this->recipients;
+        return json_decode($this->recipients);
     }
 
     public function getTimestamp() {
@@ -61,6 +69,10 @@ class obf_issuefailedrecord {
 
     public function getCriteriaAddendum() {
         return $this->criteriaAddendum;
+    }
+
+    public function getStatus() {
+        return $this->status;
     }
 
     public function delete() {

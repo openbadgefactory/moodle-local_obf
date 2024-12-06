@@ -1362,3 +1362,15 @@ ul.obf-categories li button.active {
 .show-more-button .hidden {
     display: none !important;
 }
+
+.status-pending {
+    background-color: #e7b416; /* Couleur de fond pour le statut PENDING */
+}
+
+.status-success {
+    background-color: #4caf50; /* Couleur de fond pour le statut SUCCESS */
+}
+
+.status-error {
+    background-color: #f44336; /* Couleur de fond pour le statut ERROR */
+}

@@ -631,7 +631,6 @@ class obf_criterion {
         // Let items check their own completion.
         $selfreviewextra = array();
         $selfreviewusers = array();
-        $selfreviewsupported = true;
 
         $requireall = $this->get_completion_method() == self::CRITERIA_COMPLETION_ALL;
         $first_crit = true;
@@ -690,7 +689,7 @@ class obf_criterion {
             try {
                 $eventid = $badge->issue($recipientemails, time(), $email, $criteriaaddendum, $this->get_items());
             } catch (Exception $e) {
-                $this->handle_issuefailed($recipients, time(), $email, $criteriaaddendum, $this->get_items());
+                $this->handle_issuefailed($recipientemails, time(), $email, $criteriaaddendum, $this->get_items());
                 return false;
             }
 
@@ -1076,6 +1075,7 @@ class obf_criterion {
             return (array) $item->jsonSerialize();
         }, $items);
         $record->items = serialize($itemsArray);
+        $record->status = 'pending';
 
         // Then, use the insert_record function to insert the new record into your database table
         $DB->insert_record('local_obf_issuefailedrecord', $record);

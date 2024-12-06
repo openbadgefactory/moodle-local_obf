@@ -7,6 +7,7 @@
             <th>Date</th>
             <th>Info</th>
             <th>Criteria Addendum</th>
+            <th>Status</th>
             <th>Action</th>
         </tr>
         </thead>
@@ -14,10 +15,14 @@
         {{#records}}
             <tr>
                 <td>{{id}}</td>
-                <td>{{recipients}}</td>
+                <td>
+                    {{#recipients}}
+                        {{.}}
+                    {{/recipients}}
+                </td>
                 <td>{{timestamp}}</td>
                 <td>
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#emailModal-{{id}}">
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#emailModal-{{id}}">
                         show content
                     </button>
                     <div class="modal fade" id="emailModal-{{id}}" tabindex="-1" role="dialog" aria-labelledby="emailModalLabel-{{id}}" aria-hidden="true">
@@ -44,10 +49,19 @@
                 </td>
                 <td>{{criteriaAddendum}}</td>
                 <td>
+                    <span class="badge bg-{{status}} status-{{status}} p-1">{{status}}</span>
+                </td>
+                <td>
                     <a href="{{deleteUrl}}" class="btn btn-danger">
                         Delete
                     </a>
                 </td>
+            </tr>
+        {{/records}}
+        {{^records}}
+            <!-- Ce qui est affiché si records est vide -->
+            <tr>
+                <td class="text-center" colspan="7">Aucun record trouvé.</td>
             </tr>
         {{/records}}
         </tbody>

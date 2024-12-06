@@ -29,6 +29,7 @@ use classes\criterion\obf_criterion_activity;
 use context_course;
 use context_system;
 use dml_exception;
+use Exception;
 use moodle_url;
 use stdClass;
 

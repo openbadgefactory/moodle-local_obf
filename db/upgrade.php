@@ -869,7 +869,6 @@ function xmldb_local_obf_upgrade($oldversion) {
         $table->add_field('time', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null, null);
         $table->add_field('email', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, null);
         $table->add_field('criteriaaddendum', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, null);
-        $table->add_field('items', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, null);
 
         // Adding keys to table issuefailedrecord.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
@@ -881,6 +880,19 @@ function xmldb_local_obf_upgrade($oldversion) {
 
         // Savepoint reached.
         upgrade_plugin_savepoint(true, 2024120300, 'local', 'obf');
+    }
+
+    if ($oldversion < 2024120301) {
+        $table = new xmldb_table('local_obf_issuefailedrecord');
+        $field = new xmldb_field('status', XMLDB_TYPE_CHAR, '10', null, XMLDB_NOTNULL, null, null, null);
+
+        // Conditionally add field status to the local_obf_issuefailedrecord table.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // local_obf savepoint reached
+        upgrade_plugin_savepoint(true, 2024120301, 'local', 'obf');
     }
 
     return true;

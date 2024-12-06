@@ -23,6 +23,8 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use classes\obf_issuefailedrecord;
+
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/classes/obf_issuefailedrecord.php');
 require_once(__DIR__ . '/lib.php');
@@ -80,6 +82,7 @@ $failedRecords = array_values(array_map(function($record) {
         'timestamp' => userdate($recordObject->getTimestamp()),
         'email' => $recordObject->getEmail(),
         'criteriaAddendum' => $recordObject->getCriteriaAddendum(),
+        'status' => $recordObject->getStatus(),
         'deleteUrl' => (new moodle_url(
             '/local/obf/failrecordlist.php',
             [
@@ -91,6 +94,16 @@ $failedRecords = array_values(array_map(function($record) {
     ];
 },
     $records));
+
+// Format some data.
+foreach ($failedRecords as &$record) {
+    $count = count($record['recipients']);
+    foreach ($record['recipients'] as $index => &$recipient) {
+        if ($index !== $count - 1) {
+            $recipient .= ',';
+        }
+    }
+}
 
 $data = [ 'records' => $failedRecords ];
 echo $OUTPUT->render_from_template(

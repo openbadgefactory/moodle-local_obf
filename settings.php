@@ -65,4 +65,10 @@ if ($hasobfconfig) {
 
     $ADMIN->add('obf', $badgelist);
     $ADMIN->add('obf', $history);
+
+    // list of badges "issued failed"
+    $issuefailedlist = new admin_externalpage('obffailrecordlist', get_string('failrecordlist', 'local_obf'),
+        new moodle_url('/local/obf/failrecordlist.php'), 'local/obf:configure');
+
+    $ADMIN->add('obf', $issuefailedlist);
 }
