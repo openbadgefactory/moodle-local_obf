@@ -30,6 +30,11 @@ use stdClass;
 defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__ . '/obf_criterion.php');
+require_once(__DIR__ . '/obf_criterion_course.php');
+require_once(__DIR__ . '/obf_criterion_activity.php');
+require_once(__DIR__ . '/obf_criterion_profile.php');
+require_once(__DIR__ . '/obf_criterion_totaraprogram.php');
+require_once(__DIR__ . '/obf_criterion_unknown.php');
 
 /**
  * Abstract criterion item base.
@@ -444,4 +449,28 @@ abstract class obf_criterion_item {
      * @see obf_criterion_course::delete
      */
     abstract public function delete();
+
+    /**
+     * Initialize a new criterion object based on the data provided.
+     *
+     * @param array $data The data array containing criterion information.
+     *
+     * @return obf_criterion|obf_criterion_course|obf_criterion_activity|obf_criterion_profile|obf_criterion_totaraprogram|obf_criterion_unknown
+     */
+    public static function fromArray($data) {
+        $type = $data['criteriatype'] ?? null;
+        switch($type) {
+            case self::CRITERIA_TYPE_COURSE:
+                return new obf_criterion_course($data);
+            case self::CRITERIA_TYPE_ACTIVITY:
+                return new obf_criterion_activity($data);
+            case self::CRITERIA_TYPE_PROFILE:
+                return new obf_criterion_profile($data);
+            case self::CRITERIA_TYPE_TOTARA_PROGRAM:
+            case self::CRITERIA_TYPE_TOTARA_CERTIF:
+                return new obf_criterion_totaraprogram($data);
+            default:
+                return new obf_criterion_unknown($data);
+        }
+    }
 }

@@ -455,3 +455,20 @@ $string['badgeissuedbody'] = 'The <b>{$a->badgename}</b> badge was issued to <b>
 
 $string['userremoved'] = 'User removed';
 $string['alluseralreadyrevoke'] = 'All users have either been revoked or are no longer registered on the platform';
+
+$string['tableheaderid'] = 'ID';
+$string['tableheaderrecipients'] = 'Recipients';
+$string['tableheaderdate'] = 'Date';
+$string['tableheaderinfo'] = 'Info';
+$string['tableheadercourse'] = 'Course';
+$string['tableheaderstatus'] = 'Status';
+$string['tableheaderaction'] = 'Action';
+
+$string['emailbutton'] = 'show content';
+$string['emailbadgeid'] = 'Badge ID';
+$string['closemodal'] = 'Close';
+$string['failrecordlist'] = 'List of failed issued badges';
+
+$string['deletelink'] = 'Delete';
+
+$string['norecordsfound'] = 'No record found.';

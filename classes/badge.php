@@ -478,7 +478,7 @@ class obf_badge {
 
         $raw = $this->get_client()->get_raw_response();
         $this->get_client()->set_enable_raw_response(false);
-        foreach ($raw as $key => $value) {
+        foreach ($raw as $value) {
             if ($match = preg_match('/^Location: .*event\/[\w]+\/(.*)$/i', $value, $matches)) {
                 $eventid = trim($matches[$match]);
                 if (!empty($eventid)) {

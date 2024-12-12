@@ -16,24 +16,49 @@
 
 namespace classes;
 
-/**
- * Class to handle obf_issuefailedrecord elements.
- *
- * @package    local_obf
- * @author  Sylvain Revenu | Pimenko 2024
- * @copyright  2013-2020, Open Badge Factory Oy
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+use classes\criterion\obf_criterion;
+use classes\criterion\obf_criterion_item;
 
+require_once(__DIR__ . '/../classes/criterion/obf_criterion_activity.php');
+
+/**
+ * Unique identifier for a specific element
+ */
 class obf_issuefailedrecord {
 
+    /**
+     * Unique identifier for a specific element
+     */
     protected $id;
+    /**
+     * Represents an array of recipients for a specific action or event.
+     */
     protected $recipients;
+    /**
+     * Represents a timestamp in Unix epoch format.
+     */
     protected $timestamp;
+    /**
+     * Variable representing the email address to send the message to.
+     */
     protected $email;
-    protected $criteriaAddendum;
+    /**
+     * Represents additional criteria to be added to a query.
+     */
+    protected $criteriaaddendum;
+    /**
+     * Represents the current status of the system.
+     */
     protected $status;
+    /**
+     * Represents a collection of items.
+     */
     protected $items;
+
+    /**
+     * Represents a client object with information and methods related to a specific client.
+     */
+    protected $client;
 
     /**
      * Constructor for initializing object properties from a given record.
@@ -46,41 +71,146 @@ class obf_issuefailedrecord {
         $this->recipients = $record->recipients;
         $this->timestamp = $record->time;
         $this->email = $record->email;
-        $this->criteriaAddendum = $record->criteriaaddendum;
+        $this->criteriaaddendum = $record->criteriaaddendum;
         $this->status = $record->status;
+        $this->items = $record->items;
+        $this->client = obf_client::get_instance();
     }
 
-    public function getId() {
+    /**
+     * Retrieves the ID of the current object.
+     *
+     * @return int The ID of the object.
+     */
+    public function getid() {
         return $this->id;
     }
 
-    public function getRecipients() {
+    /**
+     * Retrieves the recipients of the message as an array.
+     *
+     * Parses the recipients JSON string stored in the class property $recipients and
+     * returns it as an array.
+     *
+     * @return array An array containing the recipients of the message.
+     */
+    public function getrecipients() {
         return json_decode($this->recipients);
     }
 
-    public function getTimestamp() {
+    /**
+     * Retrieves the timestamp value of the object.
+     *
+     * Retrieves and returns the timestamp property of the object. This property represents the specific
+     * date and time associated with the object instance or record.
+     *
+     * @return mixed The timestamp value of the object.
+     */
+    public function gettimestamp() {
         return $this->timestamp;
     }
 
-    public function getEmail() {
+    /**
+     * Retrieves the email address stored in the object and decodes it from JSON format.
+     *
+     * @return mixed Returns the email address decoded as an associative array.
+     */
+    public function getemail() {
         $email = $this->email;
-        return json_decode($email,true);
+        return json_decode(
+            $email,
+            true,
+        );
     }
 
-    public function getCriteriaAddendum() {
-        return $this->criteriaAddendum;
+    /**
+     * Retrieves the criteria addendum property of the object.
+     *
+     * This method returns the criteria addendum property of the object, which contains additional details or criteria specified
+     * for the object.
+     *
+     * @return mixed The criteria addendum property of the object.
+     */
+    public function getcriteriaaddendum() {
+        return $this->criteriaaddendum;
     }
 
-    public function getStatus() {
+    /**
+     * Get the status of the current object.
+     *
+     * This method returns the value of the status property of the object.
+     *
+     * @return mixed The current status of the object.
+     */
+    public function getstatus() {
         return $this->status;
     }
 
+    /**
+     * Retrieve items property and decode it as JSON.
+     *
+     * This method returns the items property of the object instance and decodes it as a JSON string into an associative array.
+     *
+     * @return array|null Returns the items property decoded as an associative array, or null if items property is empty or
+     *     invalid JSON.
+     */
+    public function getitems() {
+        $itemsArray = unserialize($this->items);
+        if (is_array($itemsArray)) {
+            foreach ($itemsArray as &$item) {
+                $item = obf_criterion_item::fromArray($item); // We need a way to reconstruct obf_criterion_item from an array
+            }
+            unset($item); // break the reference with the last element
+        }
+        return $itemsArray;
+    }
+
+    /**
+     * Deletes the current record from the database table 'local_obf_issuefailedrecord'.
+     *
+     * @return bool Returns true if the record was successfully deleted, false otherwise.
+     * @global object $DB The global database object.
+     *
+     */
     public function delete() {
         global $DB;
 
-        if ($DB->delete_records('local_obf_issuefailedrecord', array('id' => $this->id))) {
+        if ($DB->delete_records(
+            'local_obf_issuefailedrecord',
+            [ 'id' => $this->id ],
+        )) {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Get a formatted string of recipients by joining them with a comma.
+     *
+     * @return string The formatted string of recipients separated by commas.
+     */
+    public function getformattedrecipients(): string {
+        return implode(
+            ',',
+            $this->getrecipients(),
+        );
+    }
+
+    public function getinformations() {
+
+        $badge = obf_badge::get_instance(
+            $this->getemail()['badgeid'],
+            $this->client,
+        );
+
+        $criterion = new obf_criterion();
+        $criterion->set_badge($badge);
+        $criterion->set_clientid($this->client->client_id());
+        $criterion->set_items($this->getitems());
+
+        return [
+            'criteriondata' => $criterion,
+            'badge' => $badge,
+        ];
     }
 }

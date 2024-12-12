@@ -245,9 +245,9 @@ class obf_criterion {
         $criteriaaddendum = $this->get_use_addendum() ? $this->get_criteria_addendum() : '';
 
         try {
-            $eventid = $badge->issue($recipients, time(), $email, $criteriaaddendum, $this->items);
+            $eventid = $badge->issue($recipients, time(), $email, $criteriaaddendum, $this->get_items());
         } catch (Exception $e) {
-            $this->handle_issuefailed($recipients, time(), $email, $criteriaaddendum, $this->items);
+            $this->handle_issuefailed($recipients, time(), $email, $criteriaaddendum, $this->get_items());
             return false;
         }
 
@@ -1071,11 +1071,13 @@ class obf_criterion {
         $record->time = $time;
         $record->email = json_encode($email->jsonSerialize());
         $record->criteriaaddendum = $criteriaaddendum;
-        $itemsArray = array_map(function ($item) {
-            return (array) $item->jsonSerialize();
-        }, $items);
-        $record->items = serialize($itemsArray);
         $record->status = 'pending';
+        if ($items) {
+            $itemsArray = array_map(function ($item) {
+                return (array) $item->jsonSerialize();
+            }, $items);
+            $record->items = serialize($itemsArray);
+        }
 
         // Then, use the insert_record function to insert the new record into your database table
         $DB->insert_record('local_obf_issuefailedrecord', $record);

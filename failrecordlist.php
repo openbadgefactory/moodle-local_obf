@@ -23,6 +23,7 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use classes\criterion\obf_criterion_item;
 use classes\obf_issuefailedrecord;
 
 require_once(__DIR__ . '/../../config.php');
@@ -43,16 +44,17 @@ $PAGE->set_context($context);
 $PAGE->set_url('/local/obf/failrecordlist.php');
 $PAGE->set_title(
     get_string(
-        'pluginname',
+        'failrecordlist',
         'local_obf',
     ),
 );
 $PAGE->set_heading(
     get_string(
-        'pluginname',
+        'failrecordlist',
         'local_obf',
     ),
 );
+$PAGE->set_pagelayout('admin');
 
 $action = optional_param(
     'action',
@@ -70,42 +72,52 @@ if ($action === 'delete' && confirm_sesskey() && $id > 0) {
     redirect(new moodle_url('/local/obf/failrecordlist.php'));
 }
 
-echo $OUTPUT->header();
-
 $records = $DB->get_records('local_obf_issuefailedrecord');
 
-$failedRecords = array_values(array_map(function($record) {
+$createRecord = static function($record) {
     $recordObject = new obf_issuefailedrecord($record);
+    $courses = $recordObject->getinformations()['criteriondata']->get_items();
+
+    $courseslinks = [];
+    foreach ($courses as $criterioncourse) {
+        $courseid = $criterioncourse->get_courseid();
+
+        // Don't display moodle course instance.
+        if ($courseid > 0) {
+            $course = get_course($courseid);
+            $courseslinks[] = [
+                'id' => $courseid,
+                'link' => (new moodle_url('/course/view.php', ['id' => $courseid]))->out(false),
+                'name' => $course->fullname
+            ];
+        }
+    }
+
     return [
-        'id' => $recordObject->getId(),
-        'recipients' => $recordObject->getRecipients(),
-        'timestamp' => userdate($recordObject->getTimestamp()),
-        'email' => $recordObject->getEmail(),
-        'criteriaAddendum' => $recordObject->getCriteriaAddendum(),
-        'status' => $recordObject->getStatus(),
-        'deleteUrl' => (new moodle_url(
+        'id' => $recordObject->getid(),
+        'badgename' => $recordObject->getinformations()['badge']->get_name(),
+        'recipients' => $recordObject->getformattedrecipients(),
+        'timestamp' => userdate($recordObject->gettimestamp()),
+        'email' => $recordObject->getemail(),
+        'status' => $recordObject->getstatus(),
+        'deleteurl' => (new moodle_url(
             '/local/obf/failrecordlist.php',
             [
                 'action' => 'delete',
-                'id' => $recordObject->getId(),
+                'id' => $recordObject->getid(),
                 'sesskey' => sesskey()
             ],
         ))->out(false),
+        'courseslinks' => $courseslinks
     ];
-},
-    $records));
+};
 
-// Format some data.
-foreach ($failedRecords as &$record) {
-    $count = count($record['recipients']);
-    foreach ($record['recipients'] as $index => &$recipient) {
-        if ($index !== $count - 1) {
-            $recipient .= ',';
-        }
-    }
-}
+$failedrecords = array_values(array_map($createRecord, $records));
 
-$data = [ 'records' => $failedRecords ];
+$data = [ 'records' => $failedrecords ];
+
+echo $OUTPUT->header();
+
 echo $OUTPUT->render_from_template(
     'local_obf/issuefailedrecord',
     $data,

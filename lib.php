@@ -26,6 +26,7 @@ use classes\obf_assertion;
 use classes\obf_backpack;
 use classes\obf_blacklist;
 use classes\obf_client;
+use classes\obf_issuefailedrecord;
 use classes\obf_user_preferences;
 use classes\obf_assertion_collection;
 
