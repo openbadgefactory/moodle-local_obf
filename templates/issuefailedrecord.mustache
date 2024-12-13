@@ -5,6 +5,7 @@
             <th>{{#str}}tableheaderid, local_obf{{/str}}</th>
             <th>{{#str}}tableheaderrecipients, local_obf{{/str}}</th>
             <th>{{#str}}tableheaderdate, local_obf{{/str}}</th>
+            <th>{{#str}}badgename, local_obf{{/str}}</th>
             <th>{{#str}}tableheaderinfo, local_obf{{/str}}</th>
             <th>{{#str}}tableheadercourse, local_obf{{/str}}</th>
             <th>{{#str}}tableheaderstatus, local_obf{{/str}}</th>
@@ -21,6 +22,7 @@
                     {{/recipients}}
                 </td>
                 <td>{{timestamp}}</td>
+                <td>{{badgename}}</td>
                 <td>
                     <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#emailModal-{{id}}">
                         {{#str}}emailbutton, local_obf{{/str}}
@@ -35,7 +37,6 @@
                                     </button>
                                 </div>
                                 <div class="modal-body">
-                                    <p><strong>{{#str}}badgename, local_obf{{/str}}</strong> {{badgename}}</p>
                                     <p><strong>{{#str}}emailbadgeid, local_obf{{/str}}</strong> {{email.badgeid}}</p>
                                     <p><strong>{{#str}}emailbody, local_obf{{/str}}</strong> {{email.body}}</p>
                                     <p><strong>{{#str}}emailfooter, local_obf{{/str}}</strong> {{email.footer}}</p>
@@ -68,7 +69,7 @@
         {{^records}}
             <!-- Displayed when records is empty -->
             <tr>
-                <td class="text-center" colspan="7">{{#str}}norecordsfound, local_obf{{/str}}</td>
+                <td class="text-center" colspan="8">{{#str}}norecordsfound, local_obf{{/str}}</td>
             </tr>
         {{/records}}
         </tbody>

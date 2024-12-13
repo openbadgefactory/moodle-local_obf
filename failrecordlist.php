@@ -72,7 +72,7 @@ if ($action === 'delete' && confirm_sesskey() && $id > 0) {
     redirect(new moodle_url('/local/obf/failrecordlist.php'));
 }
 
-$records = $DB->get_records('local_obf_issuefailedrecord');
+$records = $DB->get_records('local_obf_issuefailedrecord', null, 'ID DESC');
 
 $createRecord = static function($record) {
     $recordObject = new obf_issuefailedrecord($record);

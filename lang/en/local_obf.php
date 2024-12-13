@@ -464,10 +464,10 @@ $string['tableheadercourse'] = 'Course';
 $string['tableheaderstatus'] = 'Status';
 $string['tableheaderaction'] = 'Action';
 
-$string['emailbutton'] = 'show content';
+$string['emailbutton'] = 'Show message';
 $string['emailbadgeid'] = 'Badge ID';
 $string['closemodal'] = 'Close';
-$string['failrecordlist'] = 'List of failed issued badges';
+$string['failrecordlist'] = 'Pending Badges Queue';
 
 $string['deletelink'] = 'Delete';
 

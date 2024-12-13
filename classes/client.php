@@ -486,7 +486,7 @@ class obf_client {
             return 0;
         }
         try {
-            $url = $this->obf_url() . '/v4/ping/' . $this->client_id();
+            $url = $this->obf_url() . '/v1/ping/' . $this->client_id();
             $this->request('get', $url);
             return -1;
         } catch (Exception $exc) {
