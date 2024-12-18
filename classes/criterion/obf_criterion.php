@@ -1079,7 +1079,21 @@ class obf_criterion {
             $record->items = serialize($itemsArray);
         }
 
-        // Then, use the insert_record function to insert the new record into your database table
-        $DB->insert_record('local_obf_issuefailedrecord', $record);
+        $select = 'recipients = :recipients AND email = :email AND criteriaaddendum = :criteriaaddendum AND status = :status';
+        $params = [
+            'recipients' => $DB->sql_compare_text(json_encode($recipients)),
+            'email' => $DB->sql_compare_text(json_encode($email->jsonSerialize())),
+            'criteriaaddendum' => $criteriaaddendum,
+            'status' => 'pending'
+        ];
+
+        if ($items) {
+            $select .= ' AND items = :items';
+            $params['items'] = $DB->sql_compare_text(serialize($itemsArray));
+        }
+
+        if (!$DB->record_exists_select('local_obf_issuefailedrecord', $select, $params)) {
+            $DB->insert_record('local_obf_issuefailedrecord', $record);
+        }
     }
 }
