@@ -456,7 +456,6 @@ class obf_badge {
         // in case there is no rule for current categ badge and at last one define on site.
         $anyrulesdefinesql = "SELECT * FROM {local_obf_rulescateg}";
         $anyrules = $DB->get_records_sql($anyrulesdefinesql);
-
         if (!empty($anyrules)) {
 
             $badges = $this->get_client()->get_badges();

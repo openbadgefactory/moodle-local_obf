@@ -409,13 +409,4 @@ class obf_criterion_profile extends obf_criterion_course {
     public function criteria_supports_multiple_courses() {
         return false;
     }
-
-    /**
-     * Convert object to JSON-serializable data
-     *
-     * @return object Returns the object representation as a JSON-serializable data
-     */
-    public function jsonSerialize() {
-        return (object) get_object_vars($this);
-    }
 }

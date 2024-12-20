@@ -83,7 +83,7 @@ class local_obf_observer {
         // Get all criteria related to course completion.
         $criteria = obf_criterion::get_course_criterion($eventdata->course);
 
-        foreach ($criteria as $criterionid => $criterion) {
+        foreach ($criteria as $criterion) {
             // User has already met this criterion.
             if ($criterion->is_met_by_user($user)) {
                 continue;

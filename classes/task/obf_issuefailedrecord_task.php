@@ -77,7 +77,6 @@ class obf_issuefailedrecord_task extends \core\task\scheduled_task {
         $records = $DB->get_records('local_obf_issuefailedrecord');
 
         foreach ($records as $record) {
-
             // If the status of the record is 'pending', 'error', or null.
             if (
                 $record->status == "pending"
@@ -85,16 +84,16 @@ class obf_issuefailedrecord_task extends \core\task\scheduled_task {
                 || $record->status == null
             ) {
                 $issuefailed = new obf_issuefailedrecord($record);
-                $client = obf_client::get_instance();
+
                 $user = $DB->get_record(
                     'user',
-                    [ 'email' => $issuefailed->getrecipients()[0] ],
+                    [
+                        'email' => $issuefailed->getrecipients()[0]
+                    ],
                 );
 
-                $badge = obf_badge::get_instance(
-                    $issuefailed->getemail()['badgeid'],
-                    $client,
-                );
+                $informations = $issuefailed->getinformations();
+                $badge = $informations['badge'] ?? null;
 
                 // Handle case where user already receive the badge.
                 $deletedrecord = false;
@@ -120,10 +119,7 @@ class obf_issuefailedrecord_task extends \core\task\scheduled_task {
 
                 // Handle a case where record is not deleted.
                 // Regen a criterion and an email.
-                $criterion = new obf_criterion();
-                $criterion->set_badge($badge);
-                $criterion->set_clientid($client->client_id());
-                $criterion->set_items($issuefailed->getitems());
+                $criterion = $issuefailed->getinformations()['criteriondata'];
 
                 $email = new obf_email();
                 $email->set_id($issuefailed->getemail()['id']);
@@ -153,7 +149,7 @@ class obf_issuefailedrecord_task extends \core\task\scheduled_task {
                             [ 'id' => $record->id ]
                         );
                     }
-                    break;
+                    continue;
                 }
 
                 $criterion->set_met_by_user($user->id);

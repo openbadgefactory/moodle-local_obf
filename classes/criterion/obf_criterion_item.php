@@ -473,4 +473,13 @@ abstract class obf_criterion_item {
                 return new obf_criterion_unknown($data);
         }
     }
+
+    /**
+     * Convert object to JSON-serializable data
+     *
+     * @return object Returns the object representation as a JSON-serializable data
+     */
+    public function jsonSerialize() {
+        return (object) get_object_vars($this);
+    }
 }

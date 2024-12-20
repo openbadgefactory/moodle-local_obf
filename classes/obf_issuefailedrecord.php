@@ -18,6 +18,7 @@ namespace classes;
 
 use classes\criterion\obf_criterion;
 use classes\criterion\obf_criterion_item;
+use Exception;
 
 require_once(__DIR__ . '/../classes/criterion/obf_criterion_activity.php');
 
@@ -56,11 +57,6 @@ class obf_issuefailedrecord {
     protected $items;
 
     /**
-     * Represents a client object with information and methods related to a specific client.
-     */
-    protected $client;
-
-    /**
      * Constructor for initializing object properties from a given record.
      *
      * @param object $record An object containing properties for initialization.
@@ -74,7 +70,6 @@ class obf_issuefailedrecord {
         $this->criteriaaddendum = $record->criteriaaddendum;
         $this->status = $record->status;
         $this->items = $record->items;
-        $this->client = obf_client::get_instance();
     }
 
     /**
@@ -160,7 +155,8 @@ class obf_issuefailedrecord {
             foreach ($itemsArray as &$item) {
                 $item = obf_criterion_item::fromArray($item); // We need a way to reconstruct obf_criterion_item from an array
             }
-            unset($item); // break the reference with the last element
+            unset($item);
+            // break the reference with the last element.
         }
         return $itemsArray;
     }
@@ -196,21 +192,50 @@ class obf_issuefailedrecord {
         );
     }
 
+    /**
+     * Retrieves information related to the badge and client for the current object.
+     * Uses global $DB for database access.
+     *
+     * @return array Associative array containing 'criteriondata' with obf_criterion object and 'badge' object.
+     *               Returns empty array if badge is not found.
+     */
     public function getinformations() {
+        global $DB;
 
-        $badge = obf_badge::get_instance(
-            $this->getemail()['badgeid'],
-            $this->client,
-        );
+        $badge = null;
+        $client = null;
 
-        $criterion = new obf_criterion();
-        $criterion->set_badge($badge);
-        $criterion->set_clientid($this->client->client_id());
-        $criterion->set_items($this->getitems());
+        // Find the correct client.
+        $clientavaible = $DB->get_records('local_obf_oauth2', null, 'client_name');
 
-        return [
-            'criteriondata' => $criterion,
-            'badge' => $badge,
-        ];
+        foreach ($clientavaible as $client) {
+            $client = obf_client::connect($client->client_id);
+            try {
+                $badge = $client->get_badge($this->getemail()['badgeid']);
+                $badge = obf_badge::get_instance_from_array($badge);
+                break;
+            } catch (Exception $e) {
+                // If no records is find for the badge we continue searching for...
+                continue;
+            }
+        }
+
+        if ($badge && $client) {
+            $criterion = new obf_criterion();
+            $criterion->set_badge($badge);
+            $criterion->set_clientid($client->client_id());
+            $criterion->set_items($this->getitems());
+
+            $badge->set_client($client);
+
+            return [
+                'criteriondata' => $criterion,
+                'badge' => $badge,
+                'client' => $client
+            ];
+        } else {
+            // If badge is nowhere to be found we return empty data.
+            return [];
+        }
     }
 }
