@@ -97,7 +97,13 @@ class obf_issuefailedrecord_task extends \core\task\scheduled_task {
 
                 // Handle case where user already receive the badge.
                 $deletedrecord = false;
+
+                if ($badge === null) {
+                    mtrace(get_string('processobfissuefailedrecordlog', 'local_obf', $issuefailed->getemail()['badgeid']));
+                    continue;
+                }
                 $assertions = $badge->get_assertions();
+
                 foreach ($assertions as $assertion) {
 
                     // Check if the user is in the recipients list.

@@ -207,26 +207,39 @@ class obf_issuefailedrecord {
 
         // Find the correct client.
         $clientavaible = $DB->get_records('local_obf_oauth2', null, 'client_name');
-
-        foreach ($clientavaible as $client) {
-            $client = obf_client::connect($client->client_id);
+        if (empty($clientavaible)) {
+            // Fallback for legacy connect.
+            $client = obf_client::get_instance();
             try {
                 $badge = $client->get_badge($this->getemail()['badgeid']);
                 $badge = obf_badge::get_instance_from_array($badge);
-                break;
             } catch (Exception $e) {
-                // If no records is find for the badge we continue searching for...
-                continue;
+                // Ignore if badge data can't be retrieve.
+            }
+        } else {
+            foreach ($clientavaible as $client) {
+                $client = obf_client::connect($client->client_id);
+                try {
+                    $badge = $client->get_badge($this->getemail()['badgeid']);
+                    $badge = obf_badge::get_instance_from_array($badge);
+                    break;
+                } catch (Exception $e) {
+                    // If no records is find for the badge we continue searching for...
+                    continue;
+                }
             }
         }
 
-        if ($badge && $client) {
+        if ($client) {
             $criterion = new obf_criterion();
-            $criterion->set_badge($badge);
+            if ($badge) {
+                $criterion->set_badge($badge);
+            } else {
+                $criterion->set_badgeid($this->getemail()['badgeid']);
+            }
+
             $criterion->set_clientid($client->client_id());
             $criterion->set_items($this->getitems());
-
-            $badge->set_client($client);
 
             return [
                 'criteriondata' => $criterion,

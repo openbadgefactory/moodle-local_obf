@@ -104,7 +104,10 @@ $string['badgeissuedwhen'] = 'This badge is automatically awarded when any of th
 $string['badgelist'] = 'Badge list';
 $string['badgelisttitle'] = 'All badges';
 $string['badgename'] = 'Name';
+$string['badgenameorid'] = 'Name or BadgeID';
 $string['badgetags'] = 'Tags';
+$string['badgependinginformation'] = 'Information';
+$string['badgependinginformationmessage'] = 'Here you will find a list of badges waiting to be assigned. Occasionally, badges may be put on hold if they cannot be immediately assigned due to issues such as an unreachable server or the client may no longer be subscribed.';
 $string['personalbadgecloudservices'] = 'Displayer badge source';
 $string['badgewasautomaticallyissued'] = 'After reviewing the badge was awarded to {$a} recipient(s).';
 $string['blacklistbadge'] = 'Don\'t show badge';
@@ -292,6 +295,7 @@ $string['profilebadgelistbackpackprovider'] = '{$a} badges';
 $string['profilebadgelistmoz'] = 'Mozilla Backpack badges';
 $string['profilebadgelistobp'] = 'Open Badge Passport badges';
 $string['processobfissuefailedrecord'] = 'Process failed issued obf badges';
+$string['processobfissuefailedrecordlog'] = 'Error while attempting to re-issue badge ID: {$a}. This might be due to a server connection error or the client may no longer be subscribed.';
 $string['pubkeyextractionfailed'] = 'There was an error while extracting public key from certificate.';
 $string['pubkeyrequestfailed'] = 'There was an error while requesting the public key from the API';
 $string['readmeenablecompletion'] = 'Badge earning criteria';
@@ -353,6 +357,9 @@ $string['usersdisplaybadges'] = 'Display of user badges';
 $string['userscanmanagedisplayofbadges'] = 'Users can choose to display badges';
 $string['usersforcedtodisplaybadges'] = 'Badges are displayed on profile pages';
 $string['usersnotallowedtodisplaybadges'] = 'Badges are not displayed on profile pages';
+$string['unavailableserver'] = 'The OBF server is currently unreachable or may no longer be subscribed for at least one client. Please check the plugin settings, and if the issue persists, contact <a href=\'https://openbadgefactory.com\' target=\'_blank\'>Open Badge Factory</a>. Some features or information might be missing.';
+$string['unavailableserverbadgelist'] = "The list of badges cannot be displayed as the OBF server is currently unreachable.";
+$string['unavailableinfo'] = "It seems that the information for this badge is currently unavailable. This may be due to the OBF server currently being unreachable or the client may no longer be subscribed.";
 $string['verification_failed'] = 'Backpack verification failed. Reason: {$a}';
 $string['verifytoken'] = 'Token';
 $string['verifytokenbutton'] = 'Verify';
@@ -468,6 +475,7 @@ $string['emailbutton'] = 'Show message';
 $string['emailbadgeid'] = 'Badge ID';
 $string['closemodal'] = 'Close';
 $string['failrecordlist'] = 'Pending Badges Queue';
+$string['failedtogetaccesstoken'] = 'Failed to get access token:';
 
 $string['deletelink'] = 'Delete';
 

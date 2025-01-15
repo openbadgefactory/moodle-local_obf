@@ -298,11 +298,14 @@ class obf_client {
             $options = $this->get_curl_options(false);
 
             $res = $curl->post($url, http_build_query($params), $options);
-
             $res = json_decode($res);
 
+            if (!isset($res)) {
+                $res->error = get_string('apierror503', 'local_obf');
+            }
+
             if (isset($res->error)) {
-                throw new Exception('Failed to get access token: ' . $res->error);
+                throw new Exception(get_string('failedtogetaccesstoken', 'local_obf') . $res->error);
             }
 
             $this->oauth2->access_token = $res->access_token;
@@ -812,7 +815,7 @@ class obf_client {
         // Before doing anything we test connection.
         // If test_connection failed we throw an Error.
         $httpcode = $this->test_connection();
-        if ($httpcode >= 300) {
+        if ($httpcode !== -1) {
             throw new Exception(get_string('connectionerror', 'local_obf'), $httpcode);
         }
 

@@ -45,7 +45,6 @@ define('OBF_API_CODE_CERT_ERROR', 495);
 define('OBF_API_CODE_NO_CERT', 496);
 
 require_once(__DIR__ . '/classes/criterion/obf_criterion.php');
-require_once(__DIR__ . '/classes/criterion/obf_criterion_course.php');
 
 /**
  * Adds the OBF-links to Moodle's navigation, Moodle 2.2 -style.
@@ -525,6 +524,6 @@ function obf_delete_failed_record(int $id) {
         print_error('invalidrecordid', 'local_obf', '', $id);
     }
 
-    $recordObject = new obf_issuefailedrecord($record);
-    $recordObject->delete();
+    $recordobject = new obf_issuefailedrecord($record);
+    $recordobject->delete();
 }

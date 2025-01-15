@@ -42,7 +42,6 @@ global $CFG;
 
 require_once(__DIR__ . '/../badge.php');
 require_once(__DIR__ . '/obf_criterion_item.php');
-require_once(__DIR__ . '/obf_criterion_course.php');
 
 require_once($CFG->dirroot . '/grade/querylib.php');
 require_once($CFG->libdir . '/gradelib.php');

@@ -1,3 +1,60 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_obf/issuefailedrecord
+
+    The badge_table template is used to render a table of badges with
+    various information like recipients, timestamp, name, etc.
+
+    Context variables required for this template: connectionfailed, records.
+
+    Other context variables: id, recipients, timestamp, badgename, badgeinformation,
+    emailbutton, badgeid, body, linktext, courseslinks, deleteurl.
+
+    Example context (json):
+    {
+        "connectionfailed": false,
+        "records": [
+            {
+                "id": 1,
+                "recipients": ["John Doe", "Jane Doe"],
+                "timestamp": "2023-06-15 15:30",
+                "badgename": "Great Achiever",
+                // more data...
+            },
+            // More records...
+        ]
+    }
+}}
+
+{{#connectionfailed}}
+    <div class="alert alert-warning" role="alert">
+        <h4 class="alert-heading">{{#str}}error, core{{/str}}</h4>
+        {{#str}}unavailableserver, local_obf{{/str}}
+    </div>
+{{/connectionfailed}}
+
+<div class="alert alert-info mt-3" role="alert">
+    <h4 class="alert-heading">{{#str}}badgependinginformation, local_obf{{/str}}</h4>
+    <p>
+        {{#str}}badgependinginformationmessage, local_obf{{/str}}
+    </p>
+</div>
+
 <div class="table-responsive">
     <table class="table table-striped table-hover">
         <thead>
@@ -5,7 +62,7 @@
             <th>{{#str}}tableheaderid, local_obf{{/str}}</th>
             <th>{{#str}}tableheaderrecipients, local_obf{{/str}}</th>
             <th>{{#str}}tableheaderdate, local_obf{{/str}}</th>
-            <th>{{#str}}badgename, local_obf{{/str}}</th>
+            <th>{{#str}}badgenameorid, local_obf{{/str}}</th>
             <th>{{#str}}tableheaderinfo, local_obf{{/str}}</th>
             <th>{{#str}}tableheadercourse, local_obf{{/str}}</th>
             <th>{{#str}}tableheaderstatus, local_obf{{/str}}</th>
@@ -22,7 +79,14 @@
                     {{/recipients}}
                 </td>
                 <td>{{timestamp}}</td>
-                <td>{{badgename}}</td>
+                <td>
+                    {{badgename}}
+                    {{^badgeinformation}}
+                        <a href="#" data-toggle="tooltip" data-placement="right" title="{{#str}}unavailableinfo, local_obf{{/str}}">
+                            <i class="icon fa fa-question-circle text-info fa-fw"></i>
+                        </a>
+                    {{/badgeinformation}}
+                </td>
                 <td>
                     <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#emailModal-{{id}}">
                         {{#str}}emailbutton, local_obf{{/str}}

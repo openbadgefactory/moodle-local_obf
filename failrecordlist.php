@@ -24,6 +24,7 @@
  */
 
 use classes\criterion\obf_criterion_item;
+use classes\obf_client;
 use classes\obf_issuefailedrecord;
 
 require_once(__DIR__ . '/../../config.php');
@@ -72,11 +73,15 @@ if ($action === 'delete' && confirm_sesskey() && $id > 0) {
     redirect(new moodle_url('/local/obf/failrecordlist.php'));
 }
 
-$records = $DB->get_records('local_obf_issuefailedrecord', null, 'ID DESC');
+$records = $DB->get_records(
+    'local_obf_issuefailedrecord',
+    null,
+    'ID DESC',
+);
 
-$createRecord = static function($record) {
-    $recordObject = new obf_issuefailedrecord($record);
-    $courses = $recordObject->getinformations()['criteriondata']->get_items();
+$createrecord = static function($record) {
+    $recordobject = new obf_issuefailedrecord($record);
+    $courses = $recordobject->getinformations()['criteriondata']->get_items();
 
     $courseslinks = [];
     foreach ($courses as $criterioncourse) {
@@ -87,34 +92,80 @@ $createRecord = static function($record) {
             $course = get_course($courseid);
             $courseslinks[] = [
                 'id' => $courseid,
-                'link' => (new moodle_url('/course/view.php', ['id' => $courseid]))->out(false),
+                'link' => (new moodle_url(
+                    '/course/view.php',
+                    [ 'id' => $courseid ],
+                ))->out(false),
                 'name' => $course->fullname
             ];
         }
     }
 
+    $badgeinformation = $recordobject->getinformations()['badge'];
+    if ($badgeinformation) {
+        $name = $recordobject->getinformations()['badge']->get_name();
+        $badgeinformation = true;
+    } else {
+        // In case badgeinformation were not retrive from server.
+        $name = $recordobject->getemail()['badgeid'];
+        $badgeinformation = false;
+    }
+
     return [
-        'id' => $recordObject->getid(),
-        'badgename' => $recordObject->getinformations()['badge']->get_name(),
-        'recipients' => $recordObject->getformattedrecipients(),
-        'timestamp' => userdate($recordObject->gettimestamp()),
-        'email' => $recordObject->getemail(),
-        'status' => $recordObject->getstatus(),
+        'id' => $recordobject->getid(),
+        'badgename' => $name,
+        'recipients' => $recordobject->getformattedrecipients(),
+        'timestamp' => userdate($recordobject->gettimestamp()),
+        'email' => $recordobject->getemail(),
+        'status' => $recordobject->getstatus(),
         'deleteurl' => (new moodle_url(
             '/local/obf/failrecordlist.php',
             [
                 'action' => 'delete',
-                'id' => $recordObject->getid(),
+                'id' => $recordobject->getid(),
                 'sesskey' => sesskey()
             ],
         ))->out(false),
-        'courseslinks' => $courseslinks
+        'courseslinks' => $courseslinks,
+        'badgeinformation' => $badgeinformation,
     ];
 };
 
-$failedrecords = array_values(array_map($createRecord, $records));
+$failedrecords = array_values(
+    array_map(
+        $createrecord,
+        $records,
+    ),
+);
 
-$data = [ 'records' => $failedrecords ];
+// Check if all client connections are avaible.
+// In case OBF server is still down we can't get badge information.
+// So we will display more information to users.
+$connectionfailed = true;
+$result = null;
+$clientavaible = $DB->get_records(
+    'local_obf_oauth2',
+    null,
+    'client_name',
+);
+if (empty($clientavaible)) {
+    // Fallback for legacy connect.
+    $client = obf_client::get_instance();
+    $result = $client->test_connection();
+} else {
+    foreach ($clientavaible as $client) {
+        $client = obf_client::connect($client->client_id);
+        $result = $client->test_connection();
+    }
+}
+if ($result === -1) {
+    $connectionfailed = false;
+}
+
+$data = [
+    'records' => $failedrecords,
+    'connectionfailed' => $connectionfailed
+];
 
 echo $OUTPUT->header();
 

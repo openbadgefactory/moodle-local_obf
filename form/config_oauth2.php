@@ -104,34 +104,6 @@ class obf_config_oauth2_form extends moodleform {
             'data-updatebutton-field' => 'autocomplete',
         );
 
-        // Get course categories from the database.
-        $categories = $DB->get_records('course_categories', null, 'sortorder ASC', 'id, name');
-
-        // Create an array of categories for autocomplete.
-        $categoryoptions = array(
-            0 => 'All'
-        );
-        foreach ($categories as $category) {
-            $categoryoptions[$category->id] = $category->name;
-        }
-
-        // Generate an array of badge categories.
-
-        $badgecategories = array(
-            0 => 'All'
-        );
-
-        $client = obf_client::get_instance();
-
-        if ($client->client_id() && $client->oauth2_access_token()) {
-            $clientcateg = $client->get_categories();
-            if ($clientcateg) {
-                foreach ($clientcateg as $category) {
-                    $badgecategories[$category] = $category;
-                }
-            }
-        }
-
         $oauthid = optional_param('id', null, PARAM_INT);
 
         $rules = $DB->get_records_sql('SELECT ruleid FROM {local_obf_rulescateg} WHERE oauth2_id = ? GROUP BY ruleid',
@@ -142,6 +114,33 @@ class obf_config_oauth2_form extends moodleform {
 
         if (!empty($rules)) {
             $rulecount = 1;
+
+            // Get course categories from the database only if we have a rule set created.
+            $categories = $DB->get_records('course_categories', null, 'sortorder ASC', 'id, name');
+
+            // Create an array of categories for autocomplete.
+            $categoryoptions = array(
+                0 => 'All'
+            );
+            foreach ($categories as $category) {
+                $categoryoptions[$category->id] = $category->name;
+            }
+
+            // Generate an array of badge categories.
+            $badgecategories = array(
+                0 => 'All'
+            );
+
+            $client = obf_client::get_instance();
+
+            if ($client->client_id() && $client->oauth2_access_token()) {
+                $clientcateg = $client->get_categories();
+                if ($clientcateg) {
+                    foreach ($clientcateg as $category) {
+                        $badgecategories[$category] = $category;
+                    }
+                }
+            }
 
             $mform->addElement('hidden', 'delete_rule', false);
             $mform->setType('delete_rule', PARAM_BOOL);
