@@ -78,11 +78,7 @@ class obf_issuefailedrecord_task extends \core\task\scheduled_task {
 
         foreach ($records as $record) {
             // If the status of the record is 'pending', 'error', or null.
-            if (
-                $record->status == "pending"
-                || $record->status == "error"
-                || $record->status == null
-            ) {
+            if ($record->status == "pending" || $record->status == "error" || $record->status == null) {
                 $issuefailed = new obf_issuefailedrecord($record);
 
                 $user = $DB->get_record(
@@ -99,7 +95,13 @@ class obf_issuefailedrecord_task extends \core\task\scheduled_task {
                 $deletedrecord = false;
 
                 if ($badge === null) {
-                    mtrace(get_string('processobfissuefailedrecordlog', 'local_obf', $issuefailed->getemail()['badgeid']));
+                    mtrace(
+                        get_string(
+                            'processobfissuefailedrecordlog',
+                            'local_obf',
+                            $issuefailed->getemail()['badgeid'],
+                        ),
+                    );
                     continue;
                 }
                 $assertions = $badge->get_assertions();
@@ -152,7 +154,7 @@ class obf_issuefailedrecord_task extends \core\task\scheduled_task {
                             'local_obf_issuefailedrecord',
                             'status',
                             "error",
-                            [ 'id' => $record->id ]
+                            [ 'id' => $record->id ],
                         );
                     }
                     continue;

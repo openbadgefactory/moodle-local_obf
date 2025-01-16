@@ -140,7 +140,7 @@ $failedrecords = array_values(
 
 // Check if all client connections are avaible.
 // In case OBF server is still down we can't get badge information.
-// So we will display more information to users.
+// So we will display different information to users like badgeID.
 $connectionfailed = true;
 $result = null;
 $clientavaible = $DB->get_records(

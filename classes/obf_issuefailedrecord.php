@@ -206,7 +206,11 @@ class obf_issuefailedrecord {
         $client = null;
 
         // Find the correct client.
-        $clientavaible = $DB->get_records('local_obf_oauth2', null, 'client_name');
+        $clientavaible = $DB->get_records(
+            'local_obf_oauth2',
+            null,
+            'client_name',
+        );
         if (empty($clientavaible)) {
             // Fallback for legacy connect.
             $client = obf_client::get_instance();
