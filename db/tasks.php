@@ -46,7 +46,7 @@ $tasks = [
     [
         'classname' => 'local_obf\task\obf_issuefailedrecord_task',
         'blocking' => 0,
-        'minute' => '30',
+        'minute' => '*/30',
         'hour' => '*',
         'day' => '*',
         'dayofweek' => '*',
