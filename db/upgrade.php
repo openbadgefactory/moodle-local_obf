@@ -868,7 +868,7 @@ function xmldb_local_obf_upgrade($oldversion) {
         $table->add_field('recipients', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, null);
         $table->add_field('time', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null, null);
         $table->add_field('email', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, null);
-        $table->add_field('criteriaaddendum', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, null);
+        $table->add_field('criteriaaddendum', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, null);
         $table->add_field('items', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, null);
 
         // Adding keys to table issuefailedrecord.

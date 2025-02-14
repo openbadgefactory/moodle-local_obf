@@ -34,6 +34,7 @@ use Exception;
 use html_writer;
 use local_obf_html;
 use moodle_url;
+use stdClass;
 use url;
 use \Collator;
 
@@ -301,6 +302,7 @@ class obf_client {
             $res = json_decode($res);
 
             if (!isset($res)) {
+                $res = new stdClass(); // Initialiser $res comme un objet.
                 $res->error = get_string('apierror503', 'local_obf');
             }
 

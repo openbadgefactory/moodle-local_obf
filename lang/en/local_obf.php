@@ -357,7 +357,7 @@ $string['usersdisplaybadges'] = 'Display of user badges';
 $string['userscanmanagedisplayofbadges'] = 'Users can choose to display badges';
 $string['usersforcedtodisplaybadges'] = 'Badges are displayed on profile pages';
 $string['usersnotallowedtodisplaybadges'] = 'Badges are not displayed on profile pages';
-$string['unavailableserver'] = 'The OBF server is currently unreachable or may no longer be subscribed for at least one client. Please check the plugin settings, and if the issue persists, contact <a href=\'https://openbadgefactory.com\' target=\'_blank\'>Open Badge Factory</a>. Some features or information might be missing.';
+$string['unavailableserver'] = 'The badge server is currently unreachable or may no longer be available for at least one client. Please check the plugin settings, and if the issue persists, contact the respective service provider. Some features or information might be unavailable.';
 $string['unavailableserverbadgelist'] = "The list of badges cannot be displayed as the OBF server is currently unreachable.";
 $string['unavailableinfo'] = "The information for this badge appears to be currently unavailable. This might be due to the OBF server being unreachable or an inactive client subscription.";
 $string['verification_failed'] = 'Backpack verification failed. Reason: {$a}';

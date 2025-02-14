@@ -77,114 +77,120 @@ class obf_issuefailedrecord_task extends \core\task\scheduled_task {
         $records = $DB->get_records('local_obf_issuefailedrecord');
 
         foreach ($records as $record) {
-            // If the status of the record is 'pending', 'error', or null.
+            // If the record's status is 'pending', 'error', or null.
             if ($record->status == "pending" || $record->status == "error" || $record->status == null) {
                 $issuefailed = new obf_issuefailedrecord($record);
+                $recipients = $issuefailed->getrecipients(); // Retrieves all recipients for the issue.
 
-                $user = $DB->get_record(
-                    'user',
-                    [
-                        'email' => $issuefailed->getrecipients()[0]
-                    ],
-                );
-
-                $informations = $issuefailed->getinformations();
-                $badge = $informations['badge'] ?? null;
-
-                // Handle case where user already receive the badge.
-                $deletedrecord = false;
-
-                if ($badge === null) {
-                    mtrace(
-                        get_string(
-                            'processobfissuefailedrecordlog',
-                            'local_obf',
-                            $issuefailed->getemail()['badgeid'],
-                        ),
+                // Process each recipient individually.
+                foreach ($recipients as $recipient) {
+                    $user = $DB->get_record(
+                        'user',
+                        [ 'email' => $recipient ],
                     );
-                    continue;
-                }
-                $assertions = $badge->get_assertions();
-
-                foreach ($assertions as $assertion) {
-
-                    // Check if the user is in the recipients list.
-                    if (in_array(
-                        $issuefailed->getrecipients()[0],
-                        $assertion->get_recipients(),
-                    )) {
-                        $deletedrecord = $DB->delete_records(
-                            'local_obf_issuefailedrecord',
-                            [ 'id' => $record->id ],
-                        );
+                    if (!$user) {
+                        // Skip if the user does not exist in the database.
+                        continue;
                     }
-                }
 
-                // If the record was deleted, continue to the next iteration of loop.
-                if ($deletedrecord) {
-                    continue;
-                }
+                    $informations = $issuefailed->getinformations();
+                    $badge = $informations['badge'] ?? null;
 
-                // Handle a case where record is not deleted.
-                // Regen a criterion and an email.
-                $criterion = $issuefailed->getinformations()['criteriondata'];
-
-                $email = new obf_email();
-                $email->set_id($issuefailed->getemail()['id']);
-                $email->set_body($issuefailed->getemail()['body']);
-                $email->set_subject($issuefailed->getemail()['subject']);
-                $email->set_badge_id($issuefailed->getemail()['badgeid']);
-                $email->set_footer($issuefailed->getemail()['footer']);
-                $email->set_link_text($issuefailed->getemail()['linktext']);
-
-                // Build the email to be sent.
-                // Add an error handling around the badge issuance.
-                try {
-                    $eventid = $badge->issue(
-                        $issuefailed->getrecipients(),
-                        $issuefailed->gettimestamp(),
-                        $email,
-                        $issuefailed->getcriteriaaddendum(),
-                        $criterion->get_items(),
-                    );
-                } catch (Exception $e) {
-                    $timestamp = $issuefailed->gettimestamp();
-                    if ((time() - $timestamp) > 86400) { // 86400 seconds in a day
-                        $DB->set_field(
-                            'local_obf_issuefailedrecord',
-                            'status',
-                            "error",
-                            [ 'id' => $record->id ],
+                    // Skip processing if there is no associated badge.
+                    if ($badge === null) {
+                        mtrace(
+                            get_string(
+                                'processobfissuefailedrecordlog',
+                                'local_obf',
+                                $issuefailed->getemail()['badgeid'],
+                            ),
                         );
+                        continue;
                     }
-                    continue;
-                }
 
-                $criterion->set_met_by_user($user->id);
+                    try {
+                        $assertions = $badge->get_assertions();
+                        $deletedrecord = false;
 
-                // If badge issuance is valid, relate this event to criterion and save the criterion.
-                if ($eventid && !is_bool($eventid)) {
-                    $issuevent = new obf_issue_event(
-                        $eventid,
-                        $DB,
+                        // Check if the recipient already received the badge and delete the record if true.
+                        foreach ($assertions as $assertion) {
+                            if (in_array(
+                                $recipient,
+                                $assertion->get_recipients(),
+                            )) {
+                                $deletedrecord = $DB->delete_records(
+                                    'local_obf_issuefailedrecord',
+                                    [ 'id' => $record->id ],
+                                );
+                            }
+                        }
+
+                        // If the record was deleted, skip to the next recipient.
+                        if ($deletedrecord) {
+                            continue;
+                        }
+
+                        // Regenerate the criterion and email content.
+                        $criterion = $informations['criteriondata'];
+                        $email = new obf_email();
+                        $email->set_id($issuefailed->getemail()['id']);
+                        $email->set_body($issuefailed->getemail()['body']);
+                        $email->set_subject($issuefailed->getemail()['subject']);
+                        $email->set_badge_id($issuefailed->getemail()['badgeid']);
+                        $email->set_footer($issuefailed->getemail()['footer']);
+                        $email->set_link_text($issuefailed->getemail()['linktext']);
+
+                        // Attempt to issue the badge for the recipient.
+                        $eventid = $badge->issue(
+                            [ $recipient ],
+                            // Issue the badge only for the current recipient.
+                            $issuefailed->gettimestamp(),
+                            $email,
+                            $issuefailed->getcriteriaaddendum(),
+                            $criterion->get_items(),
+                        );
+                    } catch (Exception $e) {
+                        $timestamp = $issuefailed->gettimestamp();
+                        // If the failed record is more than a day old, update its status to 'error'.
+                        if ((time() - $timestamp) > 86400) {
+                            $DB->set_field(
+                                'local_obf_issuefailedrecord',
+                                'status',
+                                "error",
+                                [ 'id' => $record->id ],
+                            );
+                        }
+                        // If at least one recipient failed, we postpone the record.
+                        continue 2;
+                    }
+
+                    // Mark the criterion as met for the user.
+                    $criterion->set_met_by_user($user->id);
+
+                    // If badge issuance is valid, create a related event and save the criterion.
+                    if ($eventid && !is_bool($eventid)) {
+                        $issuevent = new obf_issue_event(
+                            $eventid,
+                            $DB,
+                        );
+                        $issuevent->set_criterionid($criterion->get_id());
+                        $issuevent->save($DB);
+                    }
+
+                    // Update the cache and set the record's status to 'success' after successful badge issuance.
+                    cache_helper::invalidate_by_event(
+                        'new_obf_assertion',
+                        [ $user->id ],
                     );
-                    $issuevent->set_criterionid($criterion->get_id());
-                    $issuevent->save($DB);
+                    $DB->set_field(
+                        'local_obf_issuefailedrecord',
+                        'status',
+                        "success",
+                        [ 'id' => $record->id ],
+                    );
                 }
-
-                // Update cache and record status after a successful badge issuance.
-                cache_helper::invalidate_by_event(
-                    'new_obf_assertion',
-                    [ $user->id ],
-                );
-
-                $DB->set_field(
-                    'local_obf_issuefailedrecord',
-                    'status',
-                    "success",
-                    [ 'id' => $record->id ],
-                );
-            } elseif ($record->status == "success") {
+            } else if ($record->status == "success") {
+                // Delete the record if its status is 'success'.
                 $DB->delete_records(
                     'local_obf_issuefailedrecord',
                     [ 'id' => $record->id ],
