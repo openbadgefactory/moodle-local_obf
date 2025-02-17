@@ -1071,6 +1071,8 @@ class obf_criterion {
         $record->email = json_encode($email->jsonSerialize());
         $record->criteriaaddendum = $criteriaaddendum;
         $record->status = 'pending';
+        // Save clientid.
+        $record->clientid = $this->get_clientid();
         if ($items) {
             $itemsArray = array_map(function ($item) {
                 return (array) $item->jsonSerialize();

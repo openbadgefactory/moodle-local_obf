@@ -896,5 +896,18 @@ function xmldb_local_obf_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024120303, 'local', 'obf');
     }
 
+    if ($oldversion < 2025021400) {
+        $table = new xmldb_table('local_obf_issuefailedrecord');
+        $field = new xmldb_field('clientid', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+
+        // Conditionally add field status to the local_obf_issuefailedrecord table.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // local_obf savepoint reached
+        upgrade_plugin_savepoint(true, 2025021400, 'local', 'obf');
+    }
+
     return true;
 }

@@ -118,6 +118,7 @@ $createrecord = static function($record) {
         'timestamp' => userdate($recordobject->gettimestamp()),
         'email' => $recordobject->getemail(),
         'status' => $recordobject->getstatus(),
+        'clientid' => $recordobject->getclientid(),
         'deleteurl' => (new moodle_url(
             '/local/obf/failrecordlist.php',
             [

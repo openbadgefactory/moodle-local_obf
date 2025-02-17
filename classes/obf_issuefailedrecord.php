@@ -55,6 +55,10 @@ class obf_issuefailedrecord {
      * Represents a collection of items.
      */
     protected $items;
+    /**
+     * The client id link to the badge.
+     */
+    protected $clientid;
 
     /**
      * Constructor for initializing object properties from a given record.
@@ -70,6 +74,7 @@ class obf_issuefailedrecord {
         $this->criteriaaddendum = $record->criteriaaddendum;
         $this->status = $record->status;
         $this->items = $record->items;
+        $this->clientid = $record->clientid;
     }
 
     /**
@@ -142,6 +147,17 @@ class obf_issuefailedrecord {
     }
 
     /**
+     * Get the client id of the current object.
+     *
+     * This method returns the value of the status property of the object.
+     *
+     * @return mixed The current status of the object.
+     */
+    public function getclientid() {
+        return $this->clientid;
+    }
+
+    /**
      * Retrieve items property and decode it as JSON.
      *
      * This method returns the items property of the object instance and decodes it as a JSON string into an associative array.
@@ -205,15 +221,8 @@ class obf_issuefailedrecord {
         $badge = null;
         $client = null;
 
-        // Find the correct client.
-        $clientavaible = $DB->get_records(
-            'local_obf_oauth2',
-            null,
-            'client_name',
-        );
-        if (empty($clientavaible)) {
-            // Fallback for legacy connect.
-            $client = obf_client::get_instance();
+        if($this->clientid) {
+            $client = obf_client::connect($this->clientid);
             try {
                 $badge = $client->get_badge($this->getemail()['badgeid']);
                 $badge = obf_badge::get_instance_from_array($badge);
@@ -221,15 +230,33 @@ class obf_issuefailedrecord {
                 // Ignore if badge data can't be retrieve.
             }
         } else {
-            foreach ($clientavaible as $client) {
-                $client = obf_client::connect($client->client_id);
+            // Fallback if for some reason clientid was not saved.
+            // Find the correct client.
+            $clientavaible = $DB->get_records(
+                'local_obf_oauth2',
+                null,
+                'client_name',
+            );
+            if (empty($clientavaible)) {
+                // Fallback for legacy connect.
+                $client = obf_client::get_instance();
                 try {
                     $badge = $client->get_badge($this->getemail()['badgeid']);
                     $badge = obf_badge::get_instance_from_array($badge);
-                    break;
                 } catch (Exception $e) {
-                    // If no records is find for the badge we continue searching for...
-                    continue;
+                    // Ignore if badge data can't be retrieve.
+                }
+            } else {
+                foreach ($clientavaible as $client) {
+                    $client = obf_client::connect($client->client_id);
+                    try {
+                        $badge = $client->get_badge($this->getemail()['badgeid']);
+                        $badge = obf_badge::get_instance_from_array($badge);
+                        break;
+                    } catch (Exception $e) {
+                        // If no records is find for the badge we continue searching for...
+                        continue;
+                    }
                 }
             }
         }
