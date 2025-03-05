@@ -72,18 +72,21 @@ class local_obf_observer {
      */
     private static function course_user_completion_review(stdClass $eventdata) {
         global $DB;
-        self::requires(array('/classes/event.php'));
-        $user = $DB->get_record('user', array('id' => $eventdata->userid));
+        self::requires([ '/classes/event.php' ]);
+        $user = $DB->get_record(
+            'user',
+            [ 'id' => $eventdata->userid ],
+        );
         $backpack = obf_backpack::get_instance($user);
 
         // If the user has configured the backpack settings, use the backpack email instead of the
         // default email.
-        $recipients = array($backpack === false ? $user->email : $backpack->get_email());
+        $recipients = [ $backpack === false ? $user->email : $backpack->get_email() ];
 
         // Get all criteria related to course completion.
         $criteria = obf_criterion::get_course_criterion($eventdata->course);
 
-        foreach ($criteria as $criterionid => $criterion) {
+        foreach ($criteria as $criterion) {
             // User has already met this criterion.
             if ($criterion->is_met_by_user($user)) {
                 continue;
@@ -91,12 +94,17 @@ class local_obf_observer {
 
             // Has the user completed all the required criteria (completion/grade/date)
             // in this criterion?
-            $criterionmet = $criterion->review($eventdata->userid,
-                $eventdata->course);
+            $criterionmet = $criterion->review(
+                $eventdata->userid,
+                $eventdata->course,
+            );
 
             // Criterion was met, issue the badge.
             if ($criterionmet) {
-                $criterion->issue_and_set_met($user, $recipients);
+                $criterion->issue_and_set_met(
+                    $user,
+                    $recipients,
+                );
             }
         }
         return true;
@@ -128,14 +136,22 @@ class local_obf_observer {
 
         global $DB;
 
-        self::requires(array('/classes/event.php', '/classes/criterion/obf_criterion_item.php'));
+        self::requires(
+            [
+                '/classes/event.php',
+                '/classes/criterion/obf_criterion_item.php'
+            ],
+        );
 
-        $user = $DB->get_record('user', array('id' => $eventdata->userid));
+        $user = $DB->get_record(
+            'user',
+            [ 'id' => $eventdata->userid ],
+        );
 
         $backpack = obf_backpack::get_instance($user);
 
         // If the user has configured the backpack settings, use the backpack email instead of the default email.
-        $recipients = array($backpack === false ? $user->email : $backpack->get_email());
+        $recipients = [ $backpack === false ? $user->email : $backpack->get_email() ];
 
         // Get all criteria related to program completion.
         $criteria = obf_criterion::get_program_criterion($eventdata->programid);
@@ -147,11 +163,17 @@ class local_obf_observer {
                 continue;
             }
 
-            $criterionmet = $criterion->review_prog($eventdata->userid, $eventdata->programid);
+            $criterionmet = $criterion->review_prog(
+                $eventdata->userid,
+                $eventdata->programid,
+            );
 
             // Criterion was met, issue the badge.
             if ($criterionmet) {
-                $criterion->issue_and_set_met($user, $recipients);
+                $criterion->issue_and_set_met(
+                    $user,
+                    $recipients,
+                );
             }
 
         }
@@ -166,7 +188,10 @@ class local_obf_observer {
      */
     public static function course_module_completion_updated(\core\event\course_module_completion_updated $event) {
         self::requires();
-        $eventdata = $event->get_record_snapshot('course_modules_completion', $event->objectid);
+        $eventdata = $event->get_record_snapshot(
+            'course_modules_completion',
+            $event->objectid,
+        );
         $context = context_module::instance($eventdata->coursemoduleid);
         if ($context && $context->get_course_context()) {
             $eventdata->course = $context->get_course_context()->instanceid;
@@ -184,11 +209,17 @@ class local_obf_observer {
     public static function course_deleted(\core\event\course_deleted $event) {
         global $DB;
         self::requires();
-        $course = $event->get_record_snapshot('course', $event->objectid);
+        $course = $event->get_record_snapshot(
+            'course',
+            $event->objectid,
+        );
         $course->context = new stdClass();
         $course->context->id = $event->courseid;
 
-        obf_criterion_course::delete_by_course($course, $DB);
+        obf_criterion_course::delete_by_course(
+            $course,
+            $DB,
+        );
         return true;
     }
 
@@ -203,12 +234,21 @@ class local_obf_observer {
         global $DB;
         self::requires();
 
-        if (get_config('local_obf', 'coursereset')) {
-            $course = $event->get_record_snapshot('course', $event->courseid);
+        if (get_config(
+            'local_obf',
+            'coursereset',
+        )) {
+            $course = $event->get_record_snapshot(
+                'course',
+                $event->courseid,
+            );
             $course->context = new stdClass();
             $course->context->id = $event->courseid;
 
-            obf_criterion_course::delete_by_course($course, $DB);
+            obf_criterion_course::delete_by_course(
+                $course,
+                $DB,
+            );
         }
         return true;
     }
@@ -220,13 +260,23 @@ class local_obf_observer {
      */
     public static function profile_criteria_review(\core\event\user_updated $event) {
         global $DB, $CFG;
-        self::requires(array('/classes/event.php', '/classes/criterion/obf_criterion_item.php'));
+        self::requires(
+            [
+                '/classes/event.php',
+                '/classes/criterion/obf_criterion_item.php'
+            ],
+        );
 
         $userid = $event->objectid;
 
-        if ($rs =
-            $DB->get_records('local_obf_criterion_courses', array('criteria_type' => obf_criterion_item::CRITERIA_TYPE_PROFILE))) {
-            $user = $DB->get_record('user', array('id' => $userid));
+        if ($rs = $DB->get_records(
+            'local_obf_criterion_courses',
+            [ 'criteria_type' => obf_criterion_item::CRITERIA_TYPE_PROFILE ],
+        )) {
+            $user = $DB->get_record(
+                'user',
+                [ 'id' => $userid ],
+            );
             foreach ($rs as $critres) {
                 $critarr = (array) $critres;
                 $crit = obf_criterion_item::build($critarr);
@@ -236,7 +286,10 @@ class local_obf_observer {
                 }
 
                 // Review & issue.
-                $criterionmet = $crit->review_for_user($user, $criterion);
+                $criterionmet = $crit->review_for_user(
+                    $user,
+                    $criterion,
+                );
 
                 // Criterion was met, issue the badge.
                 if ($criterionmet) {

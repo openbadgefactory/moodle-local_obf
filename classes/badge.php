@@ -29,6 +29,7 @@ use classes\criterion\obf_criterion_activity;
 use context_course;
 use context_system;
 use dml_exception;
+use Exception;
 use moodle_url;
 use stdClass;
 
@@ -455,7 +456,6 @@ class obf_badge {
         // in case there is no rule for current categ badge and at last one define on site.
         $anyrulesdefinesql = "SELECT * FROM {local_obf_rulescateg}";
         $anyrules = $DB->get_records_sql($anyrulesdefinesql);
-
         if (!empty($anyrules)) {
 
             $badges = $this->get_client()->get_badges();
@@ -477,7 +477,7 @@ class obf_badge {
 
         $raw = $this->get_client()->get_raw_response();
         $this->get_client()->set_enable_raw_response(false);
-        foreach ($raw as $key => $value) {
+        foreach ($raw as $value) {
             if ($match = preg_match('/^Location: .*event\/[\w]+\/(.*)$/i', $value, $matches)) {
                 $eventid = trim($matches[$match]);
                 if (!empty($eventid)) {

@@ -438,6 +438,7 @@ function xmldb_local_obf_upgrade($oldversion) {
         // Obf savepoint reached.
         upgrade_plugin_savepoint(true, 2015061000, 'local', 'obf');
     }
+
     if ($oldversion < 2015061700) {
 
         // Define table obf_user_preferences to be created.
@@ -460,6 +461,7 @@ function xmldb_local_obf_upgrade($oldversion) {
         // Obf savepoint reached.
         upgrade_plugin_savepoint(true, 2015061700, 'local', 'obf');
     }
+
     if ($oldversion < 2015061800) {
 
         // Define table obf_user_badge_blacklist to be created.
@@ -485,6 +487,7 @@ function xmldb_local_obf_upgrade($oldversion) {
         // Obf savepoint reached.
         upgrade_plugin_savepoint(true, 2015061800, 'local', 'obf');
     }
+
     if ($oldversion < 2015062100) {
 
         // Define table obf_issue_events to be created.
@@ -510,6 +513,7 @@ function xmldb_local_obf_upgrade($oldversion) {
         // Obf savepoint reached.
         upgrade_plugin_savepoint(true, 2015062100, 'local', 'obf');
     }
+
     if ($oldversion < 2015062300) {
 
         // Define field backpack_provider to be added to obf_backpack_emails.
@@ -524,6 +528,7 @@ function xmldb_local_obf_upgrade($oldversion) {
         // Obf savepoint reached.
         upgrade_plugin_savepoint(true, 2015062300, 'local', 'obf');
     }
+
     if ($oldversion < 2015062501) {
         $oldtables = array('obf_criterion_courses', 'obf_criterion',
             'obf_email_templates', 'obf_criterion_met', 'obf_backpack_emails',
@@ -548,10 +553,12 @@ function xmldb_local_obf_upgrade($oldversion) {
         // Obf savepoint reached.
         upgrade_plugin_savepoint(true, 2015062501, 'local', 'obf');
     }
+
     if ($oldversion < 2015070600) {
         set_config('availablecategories', null, 'local_obf');
         upgrade_plugin_savepoint(true, 2015070600, 'local', 'obf');
     }
+
     if ($oldversion < 2015120301) {
 
         // Define field use_addendum to be added to local_obf_criterion.
@@ -573,6 +580,7 @@ function xmldb_local_obf_upgrade($oldversion) {
         // Obf savepoint reached.
         upgrade_plugin_savepoint(true, 2015120301, 'local', 'obf');
     }
+
     if ($oldversion < 2015121500) {
 
         // Define field use_addendum to be added to local_obf_criterion.
@@ -648,6 +656,7 @@ function xmldb_local_obf_upgrade($oldversion) {
         // Obf savepoint reached.
         upgrade_plugin_savepoint(true, 2016060301, 'local', 'obf');
     }
+
     if ($oldversion < 2016062200) {
 
         $table = new xmldb_table('local_obf_backpack_sources');
@@ -659,6 +668,7 @@ function xmldb_local_obf_upgrade($oldversion) {
 
         upgrade_plugin_savepoint(true, 2016062200, 'local', 'obf');
     }
+
     if ($oldversion < 2016081000) {
         // Define table local_obf_user_emails to be created.
         $table = new xmldb_table('local_obf_user_emails');
@@ -683,6 +693,7 @@ function xmldb_local_obf_upgrade($oldversion) {
         // Obf savepoint reached.
         upgrade_plugin_savepoint(true, 2016081000, 'local', 'obf');
     }
+
     if ($oldversion < 2016090700) {
         // Define table local_obf_user_emails to be created.
         $table = new xmldb_table('local_obf_backpack_sources');
@@ -700,6 +711,7 @@ function xmldb_local_obf_upgrade($oldversion) {
         set_config('displaymoodlebadges', 0, 'local_obf');
         upgrade_plugin_savepoint(true, 2017010900, 'local', 'obf');
     }
+
     if ($oldversion < 2017060800) {
         set_config('apidataretrieve', 'local', 'local_obf');
         upgrade_plugin_savepoint(true, 2017060800, 'local', 'obf');
@@ -844,6 +856,57 @@ function xmldb_local_obf_upgrade($oldversion) {
 
         // Mettre à jour la version.
         upgrade_plugin_savepoint(true, 2023041808, 'local', 'obf');
+    }
+
+    if ($oldversion < 2024120302) {
+
+        // Define table issuefailedrecord to be created.
+        $table = new xmldb_table('local_obf_issuefailedrecord');
+
+        // Adding fields to table issuefailedrecord.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null, null);
+        $table->add_field('recipients', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, null);
+        $table->add_field('time', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null, null);
+        $table->add_field('email', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, null);
+        $table->add_field('criteriaaddendum', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, null);
+        $table->add_field('items', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, null);
+
+        // Adding keys to table issuefailedrecord.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+
+        // Conditionally launch create table for issuefailedrecord.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Savepoint reached.
+        upgrade_plugin_savepoint(true, 2024120302, 'local', 'obf');
+    }
+
+    if ($oldversion < 2024120303) {
+        $table = new xmldb_table('local_obf_issuefailedrecord');
+        $field = new xmldb_field('status', XMLDB_TYPE_CHAR, '10', null, XMLDB_NOTNULL, null, null, null);
+
+        // Conditionally add field status to the local_obf_issuefailedrecord table.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // local_obf savepoint reached
+        upgrade_plugin_savepoint(true, 2024120303, 'local', 'obf');
+    }
+
+    if ($oldversion < 2025021400) {
+        $table = new xmldb_table('local_obf_issuefailedrecord');
+        $field = new xmldb_field('clientid', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+
+        // Conditionally add field status to the local_obf_issuefailedrecord table.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // local_obf savepoint reached
+        upgrade_plugin_savepoint(true, 2025021400, 'local', 'obf');
     }
 
     return true;

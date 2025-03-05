@@ -26,6 +26,7 @@ use classes\obf_assertion;
 use classes\obf_backpack;
 use classes\obf_blacklist;
 use classes\obf_client;
+use classes\obf_issuefailedrecord;
 use classes\obf_user_preferences;
 use classes\obf_assertion_collection;
 
@@ -44,7 +45,6 @@ define('OBF_API_CODE_CERT_ERROR', 495);
 define('OBF_API_CODE_NO_CERT', 496);
 
 require_once(__DIR__ . '/classes/criterion/obf_criterion.php');
-require_once(__DIR__ . '/classes/criterion/obf_criterion_course.php');
 
 /**
  * Adds the OBF-links to Moodle's navigation, Moodle 2.2 -style.
@@ -509,3 +509,21 @@ function createnewrule($ruleid, $oauth2id, $coursecategorieid, $badgecategoriena
     return $newrule;
 }
 
+/**
+ * Deletes a failed record from database.
+ *
+ * @param int $id The ID of the failed record.
+ * @return void
+ */
+function obf_delete_failed_record(int $id) {
+    global $DB;
+
+    $record = $DB->get_record('local_obf_issuefailedrecord', ['id' => $id]);
+
+    if (!$record) {
+        print_error('invalidrecordid', 'local_obf', '', $id);
+    }
+
+    $recordobject = new obf_issuefailedrecord($record);
+    $recordobject->delete();
+}

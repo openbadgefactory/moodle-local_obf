@@ -24,8 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$tasks = array(
-    array(
+$tasks = [
+    [
         'classname' => 'local_obf\task\certificate_expiration_reminder',
         'blocking' => 0,
         'minute' => '15',
@@ -33,8 +33,8 @@ $tasks = array(
         'day' => '*',
         'dayofweek' => '*',
         'month' => '*'
-    ),
-    array(
+    ],
+    [
         'classname' => 'local_obf\task\user_email_changer',
         'blocking' => 0,
         'minute' => '15',
@@ -42,5 +42,14 @@ $tasks = array(
         'day' => '*',
         'dayofweek' => '*',
         'month' => '*'
-    )
-);
+    ],
+    [
+        'classname' => 'local_obf\task\obf_issuefailedrecord_task',
+        'blocking' => 0,
+        'minute' => '*/30',
+        'hour' => '*',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*'
+    ],
+];

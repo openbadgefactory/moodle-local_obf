@@ -34,6 +34,7 @@ use Exception;
 use html_writer;
 use local_obf_html;
 use moodle_url;
+use stdClass;
 use url;
 use \Collator;
 
@@ -193,6 +194,11 @@ class obf_client {
         return $DB->get_records_sql_menu($sql, array($user->id));
     }
 
+    /**
+     * Checks if there is at least one client_id stored in the database or if the obfclientid config is not empty.
+     *
+     * @return bool Returns true if at least one client_id is found, false otherwise.
+     */
     public static function has_client_id() {
         global $DB;
         return $DB->count_records('local_obf_oauth2') > 0 || !empty(get_config('local_obf', 'obfclientid'));
@@ -293,11 +299,15 @@ class obf_client {
             $options = $this->get_curl_options(false);
 
             $res = $curl->post($url, http_build_query($params), $options);
-
             $res = json_decode($res);
 
+            if (!isset($res)) {
+                $res = new stdClass(); // Initialiser $res comme un objet.
+                $res->error = get_string('apierror503', 'local_obf');
+            }
+
             if (isset($res->error)) {
-                throw new Exception('Failed to get access token: ' . $res->error);
+                throw new Exception(get_string('failedtogetaccesstoken', 'local_obf') . $res->error);
             }
 
             $this->oauth2->access_token = $res->access_token;
@@ -803,6 +813,13 @@ class obf_client {
 
     public function issue_badge(obf_badge $badge, $recipients, $issuedon, $email, $criteriaaddendum, $course, $activity) {
         global $CFG, $DB;
+
+        // Before doing anything we test connection.
+        // If test_connection failed we throw an Error.
+        $httpcode = $this->test_connection();
+        if ($httpcode !== -1) {
+            throw new Exception(get_string('connectionerror', 'local_obf'), $httpcode);
+        }
 
         $recipientsnameemail = [];
 

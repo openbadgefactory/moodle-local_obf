@@ -163,7 +163,7 @@ class obf_criterion_activity extends obf_criterion_course {
     public function get_name() {
         $params = $this->get_params();
         $name = '';
-        foreach ($params as $key => $param) {
+        foreach ($params as $param) {
             if (array_key_exists('module', $param)) {
                 $cminstance = $param['module'];
                 $name .= (empty($name) ? '' : ', ') . $this->get_activityname($cminstance);
@@ -331,10 +331,6 @@ class obf_criterion_activity extends obf_criterion_course {
 
         $requireall = $criterion->get_completion_method() == obf_criterion::CRITERIA_COMPLETION_ALL;
 
-        $criterioncompleted = false;
-
-        $coursecompleted = true;
-
         $userid = $user->id;
         $courseid = $this->get_courseid();
         $course = $criterion->get_course($courseid);
@@ -435,7 +431,7 @@ class obf_criterion_activity extends obf_criterion_course {
      */
     private static function get_module_instanceids_from_params($params) {
         $ids = array();
-        foreach ($params as $key => $param) {
+        foreach ($params as $param) {
             if (array_key_exists('module', $param)) {
                 $ids[] = $param['module'];
             }
