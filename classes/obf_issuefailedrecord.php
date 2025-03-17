@@ -226,6 +226,7 @@ class obf_issuefailedrecord {
             try {
                 $badge = $client->get_badge($this->getemail()['badgeid']);
                 $badge = obf_badge::get_instance_from_array($badge);
+                $badge->set_client($client);
             } catch (Exception $e) {
                 // Ignore if badge data can't be retrieve.
             }
@@ -252,6 +253,7 @@ class obf_issuefailedrecord {
                     try {
                         $badge = $client->get_badge($this->getemail()['badgeid']);
                         $badge = obf_badge::get_instance_from_array($badge);
+                        $badge->set_client($client);
                         break;
                     } catch (Exception $e) {
                         // If no records is find for the badge we continue searching for...
