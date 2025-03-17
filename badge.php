@@ -142,14 +142,14 @@ switch ($action) {
             navigation_node::override_active_url(
                 new moodle_url('/local/obf/badge.php', array('action' => 'list'))
             );
-            $PAGE->navbar->add($badge->get_name(), $badgeurl);
+            $PAGE->navbar->add(s($badge->get_name()), $badgeurl);
         } else {
             navigation_node::override_active_url(
                 new moodle_url('/local/obf/badge.php', array('action' => 'list', 'courseid' => $courseid))
             );
             $coursebadgeurl = clone $badgeurl;
             $coursebadgeurl->param('courseid', $courseid);
-            $PAGE->navbar->add($badge->get_name(), $coursebadgeurl);
+            $PAGE->navbar->add(s($badge->get_name()), $coursebadgeurl);
         }
 
         $renderer = $PAGE->get_renderer('local_obf', 'badge');
