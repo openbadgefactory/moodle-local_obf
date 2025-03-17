@@ -685,12 +685,7 @@ class obf_criterion {
 
             $criteriaaddendum = $this->get_use_addendum() ? $this->get_criteria_addendum() : '';
 
-            try {
-                $eventid = $badge->issue($recipientemails, time(), $email, $criteriaaddendum, $this->get_items());
-            } catch (Exception $e) {
-                $this->handle_issuefailed($recipientemails, time(), $email, $criteriaaddendum, $this->get_items());
-                return false;
-            }
+            $eventid = $badge->issue($recipientemails, time(), $email, $criteriaaddendum, $this->get_items());
 
             if ($eventid && !is_bool($eventid)) {
                 $issuevent = new obf_issue_event($eventid, $DB);
