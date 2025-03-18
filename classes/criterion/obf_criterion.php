@@ -1068,6 +1068,8 @@ class obf_criterion {
         $record->status = 'pending';
         // Save clientid.
         $record->clientid = $this->get_clientid();
+        // Save criterionid.
+        $record->criterionid = $this->get_id();
         if ($items) {
             $itemsArray = array_map(function ($item) {
                 return (array) $item->jsonSerialize();

@@ -61,6 +61,11 @@ class obf_issuefailedrecord {
     protected $clientid;
 
     /**
+     * The client id link to the badge.
+     */
+    protected $criterionid;
+
+    /**
      * Constructor for initializing object properties from a given record.
      *
      * @param object $record An object containing properties for initialization.
@@ -75,6 +80,7 @@ class obf_issuefailedrecord {
         $this->status = $record->status;
         $this->items = $record->items;
         $this->clientid = $record->clientid;
+        $this->criterionid = $record->criterionid;
     }
 
     /**
@@ -155,6 +161,17 @@ class obf_issuefailedrecord {
      */
     public function getclientid() {
         return $this->clientid;
+    }
+
+    /**
+     * Get the criterion id of the current object.
+     *
+     * This method returns the value of the status property of the object.
+     *
+     * @return mixed The current status of the object.
+     */
+    public function getcriterionid() {
+        return $this->criterionid;
     }
 
     /**
@@ -271,6 +288,7 @@ class obf_issuefailedrecord {
                 $criterion->set_badgeid($this->getemail()['badgeid']);
             }
 
+            $criterion->set_id($this->getcriterionid());
             $criterion->set_clientid($client->client_id());
             $criterion->set_items($this->getitems());
 
