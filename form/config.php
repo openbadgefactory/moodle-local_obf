@@ -48,7 +48,16 @@ class obf_config_form extends local_obf_form_base implements renderable {
 
         $formdata = $this->get_data();
         if ($errorcode === -1) {
-            $expires = userdate($client->get_certificate_expiration_date(),
+            // Prevent timestamp to be false.
+            // Export badge seems only legacyfeature and will work only for it as it is.
+            // Use oauth2_access_token expire date if needed as a workaround.
+            if ($client->get_certificate_expiration_date() === false && $client->oauth2_access_token()) {
+                $dateexpires = $client->oauth2_access_token()['token_expires'];
+            } else {
+                $dateexpires = $client->get_certificate_expiration_date();
+            }
+
+            $expires = userdate($dateexpires,
                 get_string('dateformatdate', 'local_obf'));
             $mform->addElement('html',
                 $OUTPUT->notification(get_string('connectionisworking',
@@ -57,8 +66,8 @@ class obf_config_form extends local_obf_form_base implements renderable {
             $mform->setType('deauthenticate', PARAM_INT);
             $mform->addElement('submit', 'submitbutton',
                 get_string('deauthenticate', 'local_obf'));
-        } else { // Connection is not working.
-
+        } else {
+            // Connection is not working.
             // We get error code 0 if pinging the API fails (like if the keyfiles
             // are missing). In plugin config we should show a more spesific
             // error to admin, so let's do that by changing the error code.
@@ -81,8 +90,6 @@ class obf_config_form extends local_obf_form_base implements renderable {
                 $mform->createElement('submit', 'submitbutton',
                     get_string('authenticate', 'local_obf')));
             $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
-
         }
     }
-
 }
