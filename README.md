@@ -45,7 +45,12 @@ On the API key page click on `Generate new client secret` for OAuth2 Client Cred
 
 Changelog
 ------------------
-1.1
+
+1.1.1
+
+- Minor settings page fixes.
+
+1.1.0
 
 - [Added] Introduced a queuing system for pending badges:
   Implemented functionality to queue badges that cannot be immediately issued due to factors such as server unavailability or client subscription issues.
