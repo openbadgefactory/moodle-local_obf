@@ -197,8 +197,16 @@ switch ($action) {
             if (isset($data->displaymoodlebadges)) {
                 set_config('displaymoodlebadges', $data->displaymoodlebadges, 'local_obf');
             }
-            $url->param('action', 'authenticate');
-            redirect($url);
+
+            if (empty(get_config('local_obf', 'obfclientid'))) {
+                // OAuth2 API auth in use
+                redirect(new moodle_url('/local/obf/config.php'));
+            }
+            else {
+                // Legacy API auth in use
+                $url->param('action', 'authenticate');
+                redirect($url);
+            }
         }
 
         $content .= $PAGE->get_renderer('local_obf')->render_badge_exporter($exportform);
