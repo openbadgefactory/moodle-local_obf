@@ -22,7 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace classes;
+namespace local_obf\classes;
 
 use API;
 use Associative;
@@ -37,9 +37,9 @@ use Mozilla;
 use Open;
 use Provider;
 use stdClass;
-use Transport;
+// use Transport;
 use type;
-use Userid;
+// use Userid;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -95,7 +95,7 @@ class obf_backpack {
     /**
      * @var List or groups to display.
      */
-    private $badgegroups = array();
+    private $badge_groups = array();
     /**
      * @var Transport.
      */
@@ -133,8 +133,9 @@ class obf_backpack {
      * DEPRECATED - Ids should now match on assertion and backpack.
      *
      * @var Associative array to match provider ids to assertion source ids.
-     */
-    private static $backpackprovidersources = array();
+     *
+     * private static $backpackprovidersources = array();
+    **/
 
     /**
      * Constructor.
