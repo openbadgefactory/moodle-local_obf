@@ -22,21 +22,21 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace classes;
+namespace local_obf\classes;
 
 use Assertion;
 use cache;
 use context_course;
 use context_coursecat;
 use context_system;
-use core\message\message;
+// use core\message\message;
 use Exception;
 use stdClass;
 use type;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once(__DIR__ . '/client.php');
+require_once(__DIR__ . '/obf_client.php');
 require_once(__DIR__ . '/badge.php');
 require_once(__DIR__ . '/collection.php');
 require_once(__DIR__ . '/obf_assertion_collection.php');

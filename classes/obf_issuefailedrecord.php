@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace classes;
+namespace local_obf\classes;
 
-use classes\criterion\obf_criterion;
-use classes\criterion\obf_criterion_item;
+use local_obf\classes\criterion\obf_criterion;
+use local_obf\classes\criterion\obf_criterion_item;
 use Exception;
 
 require_once(__DIR__ . '/../classes/criterion/obf_criterion_activity.php');

@@ -22,11 +22,11 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use classes\obf_client;
+use local_obf\classes\obf_client;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once(__DIR__ . '/classes/client.php');
+require_once(__DIR__ . '/classes/obf_client.php');
 
 $hasobfconfig = $hassiteconfig || has_capability('local/obf:configure', context_system::instance());
 if ($hasobfconfig) {

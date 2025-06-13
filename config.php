@@ -22,11 +22,11 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use classes\obf_client;
+use local_obf\classes\obf_client;
 
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
-require_once(__DIR__ . '/classes/client.php');
+require_once(__DIR__ . '/classes/obf_client.php');
 require_once(__DIR__ . '/form/config_oauth2.php');
 require_once(__DIR__ . '/form/settings.php');
 require_once(__DIR__ . '/form/badgeexport.php');
@@ -56,6 +56,12 @@ $listclients = new moodle_url('/local/obf/config.php');
 $foo = new curl();
 
 echo $OUTPUT->header();
+
+@error_reporting(E_ALL | E_STRICT);
+@ini_set('display_errors', '1');
+
+$CFG->debug = (E_ALL | E_STRICT);
+$CFG->debugdisplay = 1;
 
 switch ($action) {
     case 'list':

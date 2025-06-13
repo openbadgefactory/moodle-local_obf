@@ -23,22 +23,22 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_obf\task;
+namespace local_obf\classes\task;
 
 use cache_helper;
-use classes\criterion\obf_criterion;
-use classes\obf_badge;
-use classes\obf_client;
-use classes\obf_email;
-use classes\obf_issue_event;
-use classes\obf_issuefailedrecord;
+// use local_obf\classes\criterion\obf_criterion;
+// use local_obf\classes\obf_badge;
+// use local_obf\classes\obf_client;
+use local_obf\classes\obf_email;
+use local_obf\classes\obf_issue_event;
+use local_obf\classes\obf_issuefailedrecord;
 use Exception;
 
 defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__ . '/../obf_issuefailedrecord.php');
 require_once(__DIR__ . '/../criterion/obf_criterion.php');
-require_once(__DIR__ . '/../client.php');
+require_once(__DIR__ . '/../obf_client.php');
 require_once(__DIR__ . '/../email.php');
 require_once(__DIR__ . '/../event.php');
 

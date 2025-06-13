@@ -22,9 +22,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_obf\task;
+namespace local_obf\classes\task;
 
-use classes\obf_backpack;
+use local_obf\classes\obf_backpack;
 
 class user_email_changer extends \core\task\scheduled_task {
 

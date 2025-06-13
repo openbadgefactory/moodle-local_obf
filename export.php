@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-use classes\obf_assertion;
-use classes\obf_client;
+use local_obf\classes\obf_assertion;
+use local_obf\classes\obf_client;
 
 require_once(__DIR__ . '/../../config.php');
-require_once(__DIR__ . '/classes/client.php');
+require_once(__DIR__ . '/classes/obf_client.php');
 require_once($CFG->libdir . '/csvlib.class.php');
 
 $courseid = optional_param('courseid', null, PARAM_INT);

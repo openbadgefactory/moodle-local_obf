@@ -22,7 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace classes;
+namespace local_obf\classes;
 use moodle_database;
 use stdClass;
 

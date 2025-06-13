@@ -22,14 +22,14 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace classes\criterion;
+namespace local_obf\classes\criterion;
 
 use cache_helper;
-use classes\obf_backpack;
-use classes\obf_badge;
-use classes\obf_client;
-use classes\obf_email;
-use classes\obf_issue_event;
+use local_obf\classes\obf_backpack;
+use local_obf\classes\obf_badge;
+use local_obf\classes\obf_client;
+use local_obf\classes\obf_email;
+use local_obf\classes\obf_issue_event;
 use completion_completion;
 use completion_info;
 use Exception;

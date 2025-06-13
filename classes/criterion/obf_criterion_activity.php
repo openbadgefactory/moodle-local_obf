@@ -22,12 +22,12 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace classes\criterion;
+namespace local_obf\classes\criterion;
 
 use completion_info;
 use html_writer;
 use MoodleQuickForm;
-use Set;
+// use Set;
 use stdClass;
 
 defined('MOODLE_INTERNAL') || die();

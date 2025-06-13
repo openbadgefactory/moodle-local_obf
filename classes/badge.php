@@ -22,10 +22,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace classes;
+namespace local_obf\classes;
 
-use classes\criterion\obf_criterion;
-use classes\criterion\obf_criterion_activity;
+use local_obf\classes\criterion\obf_criterion;
+use local_obf\classes\criterion\obf_criterion_activity;
 use context_course;
 use context_system;
 use dml_exception;
@@ -36,7 +36,7 @@ use stdClass;
 defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__ . '/issuer.php');
-require_once(__DIR__ . '/client.php');
+require_once(__DIR__ . '/obf_client.php');
 require_once(__DIR__ . '/email.php');
 require_once(__DIR__ . '/criterion/obf_criterion.php');
 require_once(__DIR__ . '/obf_assertion.php');

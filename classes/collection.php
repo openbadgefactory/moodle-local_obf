@@ -22,12 +22,12 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace classes;
+namespace local_obf\classes;
 
 defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__ . '/badge.php');
-require_once(__DIR__ . '/client.php');
+require_once(__DIR__ . '/obf_client.php');
 
 /**
  * Class for storing the badges fetched from Open Badge Factory.

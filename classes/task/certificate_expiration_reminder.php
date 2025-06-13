@@ -22,9 +22,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_obf\task;
+namespace local_obf\classes\task;
 
-use classes\obf_client;
+use local_obf\classes\obf_client;
 use stdClass;
 
 /**
@@ -41,7 +41,7 @@ class certificate_expiration_reminder extends \core\task\scheduled_task {
     public function execute() {
         global $CFG;
 
-        require_once($CFG->dirroot . '/local/obf/classes/client.php');
+        require_once($CFG->dirroot . '/local/obf/classes/obf_client.php');
         require_once($CFG->libdir . '/messagelib.php');
         require_once($CFG->libdir . '/datalib.php');
 

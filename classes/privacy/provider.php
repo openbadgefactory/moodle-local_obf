@@ -21,14 +21,14 @@
  * @category    admin
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-namespace local_obf\privacy;
+namespace local_obf\classes\privacy;
 
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\contextlist;
 use core_privacy\local\request\writer;
-use \core_privacy\local\request\userlist;
-use \core_privacy\local\request\approved_userlist;
+// use \core_privacy\local\request\userlist;
+// use \core_privacy\local\request\approved_userlist;
 
 class provider implements
     // This plugin does store personal user data.

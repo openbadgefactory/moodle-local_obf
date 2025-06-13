@@ -22,16 +22,16 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use classes\obf_badge;
-use classes\obf_client;
-use classes\obf_email;
+use local_obf\classes\obf_badge;
+use local_obf\classes\obf_client;
+use local_obf\classes\obf_email;
 
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once(__DIR__ . '/form/config.php');
 require_once(__DIR__ . '/form/settings.php');
 require_once(__DIR__ . '/form/badgeexport.php');
-require_once(__DIR__ . '/classes/client.php');
+require_once(__DIR__ . '/classes/obf_client.php');
 
 $context = context_system::instance();
 $msg = optional_param('msg', '', PARAM_TEXT);

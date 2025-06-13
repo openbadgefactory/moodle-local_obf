@@ -22,16 +22,16 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace classes\criterion;
+namespace local_obf\classes\criterion;
 
-use Certificate;
+// use Certificate;
 use Exception;
 use Expires;
 use html_writer;
 use MoodleQuickForm;
 use program;
-use Programs;
-use Set;
+// use Programs;
+// use Set;
 use stdClass;
 use strign;
 
