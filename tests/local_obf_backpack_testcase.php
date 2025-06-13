@@ -22,8 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use classes\obf_backpack;
-
+use local_obf\classes\obf_backpack;
 /**
  * Backpack testcase.
  *
@@ -52,9 +51,17 @@ class local_obf_backpack_testcase extends advanced_testcase {
         $this->resetAfterTest();
 
         $email = 'existing@example.com';
-        $stub = $this->getMock('classes\obf_backpack', array('connect_to_backpack'));
-        $stub->expects($this->any())->method('connect_to_backpack')->with(
-            $this->equalTo($email))->will($this->returnValue(69));
+        $transport = new curl();
+
+        $stub = $this->getMockBuilder(obf_backpack::class)
+            ->onlyMethods(['connect_to_backpack'])
+            ->setConstructorArgs([$transport])
+            ->getMock();
+
+        $stub->expects($this->once())
+            ->method('connect_to_backpack')
+            ->with($this->equalTo($email))
+            ->willReturn(69);
 
         $stub->connect($email);
         $this->assertTrue($stub->is_connected());
@@ -71,7 +78,9 @@ class local_obf_backpack_testcase extends advanced_testcase {
      */
     public function test_invalid_connection() {
         $this->resetAfterTest();
-        $stub = $this->getMock('classes\obf_backpack', array('connect_to_backpack'));
+        $stub = $this->getMockBuilder(obf_backpack::class)
+                    ->onlyMethods(['connect_to_backpack'])
+                    ->getMock();
         $stub->expects($this->any())->method(
             $this->equalTo('connect_to_backpack'))->will($this->returnValue(false));
 
@@ -95,7 +104,9 @@ class local_obf_backpack_testcase extends advanced_testcase {
         $invalidassertion = 'invalid_assertion';
         $email = 'existing@example.com';
 
-        $mock = $this->getMock('curl', array('post'));
+        $mock = $this->getMockBuilder(curl::class)
+                    ->onlyMethods(['post'])
+                    ->getMock();
         $mock->expects($this->any())->method('post')->will($this->returnCallback(
             function($url, $params) use ($email, $assertion) {
                 $obj = json_decode($params);

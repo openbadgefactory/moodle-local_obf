@@ -31,7 +31,11 @@ class obf_mock_curl {
 
     public static function get_mock_curl($self) {
         // Create the mock object.
-        $curl = $self->getMock('curl', array('post', 'get', 'delete'));
+        // $curl = $self->getMock('curl', array('post', 'get', 'delete'));
+        $curl = $self->getMockBuilder(curl::class)
+                ->disableOriginalConstructor()
+                ->onlyMethods(['post', 'get', 'delete'])
+                ->getMock();
 
         // Mock HTTP POST.
         $curl->info = array('http_code' => 200);
