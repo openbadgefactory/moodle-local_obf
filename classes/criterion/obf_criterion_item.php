@@ -22,7 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace classes\criterion;
+namespace local_obf\classes\criterion;
 
 use Exception;
 use stdClass;
@@ -158,7 +158,7 @@ abstract class obf_criterion_item {
         $class = 'obf_criterion_' . $type;
         require_once(__DIR__ . '/' . $class . '.php');
 
-        $fullname = "classes\criterion\\" . $class;
+        $fullname = "local_obf\\classes\\criterion\\$class";
         return new $fullname($params);
     }
 
