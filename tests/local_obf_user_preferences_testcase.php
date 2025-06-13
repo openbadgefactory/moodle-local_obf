@@ -22,7 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use classes\obf_user_preferences;
+use local_obf\classes\obf_user_preferences;
 
 defined('MOODLE_INTERNAL') || die();
 

@@ -22,8 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use classes\obf_badge;
-use classes\obf_email;
+use local_obf\classes\obf_badge;
+use local_obf\classes\obf_email;
 
 defined('MOODLE_INTERNAL') || die();
 

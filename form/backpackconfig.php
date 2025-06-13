@@ -22,8 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use classes\obf_backpack;
-use classes\obf_badge;
+use local_obf\classes\obf_backpack;
+use local_obf\classes\obf_badge;
 
 defined('MOODLE_INTERNAL') || die();
 

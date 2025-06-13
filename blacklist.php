@@ -22,8 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use classes\obf_blacklist;
-use classes\obf_user_preferences;
+use local_obf\classes\obf_blacklist;
+use local_obf\classes\obf_user_preferences;
 
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/classes/blacklist.php');

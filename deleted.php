@@ -22,13 +22,13 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use classes\criterion\obf_criterion;
-use classes\obf_client;
+use local_obf\classes\criterion\obf_criterion;
+use local_obf\classes\obf_client;
 
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once(__DIR__ . '/form/criteriondeletion.php');
-require_once(__DIR__ . '/classes/client.php');
+require_once(__DIR__ . '/classes/obf_client.php');
 require_once(__DIR__ . '/classes/criterion/obf_criterion.php');
 
 $context = context_system::instance();

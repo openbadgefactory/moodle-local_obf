@@ -22,10 +22,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use classes\obf_assertion;
-use classes\obf_blacklist;
-use classes\obf_client;
-use classes\obf_assertion_collection;
+use local_obf\classes\obf_assertion;
+use local_obf\classes\obf_blacklist;
+use local_obf\classes\obf_client;
+use local_obf\classes\obf_assertion_collection;
 
 defined('MOODLE_INTERNAL') || die();
 

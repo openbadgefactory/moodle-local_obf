@@ -22,13 +22,13 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use classes\obf_assertion;
-use classes\obf_backpack;
-use classes\obf_blacklist;
-use classes\obf_client;
-use classes\obf_issuefailedrecord;
-use classes\obf_user_preferences;
-use classes\obf_assertion_collection;
+use local_obf\classes\obf_assertion;
+use local_obf\classes\obf_backpack;
+use local_obf\classes\obf_blacklist;
+use local_obf\classes\obf_client;
+use local_obf\classes\obf_issuefailedrecord;
+use local_obf\classes\obf_user_preferences;
+use local_obf\classes\obf_assertion_collection;
 
 defined('MOODLE_INTERNAL') || die();
 

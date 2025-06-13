@@ -22,11 +22,11 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use classes\obf_assertion;
-use classes\obf_backpack;
-use classes\obf_badge;
-use classes\obf_client;
-use classes\obf_issue_event;
+use local_obf\classes\obf_assertion;
+use local_obf\classes\obf_backpack;
+use local_obf\classes\obf_badge;
+use local_obf\classes\obf_client;
+use local_obf\classes\obf_issue_event;
 
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/classes/badge.php');

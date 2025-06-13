@@ -22,10 +22,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use classes\criterion\obf_criterion;
-use classes\criterion\obf_criterion_course;
-use classes\criterion\obf_criterion_item;
-use classes\criterion\obf_criterion_unknown;
+use local_obf\classes\criterion\obf_criterion;
+use local_obf\classes\criterion\obf_criterion_course;
+use local_obf\classes\criterion\obf_criterion_item;
+use local_obf\classes\criterion\obf_criterion_unknown;
 
 defined('MOODLE_INTERNAL') || die();
 

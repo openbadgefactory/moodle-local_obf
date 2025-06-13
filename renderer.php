@@ -22,15 +22,15 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use classes\criterion\obf_criterion;
-use classes\criterion\obf_criterion_item;
-use classes\obf_assertion;
-use classes\obf_backpack;
-use classes\obf_badge;
-use classes\obf_client;
-use classes\obf_issue_event;
-use classes\obf_issuer;
-use classes\obf_assertion_collection;
+use local_obf\classes\criterion\obf_criterion;
+use local_obf\classes\criterion\obf_criterion_item;
+use local_obf\classes\obf_assertion;
+use local_obf\classes\obf_backpack;
+use local_obf\classes\obf_badge;
+use local_obf\classes\obf_client;
+use local_obf\classes\obf_issue_event;
+use local_obf\classes\obf_issuer;
+use local_obf\classes\obf_assertion_collection;
 
 defined('MOODLE_INTERNAL') || die();
 
