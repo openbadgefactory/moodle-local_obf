@@ -22,7 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use classes\obf_backpack;
+require_once(__DIR__ . '/../classes/backpack.php');
 
 /**
  * Backpack testcase.
@@ -38,10 +38,10 @@ class local_obf_backpack_testcase extends advanced_testcase {
     public function test_backpack() {
         $this->resetAfterTest();
         $user = $this->getDataGenerator()->create_user();
-        $backpack = obf_backpack::get_instance($user);
+        $backpack = \classes\obf_backpack::get_instance($user);
         $this->assertFalse($backpack);
 
-        $userids = obf_backpack::get_user_ids_with_backpack();
+        $userids = \classes\obf_backpack::get_user_ids_with_backpack();
         $this->assertCount(0, $userids);
     }
 
@@ -52,18 +52,24 @@ class local_obf_backpack_testcase extends advanced_testcase {
         $this->resetAfterTest();
 
         $email = 'existing@example.com';
-        $stub = $this->getMock('classes\obf_backpack', array('connect_to_backpack'));
-        $stub->expects($this->any())->method('connect_to_backpack')->with(
-            $this->equalTo($email))->will($this->returnValue(69));
+        $stub = $this->getMockBuilder('classes\\obf_backpack')
+            ->onlyMethods(['connect_to_backpack'])
+            ->setConstructorArgs([new curl()])
+            ->getMock();
+
+        $stub->expects($this->once())
+            ->method('connect_to_backpack')
+            ->with($this->equalTo($email))
+            ->willReturn(69);
 
         $stub->connect($email);
         $this->assertTrue($stub->is_connected());
 
-        $userids = obf_backpack::get_user_ids_with_backpack();
+        $userids = 'classes\\obf_backpack'::get_user_ids_with_backpack();
         $this->assertCount(1, $userids);
 
         $stub->disconnect();
-        $this->assertFalse(obf_backpack::get_instance_by_backpack_email($email));
+        $this->assertFalse(\classes\obf_backpack::get_instance_by_backpack_email($email));
     }
 
     /**
@@ -71,7 +77,9 @@ class local_obf_backpack_testcase extends advanced_testcase {
      */
     public function test_invalid_connection() {
         $this->resetAfterTest();
-        $stub = $this->getMock('classes\obf_backpack', array('connect_to_backpack'));
+        $stub = $this->getMockBuilder('classes\\obf_backpack')
+            ->onlyMethods(['connect_to_backpack'])
+            ->getMock();
         $stub->expects($this->any())->method(
             $this->equalTo('connect_to_backpack'))->will($this->returnValue(false));
 
@@ -95,7 +103,9 @@ class local_obf_backpack_testcase extends advanced_testcase {
         $invalidassertion = 'invalid_assertion';
         $email = 'existing@example.com';
 
-        $mock = $this->getMock('curl', array('post'));
+        $mock = $this->getMockBuilder(curl::class)
+                    ->onlyMethods(['post'])
+                    ->getMock();
         $mock->expects($this->any())->method('post')->will($this->returnCallback(
             function($url, $params) use ($email, $assertion) {
                 $obj = json_decode($params);
@@ -107,7 +117,7 @@ class local_obf_backpack_testcase extends advanced_testcase {
                 return json_encode(array('status' => 'failure', 'reason' => 'You failed.'));
             }));
 
-        $backpack = new obf_backpack($mock);
+        $backpack = new \classes\obf_backpack($mock);
         $this->assertEquals($email, $backpack->verify($assertion));
 
         try {
