@@ -53,8 +53,7 @@ $PAGE->set_pagelayout('admin');
 
 $listclients = new moodle_url('/local/obf/config.php');
 
-$foo = new curl();
-
+ob_start();
 echo $OUTPUT->header();
 
 switch ($action) {
@@ -270,3 +269,4 @@ switch ($action) {
 }
 
 echo $OUTPUT->footer();
+ob_end_flush();
