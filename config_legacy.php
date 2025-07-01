@@ -53,6 +53,12 @@ switch ($action) {
 
     // Handle authentication.
     case 'authenticate':
+
+        if (empty(get_config('local_obf', 'obfclientid'))) {
+            // Legacy API config missing, creating new connections is disabled. Redirect to OAuth2 config form.
+            redirect(new moodle_url('/local/obf/config.php'));
+        }
+
         $form = new obf_config_form($FULLME, array('client' => $client));
         if (!empty(get_config('local_obf', 'obfclientid'))) {
             $settings = new stdClass();

@@ -62,16 +62,9 @@ switch ($action) {
         $clients = $DB->get_records('local_obf_oauth2', null, $DB->sql_order_by_text('client_name'));
 
         if (empty($clients)) {
-            echo '<div>';
-            echo '<p>' . get_string('infoconnectapi', 'local_obf') . '</p>';
-            echo '</div>';
-
             $newoauth2 = $CFG->wwwroot . '/local/obf/config.php?action=edit&id=0';
-
             echo '<div class="actionbuttons">';
             echo $OUTPUT->single_button($newoauth2, get_string('addnewoauth2', 'local_obf'), 'get');
-
-            
             echo '</div>';
         } else {
             $table = new html_table();
