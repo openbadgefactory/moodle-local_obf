@@ -67,11 +67,11 @@ switch ($action) {
             echo '</div>';
 
             $newoauth2 = $CFG->wwwroot . '/local/obf/config.php?action=edit&id=0';
-            $newlegacy = $CFG->wwwroot . '/local/obf/config_legacy.php';
+
             echo '<div class="actionbuttons">';
             echo $OUTPUT->single_button($newoauth2, get_string('addnewoauth2', 'local_obf'), 'get');
-            echo ' &nbsp; ';
-            echo $OUTPUT->single_button($newlegacy, get_string('addnewlegacy', 'local_obf'), 'get');
+
+            
             echo '</div>';
         } else {
             $table = new html_table();

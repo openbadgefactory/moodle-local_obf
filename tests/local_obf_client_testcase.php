@@ -22,7 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use classes\obf_client;
+require_once(__DIR__ . '/../classes/client.php');
 
 /**
  * OBF Client testcase.
@@ -41,26 +41,19 @@ class local_obf_client_testcase extends advanced_testcase {
         $curl = obf_mock_curl::get_mock_curl($this);
         obf_mock_curl::add_client_test_methods($this, $curl);
 
-        $client = obf_client::get_instance($curl);
+        $client = \classes\obf_client::get_instance($curl);
 
         // Test HTTP POST.
-        $response = $client->request('/test/', 'post');
+        $response = json_decode($client->request('post', '/test/'), true);
         $this->assertArrayHasKey('post', $response);
 
         // Test HTTP GET.
-        $response = $client->request('/test/');
+        $response = json_decode($client->request('get', '/test/'), true);
         $this->assertArrayHasKey('get', $response);
 
         // Test HTTP DELETE.
-        $response = $client->request('/test/', 'delete');
+        $response = json_decode($client->request('delete', '/test/'), true);
         $this->assertArrayHasKey('delete', $response);
-
-        // Test preformatter.
-        $response = $client->request('/test/', 'get', array(),
-            function() {
-                return json_encode(array('preformatted' => 'i am!'));
-            });
-        $this->assertArrayHasKey('preformatted', $response);
 
         // Test invalid url.
         $curl->info = array('http_code' => 404);
@@ -80,7 +73,7 @@ class local_obf_client_testcase extends advanced_testcase {
     public function test_deauthentication() {
         $this->resetAfterTest();
 
-        $client = obf_client::get_instance();
+        $client = \classes\obf_client::get_instance();
         $certfile = $client->get_cert_filename();
         $pkeyfile = $client->get_pkey_filename();
 
@@ -103,8 +96,8 @@ class local_obf_client_testcase extends advanced_testcase {
 
         $client->deauthenticate();
 
-        $this->assertFileNotExists($certfile);
-        $this->assertFileNotExists($pkeyfile);
+        $this->assertFileDoesNotExist($certfile);
+        $this->assertFileDoesNotExist($pkeyfile);
         $this->assertFalse(get_config('local_obf', 'obfclientid'));
     }
 
@@ -116,7 +109,7 @@ class local_obf_client_testcase extends advanced_testcase {
 
         set_config('obfclientid', 'test', 'local_obf');
 
-        $client = obf_client::get_instance();
+        $client = \classes\obf_client::get_instance();
 
         try {
             $client->require_client_id();

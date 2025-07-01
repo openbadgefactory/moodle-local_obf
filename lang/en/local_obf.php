@@ -26,7 +26,6 @@ $string['addcourses'] = 'Add selected courses';
 $string['addcriteria'] = 'Create new awarding rule';
 $string['addnew'] = 'Add new';
 $string['addnewclient'] = 'Add new client';
-$string['addnewlegacy'] = 'Add new legacy API connection';
 $string['addnewoauth2'] = 'Add new OAuth2 API connection';
 $string['addemaildescription'] =
     'Type your email address. If the address has not been verified, a verification code will be sent to that address.';
