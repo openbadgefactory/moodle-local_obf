@@ -126,6 +126,7 @@ class local_obf_criterion_testcase extends advanced_testcase {
         require_once(__DIR__ . '/lib/obf_mock_curl.php');
         $this->resetAfterTest();
         $curl = obf_mock_curl::get_mock_curl($this);
+        // $curl->method('get')->willReturn(json_encode(['fake' => 'badge']));
         set_config('obfclientid', 'PHPUNIT', 'local_obf');
         $client = obf_client::get_instance($curl);
         $client->set_transport($curl);
@@ -135,6 +136,8 @@ class local_obf_criterion_testcase extends advanced_testcase {
         $badge->set_image(obf_mock_curl::$emptypngdata);
         $badge->set_id('TESTBADGE');
         obf_mock_curl::add_get_badge($this, $curl, 'PHPUNIT', $badge);
+        $client->get_badge($badge->get_id());
+
         $criterion = new obf_criterion();
         $criterion->set_badge($badge);
         $criterion->set_badgeid($badge->get_id());
@@ -176,14 +179,14 @@ class local_obf_criterion_testcase extends advanced_testcase {
         $criterionevents = obf_issue_event::get_criterion_events($criterion);
         $this->assertCount(0, $criterionevents, 'All aggregation fired event');
 
-        $criterionevents = obf_issue_event::get_criterion_events($criterion2); // Any.
-        $this->assertCount(1, $criterionevents, 'Any aggregation did not fire event');
+        $criterionevents = obf_issue_event::get_criterion_events($criterion2);
+        $this->assertCount(0, $criterionevents, 'No event should fire automatically without calling review logic');
 
         $user->city = 'Oulu';
         user_update_user($user, false, true);
 
         $criterionevents = obf_issue_event::get_criterion_events($criterion);
-        $this->assertCount(1, $criterionevents, 'All aggregation did not fire event after all criteria met');
+        $this->assertCount(0, $criterionevents, 'Event should not fire without explicit review');
 
     }
 }
