@@ -126,7 +126,6 @@ class local_obf_criterion_testcase extends advanced_testcase {
         require_once(__DIR__ . '/lib/obf_mock_curl.php');
         $this->resetAfterTest();
         $curl = obf_mock_curl::get_mock_curl($this);
-        // $curl->method('get')->willReturn(json_encode(['fake' => 'badge']));
         set_config('obfclientid', 'PHPUNIT', 'local_obf');
         $client = obf_client::get_instance($curl);
         $client->set_transport($curl);
