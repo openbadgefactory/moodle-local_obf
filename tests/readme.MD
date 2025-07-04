@@ -6,6 +6,7 @@ This documentation describes how to:
 4. run PHPUnit integration testsuite
 5. run OBF Behat tests in terminal with Windows+WSL+Moodle Docker stack and follow the tests in Firefox browser 
 
+
 If you don't want to use Moodle Docker, Moodle's own documentation how to run PHPUnit tests can be found: 
 https://moodledev.io/general/development/tools/phpunit 
 If you're interested how to write PHPUnit tests, read Moodle's documentation about the subject: https://docs.moodle.org/dev/Writing_PHPUnit_tests 
