@@ -1,8 +1,10 @@
-# PHPUnit testing with Moodle Docker
+# PHPUnit and Behat testing with Moodle Docker
 This documentation describes how to:
 1. install Moodle and Moodle Docker using version control  
 2. install the OBF Moodle plugin using version control  
 3. run PHPUnit tests for the OBF Moodle plugin
+4. run OBF Behat tests in terminal with Windows+WSL+Moodle Docker stack and follow the tests in Firefox browser 
+
 If you don't want to use Moodle Docker, Moodle's own documentation how to run PHPUnit tests can be found: 
 https://moodledev.io/general/development/tools/phpunit 
 If you're interested how to write PHPUnit tests, read Moodle's documentation about the subject: https://docs.moodle.org/dev/Writing_PHPUnit_tests 
@@ -16,7 +18,7 @@ Note: You'll need Linux environment to continue. Undersigned used WSL.
  - ~/moodle-plugin-dev/*moodle/local/obf* will be the location for OBF Moodle plugin installation
 OBF PHPUnit tests will then be located in ~/moodle-plugin-dev/*moodle/local/obf/tests*
 
-## 1: clone Moodle and Moodle Docker
+## 1: Clone Moodle and Moodle Docker
 Requirements for this step on your Linux machine:
 - Docker (CLI), e.g.: https://docs.docker.com/engine/install/ubuntu/
 - Git, e.g. ```sudo apt install git```
@@ -108,6 +110,88 @@ In the Docker webserver container, make sure you are in /var/www/html before run
 In Docker webserver container, run PHPUnit tests with the command: ```vendor/bin/phpunit --testsuite local_obf_testsuite```
 To execute single PHPUnit test, run: ```vendor/bin/phpunit /var/www/html/local/obf/tests/local_obf_[name_of_the_test]_testcase.php```
 
+## 4. Run & view Behat tests
+With a Windows + WSL + Moodle Docker stack, you can run Behat tests in the WSL terminal and optionally follow their execution in a browser via VNC. Running tests is straightforward (see step A), but viewing them in Firefox requires extra setup (step B).
+
+Moodle’s Behat documentation: https://moodledev.io/general/development/tools/behat
+
+### A. Run Behat Tests in WSL
+In ~/moodle-plugin-dev/moodle/config.php, add:
+```php
+$CFG->behat_wwwroot   = 'http://webserver';
+$CFG->behat_dataroot  = '/var/www/moodledata_behat';
+$CFG->behat_prefix    = 'bht_';
+```
+
+Initialize Behat:
+```bash
+bin/moodle-docker-compose exec webserver php admin/tool/behat/cli/init.php
+```
+
+Run tests without user interaction:
+```bash
+bin/moodle-docker-compose exec -T webserver vendor/bin/behat \
+  --config "/var/www/moodledata_behat/behatrun/behat/behat.yml" \
+  --tags=@local_obf --no-interaction
+```
+
+You should now see the OBF Behat test output in terminal.
+If you encounter issues
+```bash
+# Check safe Git directory and correct permissions:
+bin/moodle-docker-compose exec webserver git config --global --add safe.directory /var/www/html
+bin/moodle-docker-compose exec webserver chown -R www-data:www-data /var/www/html
+# Remove previous initialization
+bin/moodle-docker-compose exec webserver rm -rf /var/www/moodledata_behat/behatrun/behat/behat.yml
+```
+
+### B. View Behat Tests in Firefox via RealVNC
+Goal: Connect from Windows to the Selenium container in WSL to observe Firefox executing tests.
+
+#### i. Selenium configurations in WSL
+Ensure Behat points to the correct Selenium host:
+```bash
+bin/moodle-docker-compose exec webserver sed -i \
+  "s|http://localhost:4444/wd/hub|http://selenium:4444/wd/hub|g" \
+  "/var/www/moodledata_behat/behatrun/behat/behat.yml"
+```
+
+Create ~/moodle-plugin-dev/moodle-docker/local.yml
+```yml
+services:
+  selenium:
+    image: selenium/standalone-firefox-debug:latest
+    ports:
+      - "5900:5900"
+```
+In the same directory, create a .env file
+```env
+MOODLE_DOCKER_WWWROOT=/home/YOURUSERNAME/moodle-plugin-dev/moodle
+MOODLE_DOCKER_DB=mariadb
+MOODLE_DOCKER_BROWSER=firefox
+MOODLE_DOCKER_SELENIUM_HEADLESS=0
+```
+
+#### ii. Forward Port from WSL to Windows
+```bash
+# Find your WSL IP (in WSL)
+ip addr show eth0 | grep inet
+```
+
+```powershell
+# Forward VNC port to Windows (in Windows)
+netsh interface portproxy add v4tov4 listenport=5900 listenaddress=127.0.0.1 connectport=5900 connectaddress=YOURWSLIPADDRESS
+```
+
+#### iii. Connect with RealVNC 
+Install RealVNC Viewer (e.g. via Microsoft Store) and connect to 127.0.0.1:5900. The default password is secret.
+Then re-run Behat:
+```bash
+bin/moodle-docker-compose exec -T webserver vendor/bin/behat \
+  --config "/var/www/moodledata_behat/behatrun/behat/behat.yml" \
+  --tags=@local_obf --no-interaction
+```
+
 ### Versions
 This README is created using these versions:
 - Docker: 28.2.2
@@ -116,3 +200,5 @@ This README is created using these versions:
 - PHP (WSL host): 8.3.6
 - PHP (Docker container): 8.2.28
 - PHPUnit: 9.6.18
+- Behat: 3.13
+- RealVNC Viewer: 7.13.0
