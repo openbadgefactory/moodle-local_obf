@@ -98,6 +98,14 @@ you will likely need to initialize PHPUnit and ensure it can find the OBF Moodle
 In Docker webserver container, initialize PHPUnit. Run inside the container: ```php admin/tool/phpunit/cli/init.php```
 If Composer is not installed already in Moodle Docker webserver container, do that first: ```composer install```
 
+### B. Make sure PHPUnit finds unit tests
+In Docker webserver container, in PHPUnit configuration file /var/www/html/phpunit.xml OBF Moodle plugin's directory suffix is probably wrong.
+To fix this, run following commands inside webserver container:
+```bash
+git config --global --add safe.directory /var/www/html
+sed -i 's|<directory suffix="_test\.php">local/obf/tests</directory>|<directory suffix="_testcase.php">local/obf/tests</directory>|' /var/www/html/phpunit.xml
+```
+
 ### Run PHPUnit tests 
 In the Docker webserver container, make sure you are in /var/www/html before running these commands. 
 In Docker webserver container, run PHPUnit tests with the command: ```vendor/bin/phpunit --testsuite local_obf_testsuite```

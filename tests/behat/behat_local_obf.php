@@ -23,7 +23,6 @@
  */
 
 use Behat\Behat\Context\Step\Given;
-use Behat\Behat\Event\FeatureEvent;
 use Behat\Gherkin\Node\TableNode;
 use Behat\Mink\Driver\Selenium2Driver;
 use Behat\Mink\Session;
@@ -48,7 +47,7 @@ class behat_local_obf extends behat_base {
      * @param FeatureEvent $event
      * @AfterFeature
      */
-    public static function teardownfeature(FeatureEvent $event) {
+    public static function teardownfeature() {
         require_once(__DIR__ . '/../../classes/client.php');
         try {
             obf_client::get_instance()->delete_badges();
