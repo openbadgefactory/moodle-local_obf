@@ -95,7 +95,7 @@ class obf_backpack {
     /**
      * @var List or groups to display.
      */
-    private $badgegroups = array();
+    private $badge_groups = array();
     /**
      * @var Transport.
      */

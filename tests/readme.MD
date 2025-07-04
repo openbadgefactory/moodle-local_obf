@@ -3,7 +3,9 @@ This documentation describes how to:
 1. install Moodle and Moodle Docker using version control  
 2. install the OBF Moodle plugin using version control  
 3. run PHPUnit tests for the OBF Moodle plugin
-4. run OBF Behat tests in terminal with Windows+WSL+Moodle Docker stack and follow the tests in Firefox browser 
+4. run PHPUnit integration testsuite
+5. run OBF Behat tests in terminal with Windows+WSL+Moodle Docker stack and follow the tests in Firefox browser 
+
 
 If you don't want to use Moodle Docker, Moodle's own documentation how to run PHPUnit tests can be found: 
 https://moodledev.io/general/development/tools/phpunit 
@@ -110,7 +112,20 @@ In the Docker webserver container, make sure you are in /var/www/html before run
 In Docker webserver container, run PHPUnit tests with the command: ```vendor/bin/phpunit --testsuite local_obf_testsuite```
 To execute single PHPUnit test, run: ```vendor/bin/phpunit /var/www/html/local/obf/tests/local_obf_[name_of_the_test]_testcase.php```
 
-## 4. Run & view Behat tests
+## 4. Run integration tests
+PHPUnit integration tests are separated from the rest of the PHPUnit tests. They are located under tests/integration folder. To enable them, open `phpunit.xml` in Moodle's root and add the following suite:
+```xml
+<testsuite name="local_obf_integration">
+    <directory suffix="_testcase.php">local/obf/tests/integration</directory>
+</testsuite>
+```
+
+Now you can run integration tests:
+```bash
+bin/moodle-docker-compose exec -T webserver vendor/bin/phpunit --testsuite local_obf_integration
+```
+
+## 5. Run & view Behat tests
 With a Windows + WSL + Moodle Docker stack, you can run Behat tests in the WSL terminal and optionally follow their execution in a browser via VNC. Running tests is straightforward (see step A), but viewing them in Firefox requires extra setup (step B).
 
 Moodle’s Behat documentation: https://moodledev.io/general/development/tools/behat
