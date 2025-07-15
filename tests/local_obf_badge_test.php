@@ -35,7 +35,7 @@ require_once(__DIR__ . '/../classes/client.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-class local_obf_badge_testcase extends advanced_testcase {
+class local_obf_badge_test extends advanced_testcase {
     /**
      * Simple provider of badge data.
      */
@@ -101,5 +101,69 @@ class local_obf_badge_testcase extends advanced_testcase {
         $d2 = new DateTime(date('Y-m-d', $badges['MVSLXUiDGCi1']->get_expires()));
         $months = $d2->diff($d1)->m;
         $this->assertTrue($months == 6 || $months == 5);
+    }
+
+    /** 
+     * Test get_badges() with V2 API response.
+     * 
+     */
+    public function test_get_badges_from_fixture() {
+
+        $ref = new \ReflectionClass(\classes\obf_badge::class);
+
+        // Empty cache before test.
+        $prop = $ref->getProperty('badgecache');
+        $prop->setAccessible(true);
+        $prop->setValue([]);
+
+        $this->resetAfterTest();
+
+        $jsonfile = __DIR__ . '/fixtures/responses/get_v2_badges.json';
+        $json = file_get_contents($jsonfile);
+
+        $clientid = 'TESTCLIENTID';
+
+        require_once(__DIR__ . '/lib/obf_mock_curl.php');
+        $mockcurl = new \obf_mock_curl();
+        $mockcurl->set_test_scenario([
+            [
+                'method' => 'get',
+                'url' => '#/v2/badge/' . $clientid . '#',
+                'response' => $json,
+                'http_code' => 200
+            ]
+        ]);
+
+        $client = new \classes\obf_client();
+        $client->set_transport($mockcurl);
+        $client->set_oauth2((object)[
+            'client_id' => $clientid,
+            'client_secret' => 'MOCKSECRET',
+            'obf_url' => 'https://example.com',
+            'access_token' => 'MOCKTOKEN',
+            'token_expires' => time() + 1800
+        ]);
+
+        $badges = \classes\obf_badge::get_badges($client);
+
+        $this->assertCount(3, $badges);
+
+        foreach ($badges as $badge) {
+            $this->assertInstanceOf(\classes\obf_badge::class, $badge);
+            $this->assertNotEmpty($badge->get_id());
+            $this->assertNotEmpty($badge->get_name());
+        }
+
+        $badgefound = false;
+        foreach ($badges as $badge) {
+            if ($badge->get_name() === 'Beta Contributor') {
+                $this->assertEquals('TESTBADGE3', $badge->get_id());
+                $this->assertEquals(0, $badge->get_expires());
+                $badgefound = true;
+                break;
+            }
+        }
+
+        $this->assertTrue($badgefound, 'Badge "Beta Contributor" found in response.');
     }
 }

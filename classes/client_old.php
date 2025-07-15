@@ -287,7 +287,7 @@ class obf_client {
 
         if (!isset($this->oauth2->access_token) || $this->oauth2->token_expires < time()) {
 
-            $url = $this->obf_url() . '/v2/client/oauth2/token';
+            $url = $this->obf_url() . '/v1/client/oauth2/token';
 
             $params = array(
                 'grant_type' => 'client_credentials',
@@ -298,10 +298,7 @@ class obf_client {
             $curl = $this->get_transport();
             $options = $this->get_curl_options(false);
 
-            // Add HTTPHEADER option for POST request.
-            $options['HTTPHEADER'] = array('Content-Type: application/x-www-form-urlencoded');
-            
-            $res = $curl->post($url, http_build_query($params, '', '&'), $options);
+            $res = $curl->post($url, http_build_query($params), $options);
             $res = json_decode($res);
 
             if (!isset($res)) {
@@ -427,6 +424,10 @@ class obf_client {
      * @throws Exception In case something goes wrong.
      */
     public function request($method, $url = '', $params = array(), $retry = true, $otheroauth2 = null) {
+
+        error_log("[OBF] 1. Entry Point. Client::request called with: METHOD: $method URL: $url PARAMS: " . json_encode($params));        
+        print_r("Requesting: $method $url with params: " . json_encode($params) . "\n");
+        
         global $DB;
 
         $curl = $this->get_transport();
@@ -444,10 +445,18 @@ class obf_client {
             throw new Exception('unknown method ' . $method);
         }
 
+        error_log("[OBF] 2. Response type. Response raw type: " . gettype($response));
+
+
         $this->rawresponse = null;
         if ($this->enablerawresponse) {
             $this->rawresponse = $curl->get_raw_response();
         }
+
+        error_log("[OBF] 3.1. Raw \$response (truncated, max 1kb): " . substr(print_r($response, true), 0, 1000));
+        error_log("[OBF] 3.2. RAW \$response full length: " . strlen($response));
+        error_log("[OBF] 3.3. RAW \$response full start: " . substr($response, 0, 1000));
+        error_log("[OBF] 3.4. RAW \$response full end: " . substr($response, -1000));
 
         $info = $curl->get_info();
 
@@ -479,6 +488,56 @@ class obf_client {
                     $this->error) . $appendtoerror, $this->httpcode);
         }
 
+        /** For fixture response creation START */
+        $dir = dirname(__DIR__) . '/tests/fixtures/responses';
+
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+        }
+
+        $endpoint = parse_url($url, PHP_URL_PATH);
+        $endpoint = trim($endpoint, '/');
+        $paramsuffix = $params ? '_' . md5(json_encode($params)) : '';
+        $flatpath = strtolower($method . '_' . str_replace(['/', '\\'], '_', $endpoint)) . $paramsuffix;
+        $fullpath = $dir . '/' . $flatpath . '.json';
+
+        $targetdir = dirname($fullpath);
+        if (!is_dir($targetdir)) {
+            if (!mkdir($targetdir, 0777, true)) {
+                error_log("[OBF] 4.A. Fail. Directory not created : $targetdir");
+            } else {
+                error_log("[OBF] 4.B. Success! Directory created: $targetdir");
+            }
+        } else {
+            error_log("[OBF] 4.C. Directory already exists: $targetdir");
+        }
+
+        if (is_string($response)) {
+            $handledresponse = $response;
+            if (strpos($response, '"image":') !== false) {
+                // redact the image data in the response.
+                $handledresponse = preg_replace(
+                    '/"image"\s*:\s*"data:image\/([^";]+)[^"]*"/',
+                    '"image":"[REDACTED_${1}_IMAGE]"',
+                    $response
+                );
+            }
+            file_put_contents($fullpath, $handledresponse);
+            error_log("[OBF] 5.A. Success! Raw string fixture written: $fullpath");
+        } else if (is_array($response)) {
+            // If the response is an array write it as JSON.
+            file_put_contents($fullpath, json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            error_log("[OBF] 5.B. Success! JSON fixture written: $fullpath");
+        } else {
+            error_log("[OBF] 5.C. Failure. Unanble to create fixture");
+        }
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            error_log("[OBF] 6. JSON ERROR: " . json_last_error_msg());
+        }
+
+        /** For fixture response creation END */
+    
         return $response;
     }
 
@@ -494,7 +553,7 @@ class obf_client {
             return 0;
         }
         try {
-            $url = $this->obf_url() . '/v2/ping/' . $this->client_id();
+            $url = $this->obf_url() . '/v1/ping/' . $this->client_id();
             $this->request('get', $url);
             return -1;
         } catch (Exception $exc) {
@@ -573,24 +632,10 @@ class obf_client {
             $params['query'] = $query;
         }
 
-        $url = $this->obf_url() . '/v2/badge/' . $this->client_id();
+        $url = $this->obf_url() . '/v1/badge/' . $this->client_id();
         $res = $this->request('get', $url, $params);
-        
+
         $out = $this->decode_ldjson($res);
-
-        if (is_array($out) && isset($out[0]['result'])) {
-            $out = $out[0]['result'];
-        } else {
-            $out = [];
-        }
-
-        // Handle the response data to align with badge.php expectations.
-        foreach ($out as &$badge) {
-            $badge['readyforissuing'] = isset($badge['draft']) ? !$badge['draft'] : false;
-            $badge['expires'] = $badge['expires'] ?? 0;
-            $badge['alt_language'] = $badge['languages'] ?? [];
-            $badge['client_id'] = $this->client_id();
-        }
 
         $coll = new Collator('root');
         $coll->setStrength( Collator::PRIMARY );
