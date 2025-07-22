@@ -585,7 +585,7 @@ class obf_client {
 
         // Handle the response data to align with badge.php expectations.
         foreach ($out as &$badge) {
-            // Filter badges by categories if specified.
+            // Filter badges by categories if categories are provided.
             if (!empty($categories)) {
                 if (!isset($badge['category']) || !is_array($badge['category']) ||
                     !array_intersect($badge['category'], $categories)) {
@@ -667,15 +667,6 @@ class obf_client {
         $url = $this->obf_url() . '/v2/badge/' . $this->client_id() . '/' . $badgeid;
         $res = $this->request('get', $url);
 
-        // $testfile = '/var/www/html/local/obf/tests/fixtures/responses/test_write_check.txt';
-        // $success = file_put_contents($testfile, 'testing permissions');
-
-/*         if ($success === false) {
-            error_log('[OBF] TEST WRITE FAIL: ' . $testfile);
-        } else {
-            error_log('[OBF] TEST WRITE SUCCESS: ' . $testfile);
-        } */
-
         $dir = dirname(__DIR__) . '/tests/fixtures/responses';
 
         if (!is_dir($dir)) {
@@ -684,15 +675,6 @@ class obf_client {
 
         $endpoint = parse_url($url, PHP_URL_PATH);
         $endpoint = trim($endpoint, '/');
-
-        // error_log('[OBF] get_badge() php_sapi_name: ' . php_sapi_name());
-        // error_log('[OBF] get_badge() response type: ' . gettype($res));
-
-        // error_log('[OBF] get_badge request tehtiin ja endpoint on: ' . $endpoint);
-        // error_log('[OBF] yhdistetty tiedostopolku tältä pohjalta saataisiin: ' . $dir . $endpoint . '.json');
-        // /var/www/html/local/obf/tests/fixtures/responses
-        // error_log('[OBF] get_badge request tehtiin ja response laitettiin /var/www/html/local/obf/tests/fixtures/responses/get_v2_badge.json');
-        // file_put_contents('/var/www/html/local/obf/tests/fixtures/responses/get_v2_badge.json', print_r($res, true));
 
         return json_decode($res, true);
     }
@@ -706,24 +688,6 @@ class obf_client {
     public function get_issuer() { // Tämä tehdään get_badge() requestin yhteydessä, katsotaan speksit
         $url = $this->obf_url() . '/v2/client/' . $this->client_id();
         $res = $this->request('get', $url);
-
-        // $dir = dirname(__DIR__) . '/tests/fixtures/responses';
-
-        // if (!is_dir($dir)) {
-        //     mkdir($dir, 0777, true);
-        // }
-
-        // $endpoint = parse_url($url, PHP_URL_PATH);
-        // $endpoint = trim($endpoint, '/');
-
-        // error_log('[OBF] get_issuer() php_sapi_name: ' . php_sapi_name());
-        // error_log('[OBF] get_issuer() response type: ' . gettype($res));
-
-        // error_log('[OBF] get_badge request tehtiin ja endpoint on: ' . $endpoint);
-        // error_log('[OBF] yhdistetty tiedostopolku tältä pohjalta saataisiin: ' . $dir . $endpoint . '.json');
-
-        // error_log('[OBF] get_issuer request tehtiin ja response laitettiin: /var/www/html/local/obf/tests/fixtures/responses/get_v2_client.json');
-        // file_put_contents('/var/www/html/local/obf/tests/fixtures/responses/get_v2_client.json', print_r($res, true));
 
         return json_decode($res, true);
     }
