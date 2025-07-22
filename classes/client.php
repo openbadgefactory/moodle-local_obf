@@ -581,36 +581,33 @@ class obf_client {
             $out = [];
         }
 
-        $rulecategories = $DB->get_records('local_obf_rulescateg', ['oauth2_id' => $this->oauth2->id]);
-        $badgeid_to_category = [];
-
-        // Map badge IDs to categories.
-        foreach ($rulecategories as $rule) {
-            if (!empty($rule->badgeid) && !empty($rule->badgecategoriename)) {
-                $badgeid_to_category[$rule->badgeid] = $rule->badgecategoriename;
-            }
-        }
-
         $badges = [];
 
         // Handle the response data to align with badge.php expectations.
         foreach ($out as &$badge) {
-            $badgeid = $badge['id'] ?? '';
-            $badgecategory = $badgeid_to_category[$badgeid] ?? '';
-            
-            // Filter badges by categories.
-            if (!empty($categories) && !in_array($badgecategory, $categories)) {
-                continue;
+            // Filter badges by categories if specified.
+            if (!empty($categories)) {
+                if (!isset($badge['category']) || !is_array($badge['category']) ||
+                    !array_intersect($badge['category'], $categories)) {
+                    continue;
+                }
             }
+
+            // Remove primary language from alt_language list.
+            $primary = $badge['primary_language'] ?? '';
+            $languages = $badge['languages'] ?? [];
+            $alt_languages = array_values(array_filter($languages, function ($lang) use ($primary) {
+                return $lang !== $primary && $lang !== '';
+            }));
 
             $badges[] = [
                 'id' => $badge['id'] ?? '',
                 'name' => $badge['name'] ?? '',
                 'description' => $badge['description'] ?? '',
                 'image' => $badge['image'] ?? '',
-                'primary_language' => $badge['primary_language'] ?? '',
-                'alt_language' => $badge['languages'] ?? [],
-                'category' => $badgecategory ? [$badgecategory] : [],
+                'primary_language' => $primary,
+                'alt_language' => $alt_languages,
+                'category' => $badge['category'] ?? [],
                 'tag' => $badge['tag'] ?? [],
                 'client_alias_id' => $badge['client_alias_id'] ?? [],
                 'creator_id' => $badge['creator_id'] ?? null,
