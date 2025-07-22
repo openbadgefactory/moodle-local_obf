@@ -832,6 +832,17 @@ function xmldb_local_obf_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2023041802, 'local', 'obf');
     }
 
+    if ($oldversion < 2025072100) {
+        $table = new xmldb_table('local_obf_rulescateg');
+        $field = new xmldb_field('badgeid', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_plugin_savepoint(true, 2025072100, 'local', 'obf');
+    }
+
     if ($oldversion < 2023041808) {
         // Vérifier si les valeurs sont déjà définies.
         $emailprovidervalue = get_config('local_obf', 'email_provider_local_obf_revoked_locked');

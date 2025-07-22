@@ -566,9 +566,6 @@ class obf_client {
             return [];
         }
 
-        if (count($categories) > 0) {
-            $params['category'] = implode('|', $categories);
-        }
         if (!empty($query)) {
             $params['query'] = $query;
         }
@@ -576,29 +573,63 @@ class obf_client {
         $url = $this->obf_url() . '/v2/badge/' . $this->client_id();
         $res = $this->request('get', $url, $params);
         
-        $out = $this->decode_ldjson($res);
+        $out = json_decode($res, true);
 
-        if (is_array($out) && isset($out[0]['result'])) {
-            $out = $out[0]['result'];
+        if (is_array($out) && isset($out['result'])) {
+            $out = $out['result'];
         } else {
             $out = [];
         }
 
+        $rulecategories = $DB->get_records('local_obf_rulescateg', ['oauth2_id' => $this->oauth2->id]);
+        $badgeid_to_category = [];
+
+        // Map badge IDs to categories.
+        foreach ($rulecategories as $rule) {
+            if (!empty($rule->badgeid) && !empty($rule->badgecategoriename)) {
+                $badgeid_to_category[$rule->badgeid] = $rule->badgecategoriename;
+            }
+        }
+
+        $badges = [];
+
         // Handle the response data to align with badge.php expectations.
         foreach ($out as &$badge) {
-            $badge['readyforissuing'] = isset($badge['draft']) ? !$badge['draft'] : false;
-            $badge['expires'] = $badge['expires'] ?? 0;
-            $badge['alt_language'] = $badge['languages'] ?? [];
-            $badge['client_id'] = $this->client_id();
+            $badgeid = $badge['id'] ?? '';
+            $badgecategory = $badgeid_to_category[$badgeid] ?? '';
+            
+            // Filter badges by categories.
+            if (!empty($categories) && !in_array($badgecategory, $categories)) {
+                continue;
+            }
+
+            $badges[] = [
+                'id' => $badge['id'] ?? '',
+                'name' => $badge['name'] ?? '',
+                'description' => $badge['description'] ?? '',
+                'image' => $badge['image'] ?? '',
+                'primary_language' => $badge['primary_language'] ?? '',
+                'alt_language' => $badge['languages'] ?? [],
+                'category' => $badgecategory ? [$badgecategory] : [],
+                'tag' => $badge['tag'] ?? [],
+                'client_alias_id' => $badge['client_alias_id'] ?? [],
+                'creator_id' => $badge['creator_id'] ?? null,
+                'draft' => $badge['draft'] ?? true,
+                'ctime' => $badge['ctime'] ?? 0,
+                'mtime' => $badge['mtime'] ?? 0,
+                'readyforissuing' => isset($badge['draft']) ? !$badge['draft'] : false,
+                'expires' => $badge['expires'] ?? 0, // Probably legacy API keys stuff, remove later.
+                'client_id' => $this->client_id(),
+            ];
         }
 
         $coll = new Collator('root');
         $coll->setStrength( Collator::PRIMARY );
-        usort($out, function ($a, $b) use ($coll) {
+        usort($badges, function ($a, $b) use ($coll) {
             return $coll->compare($a['name'], $b['name']);
         });
 
-        return $out;
+        return $badges;
     }
 
     /**
@@ -636,8 +667,35 @@ class obf_client {
      * @throws Exception If the request fails
      */
     public function get_badge($badgeid) {
-        $url = $this->obf_url() . '/v1/badge/' . $this->client_id() . '/' . $badgeid;
+        $url = $this->obf_url() . '/v2/badge/' . $this->client_id() . '/' . $badgeid;
         $res = $this->request('get', $url);
+
+        // $testfile = '/var/www/html/local/obf/tests/fixtures/responses/test_write_check.txt';
+        // $success = file_put_contents($testfile, 'testing permissions');
+
+/*         if ($success === false) {
+            error_log('[OBF] TEST WRITE FAIL: ' . $testfile);
+        } else {
+            error_log('[OBF] TEST WRITE SUCCESS: ' . $testfile);
+        } */
+
+        $dir = dirname(__DIR__) . '/tests/fixtures/responses';
+
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+        }
+
+        $endpoint = parse_url($url, PHP_URL_PATH);
+        $endpoint = trim($endpoint, '/');
+
+        // error_log('[OBF] get_badge() php_sapi_name: ' . php_sapi_name());
+        // error_log('[OBF] get_badge() response type: ' . gettype($res));
+
+        // error_log('[OBF] get_badge request tehtiin ja endpoint on: ' . $endpoint);
+        // error_log('[OBF] yhdistetty tiedostopolku tältä pohjalta saataisiin: ' . $dir . $endpoint . '.json');
+        // /var/www/html/local/obf/tests/fixtures/responses
+        // error_log('[OBF] get_badge request tehtiin ja response laitettiin /var/www/html/local/obf/tests/fixtures/responses/get_v2_badge.json');
+        // file_put_contents('/var/www/html/local/obf/tests/fixtures/responses/get_v2_badge.json', print_r($res, true));
 
         return json_decode($res, true);
     }
@@ -648,9 +706,27 @@ class obf_client {
      * @return array The issuer data.
      * @throws Exception If the request fails
      */
-    public function get_issuer() {
-        $url = $this->obf_url() . '/v1/client/' . $this->client_id();
+    public function get_issuer() { // Tämä tehdään get_badge() requestin yhteydessä, katsotaan speksit
+        $url = $this->obf_url() . '/v2/client/' . $this->client_id();
         $res = $this->request('get', $url);
+
+        // $dir = dirname(__DIR__) . '/tests/fixtures/responses';
+
+        // if (!is_dir($dir)) {
+        //     mkdir($dir, 0777, true);
+        // }
+
+        // $endpoint = parse_url($url, PHP_URL_PATH);
+        // $endpoint = trim($endpoint, '/');
+
+        // error_log('[OBF] get_issuer() php_sapi_name: ' . php_sapi_name());
+        // error_log('[OBF] get_issuer() response type: ' . gettype($res));
+
+        // error_log('[OBF] get_badge request tehtiin ja endpoint on: ' . $endpoint);
+        // error_log('[OBF] yhdistetty tiedostopolku tältä pohjalta saataisiin: ' . $dir . $endpoint . '.json');
+
+        // error_log('[OBF] get_issuer request tehtiin ja response laitettiin: /var/www/html/local/obf/tests/fixtures/responses/get_v2_client.json');
+        // file_put_contents('/var/www/html/local/obf/tests/fixtures/responses/get_v2_client.json', print_r($res, true));
 
         return json_decode($res, true);
     }
