@@ -803,15 +803,21 @@ class obf_client {
     }
 
     /**
-     * Get badge categories from the API.
+     * Get badge categories from Badges data.
      *
      * @return array The category data.
      */
     public function get_categories() {
-        $url = $this->obf_url() . '/v1/badge/' . $this->client_id() . '/_/categorylist';
-        $res = $this->request('get', $url);
-
-        return json_decode($res, true);
+        $badges = $this->get_badges();
+        $categories = [];
+        // Collect categories from all badges.
+        foreach ($badges as $badge) {
+            if (!empty($badge['category']) && is_array($badge['category'])) {
+                $categories = array_merge($categories, $badge['category']);
+            }
+        }
+        // Return unique categories.
+        return array_values(array_unique($categories));
     }
 
     /**
