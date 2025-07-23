@@ -593,6 +593,15 @@ class obf_client {
                 }
             }
 
+            // Filter badges by query if query is provided.
+            if (!empty($query)) {
+                // Filter badges by query, mb_ to support letters with diacritics.
+                $badge_name = mb_strtolower($badge['name'] ?? '');
+                if (mb_strpos($badge_name, mb_strtolower($query)) === false) {
+                    continue;
+                }
+            }
+
             // Remove primary language from alt_language list.
             $primary = $badge['primary_language'] ?? '';
             $languages = $badge['languages'] ?? [];
@@ -667,16 +676,48 @@ class obf_client {
         $url = $this->obf_url() . '/v2/badge/' . $this->client_id() . '/' . $badgeid;
         $res = $this->request('get', $url);
 
-        $dir = dirname(__DIR__) . '/tests/fixtures/responses';
-
-        if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
+        $badge = json_decode($res, true);
+        if (!is_array($badge)) {
+            throw new Exception("Invalid badge response");
         }
 
-        $endpoint = parse_url($url, PHP_URL_PATH);
-        $endpoint = trim($endpoint, '/');
+        $content = $badge['content'][0] ?? [];
 
-        return json_decode($res, true);
+        return [
+            'id' => $badge['id'] ?? '',
+            'name' => $content['name'] ?? '',
+            'description' => $content['description'] ?? '',
+            'image' => $badge['image'] ?? '',
+            'language' => $badge['primary_language'] ?? '',
+            'tags' => $content['tag'] ?? [],
+            'alignment' => $content['alignment'] ?? [],
+            'achievement_type' => $content['achievement_type'] ?? '',
+            'credits_available' => $content['credits_available'] ?? 0.0,
+            'field_of_study' => $content['field_of_study'] ?? '',
+            'human_code' => $content['human_code'] ?? '',
+            'specialization' => $content['specialization'] ?? '',
+            'client_alias_id' => $badge['client_alias_id'] ?? [], // Not used yet.
+            'creator_id' => $badge['creator']['id'] ?? null, // Not used yet.
+            'intent' => $badge['intent'] ?? '',
+            'email_subject' => $badge['email_message']['subject'] ?? '',
+            'email_body' => $badge['email_message']['body'] ?? '',
+            'email_link_text' => $badge['email_message']['link_text'] ?? '',
+            'email_footer' => $badge['email_message']['footer'] ?? '',
+            'draft' => $badge['draft'] ?? true,
+            'ctime' => $badge['ctime'] ?? 0,
+            'mtime' => $badge['mtime'] ?? 0,
+            'expires' => $badge['expires'] ?? 0,
+            'client_id' => $this->client_id(),
+            'criteria_html' => $content['criteria'] ?? '',
+            // Old API v1 fields set to null.
+            'metadata' => null,
+            'evidence_definition' => null,
+            'css' => null,
+            'copy_of' => null,
+            'image_small' => null,
+            'deleted' => 0,
+            'lastmodifiedby' => null
+        ];
     }
 
     /**
@@ -685,11 +726,44 @@ class obf_client {
      * @return array The issuer data.
      * @throws Exception If the request fails
      */
-    public function get_issuer() { // Tämä tehdään get_badge() requestin yhteydessä, katsotaan speksit
+    public function get_issuer() {
         $url = $this->obf_url() . '/v2/client/' . $this->client_id();
         $res = $this->request('get', $url);
 
-        return json_decode($res, true);
+        $issuer = json_decode($res, true);
+        if (!is_array($issuer)) {
+            throw new Exception("Invalid issuer response");
+        }
+
+        return [
+            'id' => $issuer['id'] ?? '',
+            'reply_to' => $issuer['reply_to'] ?? '',
+            'url' => $issuer['url'] ?? '',
+            'vat_id' => $issuer['vat_id'] ?? '',
+            'name' => $issuer['name'] ?? '',
+            'mtime' => $issuer['mtime'] ?? 0,
+            'ctime' => $issuer['ctime'] ?? 0,
+            'email' => $issuer['email'] ?? '',
+            'billing_email' => $issuer['billing_email'] ?? '',
+            'verified' => $issuer['verified'] ? 1 : 0,
+            'issuing_limit' => $issuer['issuing_limit'] ?? 0,
+            'tier' => $issuer['tier'] ?? '',
+            'country' => $issuer['country'] ?? '',
+            'image' => $issuer['image'] ?? '',
+            'description' => $issuer['description'] ?? '',
+            'type' => $issuer['type'] ?? '',
+            'aliases' => $issuer['aliases'] ?? 0,
+            'searchable' => $issuer['searchable'] ? 1 : 0,
+            'paid_until' => $issuer['paid_until'] ?? 0,
+            // API v1 fields not present in v2, remove later.
+            'is_active' => 1, // Old API v1 field is_active is always set true to ensure potential is_active checks in other classes.
+            'deleted' => 0, // Old API v1 field deleted is always set to 0 to ensure potential deleted checks in other classes.
+            'suspended' => 0, // Old API v1 field suspended is always set to 0 to ensure potential suspended checks in other classes.
+            'enterprise_features' => 0, // Old API v1 field enterprise_features is always set to 0 to ensure potential enterprise features checks in other classes.
+            'partner' => [],
+            'client_config' => [],
+            'lastmodifiedby' => null,
+        ];
     }
 
     public function get_client_info() {
