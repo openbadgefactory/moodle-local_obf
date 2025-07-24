@@ -435,6 +435,9 @@ class obf_client {
         if ($method === 'get') {
             $response = $curl->get($url, $params, $options);
         } else if ($method === 'post') {
+            $options['POSTFIELDS'] = json_encode($params);
+            // Add Content-Type without overwriting Authorization.
+            $options['HTTPHEADER'][] = 'Content-Type: application/json';
             $response = $curl->post($url, json_encode($params), $options);
         } else if ($method === 'put') {
             $response = $curl->put($url, json_encode($params), $options);
@@ -494,7 +497,7 @@ class obf_client {
             return 0;
         }
         try {
-            $url = $this->obf_url() . '/v2/ping/' . $this->client_id();
+            $url = $this->obf_url() . '/v2/client/' . $this->client_id() . '/ping';
             $this->request('get', $url);
             return -1;
         } catch (Exception $exc) {
@@ -793,10 +796,10 @@ class obf_client {
             $params['email'] = $email;
         }
 
-        $url = $this->obf_url() . '/v1/event/' . $this->client_id();
+        $url = $this->obf_url() . '/v2/event/' . $this->client_id();
         $res = $this->request('get', $url, $params);
 
-        return $this->decode_ldjson($res);
+        return json_decode($res);
     }
 
     /**
@@ -1111,32 +1114,43 @@ class obf_client {
         $coursename = $badge->get_course_name($course);
 
         $params = array(
-            'recipient' => $recipientsnameemail,
+            'recipient' => array_map(function($email) use ($users) {
+                $user = current(array_filter($users, fn($u) => $u->email === $email));
+                return [
+                    'email' => $user->email,
+                    'name' => fullname($user),
+                ];
+            }, $recipients),
             'issued_on' => $issuedon,
             'api_consumer_id' => OBF_API_CONSUMER_ID,
-            'log_entry' => array('course_id' => strval($course),
+            'send_email' => true,
+            'show_report' => true,
+            'log_entry' => [
+                'course_id' => (string)$course,
                 'course_name' => $coursename,
                 'activity_name' => $activity,
-                'wwwroot' => $CFG->wwwroot),
-            'show_report' => 1
+                'wwwroot' => $CFG->wwwroot
+            ]
         );
 
         if (!is_null($email)) {
-            $params['email_subject'] = $email->get_subject();
-            $params['email_body'] = $email->get_body();
-            $params['email_footer'] = $email->get_footer();
-            $params['email_link_text'] = $email->get_link_text();
+            $params['email_message'] = [
+                'subject' => $email->get_subject(),
+                'body' => $email->get_body(),
+                'link_text' => $email->get_link_text(),
+                'footer' => $email->get_footer()
+            ];
         }
 
         if (!empty($criteriaaddendum)) {
-            $params['badge_override'] = array('criteria_add' => $criteriaaddendum);
+            $payload['criteria_add'] = $criteriaaddendum;
         }
 
         if (!is_null($badge->get_expires()) && $badge->get_expires() > 0) {
-            $params['expires'] = $badge->get_expires();
+            $payload['expires_on'] = $badge->get_expires();
         }
 
-        $url = $this->obf_url() . '/v1/badge/' . $this->client_id() . '/' . $badge->get_id();
+        $url = $this->obf_url() . '/v2/event/' . $this->client_id() . '/' . $badge->get_id() . '/issue';
         $this->request('post', $url, $params);
 
         // Sending notifications messages only if request is done with no error.
