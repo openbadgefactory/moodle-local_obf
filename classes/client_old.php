@@ -426,7 +426,7 @@ class obf_client {
     public function request($method, $url = '', $params = array(), $retry = true, $otheroauth2 = null) {
 
         error_log("[OBF] 1. Entry Point. Client::request called with: METHOD: $method URL: $url PARAMS: " . json_encode($params));        
-        print_r("Requesting: $method $url with params: " . json_encode($params) . "\n");
+        // print_r("Requesting: $method $url with params: " . json_encode($params) . "\n");
         
         global $DB;
 
@@ -445,7 +445,7 @@ class obf_client {
             throw new Exception('unknown method ' . $method);
         }
 
-        error_log("[OBF] 2. Response type. Response raw type: " . gettype($response));
+        // error_log("[OBF] 2. Response type. Response raw type: " . gettype($response));
 
 
         $this->rawresponse = null;
@@ -453,11 +453,11 @@ class obf_client {
             $this->rawresponse = $curl->get_raw_response();
         }
 
-        error_log("[OBF] 3.1. Raw \$response (truncated, max 1kb): " . substr(print_r($response, true), 0, 1000));
+/*         error_log("[OBF] 3.1. Raw \$response (truncated, max 1kb): " . substr(print_r($response, true), 0, 1000));
         error_log("[OBF] 3.2. RAW \$response full length: " . strlen($response));
         error_log("[OBF] 3.3. RAW \$response full start: " . substr($response, 0, 1000));
         error_log("[OBF] 3.4. RAW \$response full end: " . substr($response, -1000));
-
+ */
         $info = $curl->get_info();
 
         if ($info['http_code'] === 403 && empty(get_config('local_obf', 'obfclientid'))) {
@@ -489,19 +489,19 @@ class obf_client {
         }
 
         /** For fixture response creation START */
-        $dir = dirname(__DIR__) . '/tests/fixtures/responses';
+/*         $dir = dirname(__DIR__) . '/tests/fixtures/responses';
 
         if (!is_dir($dir)) {
             mkdir($dir, 0777, true);
-        }
+        } */
 
-        $endpoint = parse_url($url, PHP_URL_PATH);
+/*         $endpoint = parse_url($url, PHP_URL_PATH);
         $endpoint = trim($endpoint, '/');
         $paramsuffix = $params ? '_' . md5(json_encode($params)) : '';
         $flatpath = strtolower($method . '_' . str_replace(['/', '\\'], '_', $endpoint)) . $paramsuffix;
         $fullpath = $dir . '/' . $flatpath . '.json';
-
-        $targetdir = dirname($fullpath);
+ */
+/*         $targetdir = dirname($fullpath);
         if (!is_dir($targetdir)) {
             if (!mkdir($targetdir, 0777, true)) {
                 error_log("[OBF] 4.A. Fail. Directory not created : $targetdir");
@@ -510,9 +510,9 @@ class obf_client {
             }
         } else {
             error_log("[OBF] 4.C. Directory already exists: $targetdir");
-        }
+        } */
 
-        if (is_string($response)) {
+/*         if (is_string($response)) {
             $handledresponse = $response;
             if (strpos($response, '"image":') !== false) {
                 // redact the image data in the response.
@@ -534,7 +534,7 @@ class obf_client {
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             error_log("[OBF] 6. JSON ERROR: " . json_last_error_msg());
-        }
+        } */
 
         /** For fixture response creation END */
     

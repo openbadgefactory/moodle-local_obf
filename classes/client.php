@@ -782,7 +782,7 @@ class obf_client {
      * @return array The event data.
      */
     public function get_assertions($badgeid = null, $email = null, $params = array()) {
-
+        
         if (is_null($badgeid) && !is_null($email)) {
             return array();
         }
@@ -796,10 +796,51 @@ class obf_client {
             $params['email'] = $email;
         }
 
-        $url = $this->obf_url() . '/v2/event/' . $this->client_id();
-        $res = $this->request('get', $url, $params);
+        /** Get badge issuing data. */
+        $events_url = $this->obf_url() . '/v2/event/' . $this->client_id();
+        $events_res = $this->request('get', $events_url, $params);
+        $events_data = json_decode($events_res, true);
 
-        return json_decode($res);
+        /** Get badge recipients data. */
+        $recipients_url = $this->obf_url() . '/v2/event/' . $this->client_id() . '/recipient';
+        $recipients_res = $this->request('get', $recipients_url, $params);
+        $recipients_data = json_decode($recipients_res, true);
+
+        $recipientmap = [];
+        foreach ($recipients_data['result'] ?? [] as $recipient) {
+            $eventid = $recipient['event_id'];
+            if (!isset($recipientmap[$eventid])) {
+                $recipientmap[$eventid] = [];
+            }
+            $recipientmap[$eventid][] = $recipient;
+        }
+
+        /** Build the output array from the two requests to match the V1 output. */
+        $out = [];
+        foreach ($events_data['result'] ?? [] as $event) {
+            $eventid = $event['id'];
+            foreach ($recipientmap[$eventid] ?? [] as $recipient) {
+                $out[] = array(
+                    'id' => $recipient['assertion_id'],
+                    'name' => $event['name'] ?? '',
+                    'recipient' => [$recipient['email']],
+                    'issued_on' => $recipient['issued_on'] ?? $event['issued_on'],
+                    'badge_id' => $event['badge_id'],
+                    'expires' => $recipient['expires_on'] ?? null,
+                    'revoked' => ($recipient['revoked'] ?? false)
+                        ? [$recipient['email'] => true]
+                        : [],
+                    'log_entry' => [
+                        'wwwroot' => $GLOBALS['CFG']->wwwroot ?? '',
+                        'course_id' => '',
+                        'course_name' => null,
+                        'activity_name' => null
+                    ],
+                    'timestamp' => $event['mtime'] ?? $recipient['issued_on'] ?? null,
+                );
+            }
+        }
+        return $out;
     }
 
     /**
