@@ -300,7 +300,7 @@ class obf_client {
 
             // Add HTTPHEADER option for POST request.
             $options['HTTPHEADER'] = array('Content-Type: application/x-www-form-urlencoded');
-            
+
             $res = $curl->post($url, http_build_query($params, '', '&'), $options);
             $res = json_decode($res);
 
@@ -429,6 +429,8 @@ class obf_client {
     public function request($method, $url = '', $params = array(), $retry = true, $otheroauth2 = null) {
         global $DB;
 
+        error_log('OBF request: ' . $method . ' ' . $url . ' params: ');
+
         $curl = $this->get_transport();
         $options = $this->get_curl_options();
 
@@ -479,7 +481,7 @@ class obf_client {
             $this->error = isset($response['error']) ? $response['error'] : '';
             $appendtoerror = defined('PHPUNIT_TEST') && PHPUNIT_TEST ? ' ' . $method . ' ' . $url : '';
             throw new Exception(get_string('apierror' . $this->httpcode, 'local_obf',
-                    $this->error) . $appendtoerror, $this->httpcode);
+                $this->error) . $appendtoerror, $this->httpcode);
         }
 
         return $response;
@@ -513,7 +515,7 @@ class obf_client {
      */
     public function get_badges(array $categories = array(), $query = '') {
         global $DB;
-
+        
         $params = array('draft' => 0, 'external' => 1);
 
         // Checks rules.
@@ -573,65 +575,77 @@ class obf_client {
             $params['query'] = $query;
         }
 
-        $url = $this->obf_url() . '/v2/badge/' . $this->client_id();
-        $res = $this->request('get', $url, $params);
-        
-        $out = json_decode($res, true);
+        $badges = []; // Initialize badges array that'll be combined from batches.
+        $limit = 1000; // Limit for each batch request (OBF v2 API max 1000).
+        $offset = 0; // Offset for each batch request, iteratively increased.
 
-        if (is_array($out) && isset($out['result'])) {
-            $out = $out['result'];
-        } else {
-            $out = [];
-        }
+        /** Loop, if necessary, enough of times to get all badges (max 5000) */
+        do {
+            $params['limit'] = $limit;
+            $params['offset'] = $offset;
 
-        $badges = [];
+            $url = $this->obf_url() . '/v2/badge/' . $this->client_id();
+            $res = $this->request('get', $url, $params);
+            $out = json_decode($res, true);
+            $batch = []; // Initialize batch array, will be filled with the response data.
 
-        // Handle the response data to align with badge.php expectations.
-        foreach ($out as &$badge) {
-            // Filter badges by categories if categories are provided.
-            if (!empty($categories)) {
-                if (!isset($badge['category']) || !is_array($badge['category']) ||
-                    !array_intersect($badge['category'], $categories)) {
-                    continue;
-                }
+            if (is_array($out) && isset($out['result'])) {
+                $batch = $out['result'];
+            } else {
+                $batch = [];
             }
 
-            // Filter badges by query if query is provided.
-            if (!empty($query)) {
-                // Filter badges by query, mb_ to support letters with diacritics.
-                $badge_name = mb_strtolower($badge['name'] ?? '');
-                if (mb_strpos($badge_name, mb_strtolower($query)) === false) {
-                    continue;
+            // Handle the response data to align with badge.php expectations.
+            foreach ($batch as &$badge) {
+                // Filter badges by categories if categories are provided.
+                if (!empty($categories)) {
+                    if (!isset($badge['category']) || !is_array($badge['category']) ||
+                        !array_intersect($badge['category'], $categories)) {
+                        continue;
+                    }
                 }
+
+                // Filter badges by query if query is provided.
+                if (!empty($query)) {
+                    // Filter badges by query, mb_ to support letters with diacritics.
+                    $badge_name = mb_strtolower($badge['name'] ?? '');
+                    if (mb_strpos($badge_name, mb_strtolower($query)) === false) {
+                        continue;
+                    }
+                }
+
+                // Remove primary language from alt_language list.
+                $primary = $badge['primary_language'] ?? '';
+                $languages = $badge['languages'] ?? [];
+                $alt_languages = array_values(array_filter($languages, function ($lang) use ($primary) {
+                    return $lang !== $primary && $lang !== '';
+                }));
+
+                $badges[] = [
+                    'id' => $badge['id'] ?? '',
+                    'name' => $badge['name'] ?? '',
+                    'description' => $badge['description'] ?? '',
+                    'image' => $badge['image'] ?? '',
+                    'primary_language' => $primary,
+                    'alt_language' => $alt_languages,
+                    'category' => $badge['category'] ?? [],
+                    'tag' => $badge['tag'] ?? [],
+                    'client_alias_id' => $badge['client_alias_id'] ?? [],
+                    'creator_id' => $badge['creator_id'] ?? null,
+                    'draft' => $badge['draft'] ?? true,
+                    'ctime' => $badge['ctime'] ?? 0,
+                    'mtime' => $badge['mtime'] ?? 0,
+                    'readyforissuing' => isset($badge['draft']) ? !$badge['draft'] : false,
+                    'expires' => $badge['expires'] ?? 0, // Probably legacy API keys stuff, remove later.
+                    'client_id' => $this->client_id(),
+                ];
             }
 
-            // Remove primary language from alt_language list.
-            $primary = $badge['primary_language'] ?? '';
-            $languages = $badge['languages'] ?? [];
-            $alt_languages = array_values(array_filter($languages, function ($lang) use ($primary) {
-                return $lang !== $primary && $lang !== '';
-            }));
+            $offset += $limit;
+            // Stop if batch has less badges than the limit or if we have reached the arbitrary offset limit of 5000.
+        } while (count($batch) === $limit && $offset < 5000);
 
-            $badges[] = [
-                'id' => $badge['id'] ?? '',
-                'name' => $badge['name'] ?? '',
-                'description' => $badge['description'] ?? '',
-                'image' => $badge['image'] ?? '',
-                'primary_language' => $primary,
-                'alt_language' => $alt_languages,
-                'category' => $badge['category'] ?? [],
-                'tag' => $badge['tag'] ?? [],
-                'client_alias_id' => $badge['client_alias_id'] ?? [],
-                'creator_id' => $badge['creator_id'] ?? null,
-                'draft' => $badge['draft'] ?? true,
-                'ctime' => $badge['ctime'] ?? 0,
-                'mtime' => $badge['mtime'] ?? 0,
-                'readyforissuing' => isset($badge['draft']) ? !$badge['draft'] : false,
-                'expires' => $badge['expires'] ?? 0, // Probably legacy API keys stuff, remove later.
-                'client_id' => $this->client_id(),
-            ];
-        }
-
+        /** Sort the badges alphabetically */
         $coll = new Collator('root');
         $coll->setStrength( Collator::PRIMARY );
         usort($badges, function ($a, $b) use ($coll) {
@@ -694,11 +708,6 @@ class obf_client {
             'language' => $badge['primary_language'] ?? '',
             'tags' => $content['tag'] ?? [],
             'alignment' => $content['alignment'] ?? [],
-            'achievement_type' => $content['achievement_type'] ?? '',
-            'credits_available' => $content['credits_available'] ?? 0.0,
-            'field_of_study' => $content['field_of_study'] ?? '',
-            'human_code' => $content['human_code'] ?? '',
-            'specialization' => $content['specialization'] ?? '',
             'client_alias_id' => $badge['client_alias_id'] ?? [], // Not used yet.
             'creator_id' => $badge['creator']['id'] ?? null, // Not used yet.
             'intent' => $badge['intent'] ?? '',
@@ -712,7 +721,14 @@ class obf_client {
             'expires' => $badge['expires'] ?? 0,
             'client_id' => $this->client_id(),
             'criteria_html' => $content['criteria'] ?? '',
-            // Old API v1 fields set to null.
+            // New Badge v3 fields start.
+            'achievement_type' => $content['achievement_type'] ?? '',
+            'credits_available' => $content['credits_available'] ?? 0.0,
+            'field_of_study' => $content['field_of_study'] ?? '',
+            'human_code' => $content['human_code'] ?? '',
+            'specialization' => $content['specialization'] ?? '',
+            // New Badge v3 fields end.
+            // API v1 fields set to null.
             'metadata' => null,
             'evidence_definition' => null,
             'css' => null,
@@ -759,6 +775,7 @@ class obf_client {
             'searchable' => $issuer['searchable'] ? 1 : 0,
             'paid_until' => $issuer['paid_until'] ?? 0,
             // API v1 fields not present in v2, remove later.
+            // Ei käytössä, ei tulossa.
             'is_active' => 1, // Old API v1 field is_active is always set true to ensure potential is_active checks in other classes.
             'deleted' => 0, // Old API v1 field deleted is always set to 0 to ensure potential deleted checks in other classes.
             'suspended' => 0, // Old API v1 field suspended is always set to 0 to ensure potential suspended checks in other classes.
@@ -782,7 +799,7 @@ class obf_client {
      * @return array The event data.
      */
     public function get_assertions($badgeid = null, $email = null, $params = array()) {
-        
+
         if (is_null($badgeid) && !is_null($email)) {
             return array();
         }
@@ -796,49 +813,68 @@ class obf_client {
             $params['email'] = $email;
         }
 
-        /** Get badge issuing data. */
-        $events_url = $this->obf_url() . '/v2/event/' . $this->client_id();
-        $events_res = $this->request('get', $events_url, $params);
-        $events_data = json_decode($events_res, true);
+        $page = optional_param('page', 0, PARAM_INT); // Page number.
+        $assertations_per_page = 10;
+        $assertations_per_request = 10; // OBF v2 API max 1000.
 
-        /** Get badge recipients data. */
-        $recipients_url = $this->obf_url() . '/v2/event/' . $this->client_id() . '/recipient';
-        $recipients_res = $this->request('get', $recipients_url, $params);
-        $recipients_data = json_decode($recipients_res, true);
+        $batchindex = floor($page * $assertations_per_page / $assertations_per_request); // What batch we are in.
+        $localoffset = ($page * $assertations_per_page) % $assertations_per_request; // How far are we in the batch.
+        
+        $params['limit'] = $assertations_per_request; // Set the limit for the request (1000).
+        $params['offset'] = $batchindex * $assertations_per_request; // Set the offset for the request.
 
-        $recipientmap = [];
-        foreach ($recipients_data['result'] ?? [] as $recipient) {
-            $eventid = $recipient['event_id'];
-            if (!isset($recipientmap[$eventid])) {
-                $recipientmap[$eventid] = [];
-            }
-            $recipientmap[$eventid][] = $recipient;
-        }
+        $url = $this->obf_url() . '/v2/event/' . $this->client_id();
+        $res = $this->request('get', $url, $params);
+        $data = json_decode($res, true);
 
+        $batch = $data['result'] ?? []; // Get the batch of events for the current page.
+        $events = array_slice($batch, $localoffset, $assertations_per_page); // Get the events for the current page.
         /** Build the output array from the two requests to match the V1 output. */
         $out = [];
-        foreach ($events_data['result'] ?? [] as $event) {
-            $eventid = $event['id'];
-            foreach ($recipientmap[$eventid] ?? [] as $recipient) {
-                $out[] = array(
-                    'id' => $recipient['assertion_id'],
-                    'name' => $event['name'] ?? '',
-                    'recipient' => [$recipient['email']],
-                    'issued_on' => $recipient['issued_on'] ?? $event['issued_on'],
-                    'badge_id' => $event['badge_id'],
-                    'expires' => $recipient['expires_on'] ?? null,
-                    'revoked' => ($recipient['revoked'] ?? false)
-                        ? [$recipient['email'] => true]
-                        : [],
-                    'log_entry' => [
-                        'wwwroot' => $GLOBALS['CFG']->wwwroot ?? '',
-                        'course_id' => '',
-                        'course_name' => null,
-                        'activity_name' => null
-                    ],
-                    'timestamp' => $event['mtime'] ?? $recipient['issued_on'] ?? null,
-                );
+        foreach ($events as $event) {
+
+            $recipient_count = $event['recipient_count'] ?? 0;
+            $recipient = [$event['recipient_count']];
+
+            // If recipient_count is 1, get the recipient data.
+            if ($recipient_count === 1) {
+                // error_log('[OBF] get_assertions: recipient_count: (should be 1) ' . $recipient_count);
+                $recipient_url = $this->obf_url() . '/v2/event/' . $this->client_id() . '/recipient';
+                $recipient_res = $this->request('get', $recipient_url, array('event_id' => $event['id']));
+                $recipient_data = json_decode($recipient_res, true);
+                $recipient_item = $recipient_data['result'] ?? []; // Get the recipient data from the response.
+                // error_log('[OBF] get_assertions:: total (should be 1) '  . $recipient_data['total'] ?? 0);
+                if (!empty($recipient_item) && !empty($recipient_item[0]['email'])) {
+                    // error_log('[OBF] get_assertions: recipient email: ' . $recipient_item[0]['email']);
+                    $recipient = [$recipient_item[0]['email']];
+                }
+                // $recipient = []; //  [$recipient_item[0]['email']]; // Get the email of the recipient.
             }
+
+            $out[] = array(
+                'id' => $event['id'] ?? '',
+                'name' => $event['name'] ?? '',
+                'recipient' => $recipient, // Handle showing recipient_count later, currently this field expects an array of emails.
+                'issued_on' => $event['issued_on'],
+                'badge_id' => $event['badge_id'],
+                'expires' => $event['expires_on'] ?? null,
+                'revoked' => [], // 
+                // parameters for legacy API v1 fields 
+                // ei nää voi olla tyhjä, ei käytetä
+                'log_entry' => '', // $event['log_entry'] ?? '', // ei käytetä, mutta v1 vaatii
+/*                 [
+                    'wwwroot' => '', // $GLOBALS['CFG']->wwwroot ?? '', // eli myöntämistapahtumat sillä kurssilla millä ollaan menossa
+                    'course_id' => $params['log_entry']['course_id'] ?? '', // eli tällä
+                    // Myöntämishistoriaa eri paikoissa 
+                    // 1. Päätaso get
+                    // 3. yksittäinen merkki
+                    // 2. myöntämishistoria kurssin sisällä 
+                    /// Mieti mieti mieti mistä oikeat speksit 
+                    'course_name' => null,
+                    'activity_name' => null
+                ], */
+                'timestamp' => $event['mtime'] ?? $event['issued_on'] ?? null,
+            );
         }
         return $out;
     }
@@ -901,10 +937,52 @@ class obf_client {
      * @return array The event data.
      */
     public function get_event($eventid) {
-        $url = $this->obf_url() . '/v1/event/' . $this->client_id() . '/' . $eventid;
-        $res = $this->request('get', $url);
+        $event_url = $this->obf_url() . '/v2/event/' . $this->client_id() . '/' . $eventid;
+        $event_res = $this->request('get', $event_url);
+        $event = json_decode($event_res, true);
 
-        return json_decode($res, true);
+        $recipients_url = $this->obf_url() . '/v2/event/' . $this->client_id() . '/recipient';
+        $recipients_res = $this->request('get', $recipients_url, array('event_id' => $eventid));
+        $recipients = json_decode($recipients_res, true);
+
+        $dir = dirname(__DIR__) . '/tests/fixtures/responses';
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+        }
+
+        file_put_contents($dir . '/get_v2_single_recipients.json', $recipients_res);
+
+        // sit tee event recipient request event_id:tä käyttäen parametrina
+        if (!is_array($event)) {
+            throw new Exception("Invalid issuer response");
+        }
+
+        /** Handle data to respond v1 specs */
+        return [
+            'id' => $event['id'] ?? '',
+            'name' => $event['name'] ?? '',
+            'badge_id' => $event['badge']['id'] ?? '',
+            'issued_on' => $event['issued_on'] ?? 0,
+            'expires' => $event['expires_on'] ?? 0,
+            'mtime' => $event['mtime'] ?? 0,
+            'timestamp' => $event['mtime'] ?? $event['issued_on'] ?? 0,
+            'client_id' => $event['client_alias_id'] ?? $this->client_id() ?? '', // How should this work tbh?
+            'client_alias' => $event['client_alias_id'] ?? '',
+            'api_consumer_id' => $event['api_consumer_id'] ?? '',
+            'log_entry' => $event['log_entry'] ?? '',
+            'earnable_application_id' => $event['earnable_application_id'] ?? '',
+            'email_subject' => $event['email_message']['subject'] ?? '',
+            'email_body' => $event['email_message']['body'] ?? '',
+            'email_pdf_link_text' => $event['email_message']['link_text'] ?? '',
+            'email_footer' => $event['email_message']['footer'] ?? '',
+            // Legacy API v1 fields. 
+            'lastmodifiedby' => null,
+            'token' => null,
+            'json_cache_id' => '',
+            'recipient' => [],
+            'deleted' => 0, // Old API v1 field deleted is always set to 0 to ensure potential deleted checks in other classes.
+            'show_report' => 1, // Always set to 1 to ensure potential show_report checks in other classes.
+        ];
     }
 
     /**
@@ -1002,8 +1080,8 @@ class obf_client {
         $recipientsnameemail = [];
 
         $userfields = 'id, email, ' . implode(', ',
-                ['firstnamephonetic', 'lastnamephonetic', 'middlename', 'alternatename', 'firstname', 'lastname']
-            );
+            ['firstnamephonetic', 'lastnamephonetic', 'middlename', 'alternatename', 'firstname', 'lastname']
+        );
 
         $users = $DB->get_records_list('user', 'email', $recipients, '', $userfields);
         $now = time();
@@ -1015,6 +1093,7 @@ class obf_client {
         $managerfullmessage = '';
         $managerfullmessagehtml = '';
 
+        // Luuppaa 
         foreach ($users as $user) {
 
             try {
@@ -1025,7 +1104,7 @@ class obf_client {
                     throw $e;
                 }
             }
-            // Add username, if available.
+            // Add username, if available. // luuppaa täällä recipient list muodosta jo täällä
             if ($user->firstname && $user->lastname && $user->email && !preg_match('/[><]/', $user->email)) {
                 $recipientsnameemail[] = fullname($user) . ' <' . $user->email . '>';
             } else {
@@ -1070,18 +1149,18 @@ class obf_client {
             // Prepare message for managers.
             $managerfullmessage = $managerfullmessage . '<br>'
                 . get_string('badgeissuedbody', 'local_obf', [
-                'badgename' => $badgename,
-                'firstname' => $user->firstname,
-                'lastname' => $user->lastname,
-                'courselink' => $courselink,
-            ]) . '<br>';
+                    'badgename' => $badgename,
+                    'firstname' => $user->firstname,
+                    'lastname' => $user->lastname,
+                    'courselink' => $courselink,
+                ]) . '<br>';
             $managerfullmessagehtml = $managerfullmessagehtml . '<br>'
-            . get_string('badgeissuedbody', 'local_obf', [
-                'badgename' => $badgename,
-                'firstname' => $user->firstname,
-                'lastname' => $user->lastname,
-                'courselink' => $courselink,
-            ]) . '<br>';
+                . get_string('badgeissuedbody', 'local_obf', [
+                    'badgename' => $badgename,
+                    'firstname' => $user->firstname,
+                    'lastname' => $user->lastname,
+                    'courselink' => $courselink,
+                ]) . '<br>';
         }
 
         // Send notification to teachers.
@@ -1154,6 +1233,8 @@ class obf_client {
 
         $coursename = $badge->get_course_name($course);
 
+        // tee jo aiemmin foreach usersissa 
+        // jos ei käytetä missään mussa kuin parametrissa niin täytä jos usuoraan nimi ja email
         $params = array(
             'recipient' => array_map(function($email) use ($users) {
                 $user = current(array_filter($users, fn($u) => $u->email === $email));
@@ -1224,7 +1305,7 @@ class obf_client {
     public function pub_get_badge($badgeid, $eventid) {
         if ($this->eventlookup && isset($this->eventlookup[$eventid]['host'])) {
             $host = $this->eventlookup[$eventid]['host'];
-        }
+        } 
         else {
             $host = $this->obf_url();
         }
@@ -1357,7 +1438,7 @@ class obf_client {
 
         // Couldn't decrypt data with provided key.
         if (openssl_public_decrypt($token, $decrypted, $key,
-                OPENSSL_PKCS1_PADDING) === false) {
+            OPENSSL_PKCS1_PADDING) === false) {
             throw new Exception(get_string('tokendecryptionfailed', 'local_obf') .
                 ': ' . openssl_error_string());
         }
