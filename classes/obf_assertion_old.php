@@ -125,21 +125,6 @@ class obf_assertion {
      * @var string The criteria addendum
      */
     private $criteriaaddendum = '';
-    
-    /** 
-     * @var int|null 
-     */
-    protected $recipientcount = null;
-
-    /**
-     * @var bool Whether more recipients are available
-     */
-    private $more_recipients_available = false;
-
-    /**
-     * @var int Offset for loading more recipients
-     */
-    private $next_offset = 0;
 
     /**
      * @var Assertion source is unknown.
@@ -326,9 +311,8 @@ class obf_assertion {
      * @param obf_client $client The client instance.
      * @return obf_assertion The assertion instance.
      */
-    // TODO: Support getting more recipients by allowing get_event() to accept offset parameter.
-    public static function get_instance_by_id($id, obf_client $client, int $offset = 0) {
-        $arr = $client->get_event($id, $offset);
+    public static function get_instance_by_id($id, obf_client $client) {
+        $arr = $client->get_event($id);
         $obj = self::get_instance()->set_emailbody($arr['email_body']);
         $obj->set_emailfooter($arr['email_footer'])->set_emailsubject($arr['email_subject']);
         if (isset($arr['email_link_text'])) {
@@ -340,17 +324,6 @@ class obf_assertion {
         $obj->set_source(self::ASSERTION_SOURCE_OBF);
         if (array_key_exists('revoked', $arr)) {
             $obj->set_revoked($arr['revoked']);
-        }
-
-        /** 
-         * New fields for getting more recipients 
-         * TODO: Add support for getting more recipients in the future.
-         */
-        if (array_key_exists('more_recipients_available', $arr)) {
-            $obj->set_more_recipients_available($arr['more_recipients_available']);
-        }
-        if (array_key_exists('next_offset', $arr)) {
-            $obj->set_next_offset($arr['next_offset']);
         }
 
         return $obj;
@@ -434,49 +407,6 @@ class obf_assertion {
         if ($limit > 0) {
             $assertions = array_slice($assertions, 0, $limit);
         }
-
-        return new obf_assertion_collection($assertions);
-    }
-
-    /**
-     * Returns all assertions related to a badge.
-     */
-    public static function get_assertions_for_badge(obf_client $client, obf_badge $badge, array $searchparams = []) {
-                
-        $badgeid = $badge->get_id();
-        $arr = $client->get_assertions_per_badge($badgeid, null, $searchparams);
-        $assertions = array();
-
-        if (is_array($arr)) {
-            foreach ($arr as $item) {
-                $b = $badge;
-
-                if (!is_null($b)) {
-                    $assertion = self::get_instance();
-                    $assertion->set_badge($b)->set_id($item['id'])->set_recipients($item['recipient']);
-                    $assertion->set_client_id($b->get_client_id());
-
-                    if (isset($item['log_entry'])) {
-                        $assertion->set_log_entry($item['log_entry']);
-                    }
-                    if (isset($item['recipient_count'])) {
-                        $assertion->set_recipient_count($item['recipient_count']);
-                    }
-                    $assertion->set_expires($item['expires'])->set_name($item['name']);
-                    $assertion->set_issuedon($item['issued_on'])->set_source(self::ASSERTION_SOURCE_OBF);
-                    if (array_key_exists('revoked', $item)) {
-                        $assertion->set_revoked($item['revoked']);
-                    }
-                    $assertions[] = $assertion;
-                }
-            }
-        }
-
-        // Sort the assertions by date...
-        usort($assertions,
-            function (obf_assertion $a1, obf_assertion $a2) {
-                return $a1->get_issuedon() - $a2->get_issuedon();
-            });
 
         return new obf_assertion_collection($assertions);
     }
@@ -609,7 +539,7 @@ class obf_assertion {
      * @return obf_assertion_collection The related assertions.
      */
     public static function get_badge_assertions(obf_badge $badge, obf_client $client) {
-        return self::get_assertions_for_badge($client, $badge);
+        return self::get_assertions($client, $badge);
     }
 
     /**
@@ -814,26 +744,6 @@ class obf_assertion {
     }
 
     /**
-     * Get the recipient count.
-     *
-     * @return int|null
-     */
-    public function get_recipient_count() {
-        return $this->recipientcount;
-    }
-
-    /**
-     * Set the recipient count for the assertion.
-     *
-     * @param int $count
-     * @return $this
-     */
-    public function set_recipient_count($count) {
-        $this->recipientcount = $count;
-        return $this;
-    }
-
-    /**
      * @param $key
      * @return mixed
      */
@@ -857,20 +767,6 @@ class obf_assertion {
      */
     public function get_recipients() {
         return $this->recipients;
-    }
-
-    /**
-     * Get recipient emails.
-     * 
-     */
-    public function get_recipient_emails(): array {
-        $emails = [];
-        foreach ($this->get_recipients() as $r) {
-            if (!empty($r['email'])) {
-                $emails[] = $r['email'];
-            }
-        }
-        return $emails;
     }
 
     /**
@@ -992,30 +888,6 @@ class obf_assertion {
      */
     public function set_name($name) {
         $this->name = $name;
-        return $this;
-    }
-
-    /**
-     * Get whether more recipients are available.
-     */
-    public function get_more_recipients_available() {
-        return $this->more_recipients_available;
-    }
-
-    public function set_more_recipients_available($available) {
-        $this->more_recipients_available = $available;
-        return $this;
-    }
-
-    /**
-     * Get the next offset for loading more recipients.
-     */
-    public function get_next_offset() {
-        return $this->next_offset;
-    }
-
-    public function set_next_offset($offset) {
-        $this->next_offset = $offset;
         return $this;
     }
 

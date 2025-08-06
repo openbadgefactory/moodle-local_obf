@@ -93,6 +93,11 @@ class obf_client {
      */
     private $eventlookup = null;
 
+    /**
+     * @var array Total badge issuing events.
+     */
+    private static $total_assertions = null;
+
     const RETRIEVE_ALL = 'all';
     const RETRIEVE_LOCAL = 'local';
 
@@ -429,7 +434,7 @@ class obf_client {
     public function request($method, $url = '', $params = array(), $retry = true, $otheroauth2 = null) {
         global $DB;
 
-        error_log('OBF request: ' . $method . ' ' . $url . ' params: ');
+        // error_log('[OBF] request: ' . $method . ' ' . $url . ' params: ');
 
         $curl = $this->get_transport();
         $options = $this->get_curl_options();
@@ -480,8 +485,11 @@ class obf_client {
         if (is_numeric($this->httpcode) && ($this->httpcode < 200 || $this->httpcode >= 300)) {
             $this->error = isset($response['error']) ? $response['error'] : '';
             $appendtoerror = defined('PHPUNIT_TEST') && PHPUNIT_TEST ? ' ' . $method . ' ' . $url : '';
-            throw new Exception(get_string('apierror' . $this->httpcode, 'local_obf',
-                $this->error) . $appendtoerror, $this->httpcode);
+            throw new Exception(get_string(
+                'apierror' . $this->httpcode,
+                'local_obf',
+                $this->error
+            ) . $appendtoerror, $this->httpcode);
         }
 
         return $response;
@@ -515,7 +523,7 @@ class obf_client {
      */
     public function get_badges(array $categories = array(), $query = '') {
         global $DB;
-        
+
         $params = array('draft' => 0, 'external' => 1);
 
         // Checks rules.
@@ -599,8 +607,10 @@ class obf_client {
             foreach ($batch as &$badge) {
                 // Filter badges by categories if categories are provided.
                 if (!empty($categories)) {
-                    if (!isset($badge['category']) || !is_array($badge['category']) ||
-                        !array_intersect($badge['category'], $categories)) {
+                    if (
+                        !isset($badge['category']) || !is_array($badge['category']) ||
+                        !array_intersect($badge['category'], $categories)
+                    ) {
                         continue;
                     }
                 }
@@ -813,67 +823,99 @@ class obf_client {
             $params['email'] = $email;
         }
 
-        $page = optional_param('page', 0, PARAM_INT); // Page number.
-        $assertations_per_page = 10;
-        $assertations_per_request = 10; // OBF v2 API max 1000.
-
-        $batchindex = floor($page * $assertations_per_page / $assertations_per_request); // What batch we are in.
-        $localoffset = ($page * $assertations_per_page) % $assertations_per_request; // How far are we in the batch.
-        
-        $params['limit'] = $assertations_per_request; // Set the limit for the request (1000).
-        $params['offset'] = $batchindex * $assertations_per_request; // Set the offset for the request.
-
+        /** Get badge issuing data. */
         $url = $this->obf_url() . '/v2/event/' . $this->client_id();
         $res = $this->request('get', $url, $params);
         $data = json_decode($res, true);
 
-        $batch = $data['result'] ?? []; // Get the batch of events for the current page.
-        $events = array_slice($batch, $localoffset, $assertations_per_page); // Get the events for the current page.
         /** Build the output array from the two requests to match the V1 output. */
         $out = [];
-        foreach ($events as $event) {
-
-            $recipient_count = $event['recipient_count'] ?? 0;
-            $recipient = [$event['recipient_count']];
-
-            // If recipient_count is 1, get the recipient data.
-            if ($recipient_count === 1) {
-                // error_log('[OBF] get_assertions: recipient_count: (should be 1) ' . $recipient_count);
-                $recipient_url = $this->obf_url() . '/v2/event/' . $this->client_id() . '/recipient';
-                $recipient_res = $this->request('get', $recipient_url, array('event_id' => $event['id']));
-                $recipient_data = json_decode($recipient_res, true);
-                $recipient_item = $recipient_data['result'] ?? []; // Get the recipient data from the response.
-                // error_log('[OBF] get_assertions:: total (should be 1) '  . $recipient_data['total'] ?? 0);
-                if (!empty($recipient_item) && !empty($recipient_item[0]['email'])) {
-                    // error_log('[OBF] get_assertions: recipient email: ' . $recipient_item[0]['email']);
-                    $recipient = [$recipient_item[0]['email']];
-                }
-                // $recipient = []; //  [$recipient_item[0]['email']]; // Get the email of the recipient.
-            }
-
+        foreach ($data['result'] ?? [] as $event) {
             $out[] = array(
-                'id' => $event['id'] ?? '',
+                'id' => $event['id'],
                 'name' => $event['name'] ?? '',
-                'recipient' => $recipient, // Handle showing recipient_count later, currently this field expects an array of emails.
-                'issued_on' => $event['issued_on'],
-                'badge_id' => $event['badge_id'],
+                'recipient' => [], // For v1 compatibility, recipient data is not included in the v2 API.
+                'recipient_count' => [$event['recipient_count']] ?? [],
+                'issued_on' => $event['issued_on'] ?? null,
+                'badge_id' => $event['badge_id'] ?? null,
                 'expires' => $event['expires_on'] ?? null,
-                'revoked' => [], // 
-                // parameters for legacy API v1 fields 
-                // ei nää voi olla tyhjä, ei käytetä
-                'log_entry' => '', // $event['log_entry'] ?? '', // ei käytetä, mutta v1 vaatii
-/*                 [
-                    'wwwroot' => '', // $GLOBALS['CFG']->wwwroot ?? '', // eli myöntämistapahtumat sillä kurssilla millä ollaan menossa
-                    'course_id' => $params['log_entry']['course_id'] ?? '', // eli tällä
-                    // Myöntämishistoriaa eri paikoissa 
-                    // 1. Päätaso get
-                    // 3. yksittäinen merkki
-                    // 2. myöntämishistoria kurssin sisällä 
-                    /// Mieti mieti mieti mistä oikeat speksit 
+                'revoked' => [],
+                'log_entry' => [
+                    'wwwroot' => $GLOBALS['CFG']->wwwroot ?? '',
+                    'course_id' => '',
                     'course_name' => null,
                     'activity_name' => null
-                ], */
-                'timestamp' => $event['mtime'] ?? $event['issued_on'] ?? null,
+                ],
+                'timestamp' => $event['mtime'] ?? $recipient['issued_on'] ?? null,
+            );
+        }
+        return $out;
+    }
+
+    /**
+     * Get badge issuing events from the API for a single badge and recipient.
+     * @param string $badgeid The id of the badge.
+     */
+    public function get_assertions_per_badge($badgeid = null) {
+
+        if (is_null($badgeid)) {
+            return [];
+        }
+
+        $all_events = [];
+        $limit = 1000;
+        $total = null;
+        $offset = 0;
+        $page = optional_param('page', 0, PARAM_INT); // Page number.
+        $perpage = 10; // Number of events per page, used for pagination.
+
+        do {
+            // Get badge issuing data.
+            $url = $this->obf_url() . '/v2/event/' . $this->client_id();
+            $query = [
+                'badge_id' => $badgeid,
+                'offset' => $offset,
+                'limit' => $limit
+            ];
+            $res = $this->request('get', $url, $query);
+            $data = json_decode($res, true);
+
+            // Make sure the response contains events.
+            if (!isset($data['result']) || !is_array($data['result'])) {
+                break;
+            }
+
+            // Save the number of total amount of issuing events once.
+            if (is_null($total) && isset($data['total'])) {
+                $total = $data['total'];
+                $this->total_assertions = $total;
+            }
+
+            $events = $data['result'];
+            $all_events = array_merge($all_events, $events); // Merge the current batch of events with the all_events array.
+            $offset += $limit; // Increase the offset for the next request.
+            $min_needed = ($page + 1) * $perpage; // Calculate the minimum number of events needed for the current page.
+
+        // Continue fetching events until total count is reached or we have enough events for the current page.
+        } while (
+            count($all_events) < $total
+            && count($all_events) < $min_needed
+        );
+
+        /** Build the output array from the two requests to match the V1 output. */
+        $out = [];
+        foreach ($all_events as $event) {
+            $out[] = array(
+                'id' => $event['id'],
+                'name' => $event['name'] ?? '',
+                'recipient' => [$event['recipient_count']] ?? [], // For v1 compatibility, recipient data is not included in the v2 API.
+                'recipient_count' => $event['recipient_count'] ?? [],
+                'issued_on' => $event['issued_on'] ?? null,
+                'badge_id' => $event['badge_id'] ?? null,
+                'expires' => $event['expires_on'] ?? null,
+                'revoked' => [],
+                'log_entry' => [],
+                'timestamp' => $event['mtime'] ?? $recipient['issued_on'] ?? null,
             );
         }
         return $out;
@@ -936,26 +978,35 @@ class obf_client {
      * @param string $eventid The id of the event.
      * @return array The event data.
      */
-    public function get_event($eventid) {
-        $event_url = $this->obf_url() . '/v2/event/' . $this->client_id() . '/' . $eventid;
-        $event_res = $this->request('get', $event_url);
-        $event = json_decode($event_res, true);
+    // TODO: Re-enabled offset parameter later when load-more functionality is integrated.
+    public function get_event($eventid, $offset = 0)
+    {
+        $url = $this->obf_url() . '/v2/event/' . $this->client_id() . '/' . $eventid;
+        $res = $this->request('get', $url);
+        $event = json_decode($res, true);
 
+        $recipients = [];
+        $offset = 0;
+        $limit = 1000;
+        // $total = 0;
+        // $offset = optional_param('offset', 0, PARAM_INT);
+
+        /** 
+         * We cannot get all the recipients at once, 
+         * currently we'll get first 1000, 
+         * we can easily raise this limit later if needed for example ten times.
+         */
+        // do { // Get recipients for the event.
         $recipients_url = $this->obf_url() . '/v2/event/' . $this->client_id() . '/recipient';
-        $recipients_res = $this->request('get', $recipients_url, array('event_id' => $eventid));
-        $recipients = json_decode($recipients_res, true);
-
-        $dir = dirname(__DIR__) . '/tests/fixtures/responses';
-        if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
-        }
-
-        file_put_contents($dir . '/get_v2_single_recipients.json', $recipients_res);
-
-        // sit tee event recipient request event_id:tä käyttäen parametrina
-        if (!is_array($event)) {
-            throw new Exception("Invalid issuer response");
-        }
+        $query = ['event_id' => $eventid, 'offset' => $offset, 'limit' => $limit];
+        $recipients_res = $this->request('get', $recipients_url, $query);
+        $recipients_data = json_decode($recipients_res, true);
+        $recipient_list = $recipients_data['result'] ?? [];
+        $emails = array_map(fn($recipient) => $recipient['email'], $recipient_list);
+        $recipients = array_merge($recipients, $recipients_data['result']);
+        $offset += $limit;
+        // $total = $recipients_data['total'] ?? 0;
+        // } while (count($recipients) < $total);
 
         /** Handle data to respond v1 specs */
         return [
@@ -964,6 +1015,10 @@ class obf_client {
             'badge_id' => $event['badge']['id'] ?? '',
             'issued_on' => $event['issued_on'] ?? 0,
             'expires' => $event['expires_on'] ?? 0,
+            'recipient' => $emails,
+            // For now set false, but could be used in the future to get more recipients.
+            'more_recipients_available' => false, // count($recipients) + $offset < $total,
+            'next_offset' => $offset + $limit,
             'mtime' => $event['mtime'] ?? 0,
             'timestamp' => $event['mtime'] ?? $event['issued_on'] ?? 0,
             'client_id' => $event['client_alias_id'] ?? $this->client_id() ?? '', // How should this work tbh?
@@ -979,7 +1034,6 @@ class obf_client {
             'lastmodifiedby' => null,
             'token' => null,
             'json_cache_id' => '',
-            'recipient' => [],
             'deleted' => 0, // Old API v1 field deleted is always set to 0 to ensure potential deleted checks in other classes.
             'show_report' => 1, // Always set to 1 to ensure potential show_report checks in other classes.
         ];
@@ -1093,7 +1147,6 @@ class obf_client {
         $managerfullmessage = '';
         $managerfullmessagehtml = '';
 
-        // Luuppaa 
         foreach ($users as $user) {
 
             try {
@@ -1134,10 +1187,16 @@ class obf_client {
             $badgelink = $badge->get_name();
 
             // We need both.
-            $message->fullmessage = get_string('newbadgeearned', 'local_obf',
-                array('courselink' => $courselink, 'badgelink' => $badgelink));
-            $message->fullmessagehtml = get_string('newbadgeearned', 'local_obf',
-                array('courselink' => $courselink, 'badgelink' => $badgelink));
+            $message->fullmessage = get_string(
+                'newbadgeearned',
+                'local_obf',
+                array('courselink' => $courselink, 'badgelink' => $badgelink)
+            );
+            $message->fullmessagehtml = get_string(
+                'newbadgeearned',
+                'local_obf',
+                array('courselink' => $courselink, 'badgelink' => $badgelink)
+            );
             $message->fullmessageformat = FORMAT_MARKDOWN;
 
             // Send the message.
@@ -1161,6 +1220,12 @@ class obf_client {
                     'lastname' => $user->lastname,
                     'courselink' => $courselink,
                 ]) . '<br>';
+            
+            // Prepare recipient params for the API.
+            $recipientparams[] = [
+                'email' => $user->email,
+                'name' => fullname($user),
+            ];
         }
 
         // Send notification to teachers.
@@ -1233,16 +1298,8 @@ class obf_client {
 
         $coursename = $badge->get_course_name($course);
 
-        // tee jo aiemmin foreach usersissa 
-        // jos ei käytetä missään mussa kuin parametrissa niin täytä jos usuoraan nimi ja email
-        $params = array(
-            'recipient' => array_map(function($email) use ($users) {
-                $user = current(array_filter($users, fn($u) => $u->email === $email));
-                return [
-                    'email' => $user->email,
-                    'name' => fullname($user),
-                ];
-            }, $recipients),
+        $params = [
+            'recipient' => $recipientparams,
             'issued_on' => $issuedon,
             'api_consumer_id' => OBF_API_CONSUMER_ID,
             'send_email' => true,
@@ -1253,7 +1310,7 @@ class obf_client {
                 'activity_name' => $activity,
                 'wwwroot' => $CFG->wwwroot
             ]
-        );
+        ];
 
         if (!is_null($email)) {
             $params['email_message'] = [
@@ -1388,8 +1445,11 @@ class obf_client {
 
         // Certificate directory not writable.
         if (!is_writable($pkidir)) {
-            throw new Exception(get_string('pkidirnotwritable', 'local_obf',
-                $pkidir));
+            throw new Exception(get_string(
+                'pkidirnotwritable',
+                'local_obf',
+                $pkidir
+            ));
         }
 
         $signature = trim($signature);
@@ -1437,8 +1497,12 @@ class obf_client {
         }
 
         // Couldn't decrypt data with provided key.
-        if (openssl_public_decrypt($token, $decrypted, $key,
-            OPENSSL_PKCS1_PADDING) === false) {
+        if (openssl_public_decrypt(
+            $token,
+            $decrypted,
+            $key,
+            OPENSSL_PKCS1_PADDING
+        ) === false) {
             throw new Exception(get_string('tokendecryptionfailed', 'local_obf') .
                 ': ' . openssl_error_string());
         }
@@ -1476,8 +1540,11 @@ class obf_client {
         }
 
         $postdata = json_encode(array('signature' => $signature, 'request' => $csrout));
-        $cert = $curl->post($apiurl . '/client/' . $json->id . '/sign_request',
-            $postdata, $curlopts);
+        $cert = $curl->post(
+            $apiurl . '/client/' . $json->id . '/sign_request',
+            $postdata,
+            $curlopts
+        );
 
         // Fetching certificate failed.
         if ($cert === false) {
@@ -1489,8 +1556,10 @@ class obf_client {
         // Server gave us an error.
         if ($httpcode !== 200) {
             $jsonresp = json_decode($cert);
-            $extrainfo = is_null($jsonresp) ? get_string('apierror' . $httpcode,
-                'local_obf') : $jsonresp->error;
+            $extrainfo = is_null($jsonresp) ? get_string(
+                'apierror' . $httpcode,
+                'local_obf'
+            ) : $jsonresp->error;
 
             throw new Exception(get_string('certrequestfailed', 'local_obf') . ': ' . $extrainfo);
         }
@@ -1554,5 +1623,12 @@ class obf_client {
      */
     public function get_oauth2id() {
         return $this->oauth2;
+    }
+    /**
+     * Get the total number of assertions issued.
+     */
+    public function get_total_assertions()
+    {
+        return $this->total_assertions ?? 0;
     }
 }
