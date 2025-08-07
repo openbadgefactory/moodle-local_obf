@@ -922,6 +922,40 @@ class obf_client {
     }
 
     /**
+     * Get badge issuing events from the API (v2).
+     *
+     * @param array $params Optional extra params for the query.
+     * @return array The event data.
+     */
+    public function get_all_assertions(array $params = []) {
+
+        error_log("[OBF] get all assertions NEW method in client.php");
+
+        $url = $this->obf_url() . '/v2/event/' . $this->client_id();
+        $res = $this->request('get', $url, $params);
+        $data = json_decode($res, true);
+        $total = $data['total'] ?? 0;
+        $out = [];
+
+        foreach ($data['result'] ?? [] as $event) {
+            $out[] = array(
+                'id' => $event['id'],
+                'name' => $event['name'] ?? '',
+                'recipient' => [$event['recipient_count']] ?? [], // v2 does not return recipient emails in this endpoint
+                'recipient_count' => $event['recipient_count'] ?? [],
+                'issued_on' => $event['issued_on'] ?? null,
+                'badge_id' => $event['badge_id'] ?? null,
+                'expires' => $event['expires_on'] ?? null,
+                'revoked' => null,
+                'log_entry' => [],
+                'timestamp' => $event['mtime'] ?? $event['issued_on'] ?? null,
+            );
+        }
+        return $out;
+    }
+
+
+    /**
      * Get single recipient's all badge issuing events from the API for all connections.
      *
      * @param string $badgeid The id of the badge.

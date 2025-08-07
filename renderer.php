@@ -1270,8 +1270,11 @@ class local_obf_renderer extends plugin_renderer_base {
 
         // Show recipient_count in Recipient(s) column
         if (method_exists($assertion, 'get_recipient_count') && $assertion->get_recipient_count() !== null) {
-            $recipienthtml .= html_writer::tag('p',
-                get_string('historyrecipients', 'local_obf', $assertion->get_recipient_count()));
+            $count = $assertion->get_recipient_count();
+            if (is_numeric($count)) {
+                $recipienthtml .= html_writer::tag('p',
+                    get_string('historyrecipients', 'local_obf', $count));
+            }
         } else if (count($users) > 1) {
             $recipienthtml .= html_writer::tag('p', get_string('historyrecipients', 'local_obf', count($users)),
                 array('title' => $this->render_userlist($users, false)));

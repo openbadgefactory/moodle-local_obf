@@ -413,6 +413,10 @@ class obf_assertion {
                     if (isset($item['log_entry'])) {
                         $assertion->set_log_entry($item['log_entry']);
                     }
+                    // New field for showing recipient count in Recipient(s) column.
+                    if (isset($item['recipient_count'])) {
+                        $assertion->set_recipient_count((int)$item['recipient_count']);
+                    }
                     $assertion->set_expires($item['expires'])->set_name($item['name']);
                     $assertion->set_issuedon($item['issued_on'])->set_source(self::ASSERTION_SOURCE_OBF);
                     if (array_key_exists('revoked', $item)) {
@@ -459,8 +463,9 @@ class obf_assertion {
                     if (isset($item['log_entry'])) {
                         $assertion->set_log_entry($item['log_entry']);
                     }
+                    // New field for showing recipient count in Recipient(s) column.
                     if (isset($item['recipient_count'])) {
-                        $assertion->set_recipient_count($item['recipient_count']);
+                        $assertion->set_recipient_count((int)$item['recipient_count']);
                     }
                     $assertion->set_expires($item['expires'])->set_name($item['name']);
                     $assertion->set_issuedon($item['issued_on'])->set_source(self::ASSERTION_SOURCE_OBF);
