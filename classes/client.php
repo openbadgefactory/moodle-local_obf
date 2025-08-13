@@ -434,7 +434,7 @@ class obf_client {
     public function request($method, $url = '', $params = array(), $retry = true, $otheroauth2 = null) {
         global $DB;
 
-        // error_log('[OBF] request: ' . $method . ' ' . $url . ' params: ');
+        // error_log('[OBF] request: ' . $method . ' ' . $url . ' params: ' . json_encode($params));
 
         $curl = $this->get_transport();
         $options = $this->get_curl_options();
@@ -896,7 +896,7 @@ class obf_client {
             $offset += $limit; // Increase the offset for the next request.
             $min_needed = ($page + 1) * $perpage; // Calculate the minimum number of events needed for the current page.
 
-        // Continue fetching events until total count is reached or we have enough events for the current page.
+            // Continue fetching events until total count is reached or we have enough events for the current page.
         } while (
             count($all_events) < $total
             && count($all_events) < $min_needed
@@ -954,6 +954,43 @@ class obf_client {
         return $out;
     }
 
+    /**
+     * Get badge issuing events from the API.
+     *
+     * @param string $badgeid The id of the badge.
+     * @param string $email The email address of the recipient.
+     * @param array $params Optional extra params for the query.
+     *      Possible params:        
+     *      'api_consumer_id' (string)
+     *      'log_entry' (string)           
+     *      'count_only' (0|1)                              
+     *      'limit', 'offset', 'order_by', 'begin', 'end', 'badge_id', 'event_name', 'client_alias_id', 'email'
+     * @return array The event data.
+     */
+    public function get_course_assertions($params = array()) {
+        // Is only the total count of response results wanted
+        $countonly = !empty($params['count_only']);
+        // Don't use count_only in request parameters in V2
+        unset($params['count_only']);
+
+        $url = $this->obf_url() . '/v2/event/' . $this->client_id();
+        $res = $this->request('get', $url, $params);
+        $data = json_decode($res, true);
+
+        // Defensive checks
+        $total = isset($data['total']) ? (int)$data['total'] : 0;
+        $result = isset($data['result']) && is_array($data['result']) ? $data['result'] : [];
+
+        // Return the total if $countonly true
+        if ($countonly) {
+            // Backward-compatible shape used by courseuserbadges.php: $historysize = $res[0]['result_count'];
+            return [
+                ['result_count' => $total]
+            ];
+        }
+
+        return $result;
+    }
 
     /**
      * Get single recipient's all badge issuing events from the API for all connections.
@@ -1254,7 +1291,7 @@ class obf_client {
                     'lastname' => $user->lastname,
                     'courselink' => $courselink,
                 ]) . '<br>';
-            
+
             // Prepare recipient params for the API.
             $recipientparams[] = [
                 'email' => $user->email,
