@@ -447,6 +447,7 @@ class obf_client {
             $options['HTTPHEADER'][] = 'Content-Type: application/json';
             $response = $curl->post($url, json_encode($params), $options);
         } else if ($method === 'put') {
+            $options['HTTPHEADER'][] = 'Content-Type: application/json';
             $response = $curl->put($url, json_encode($params), $options);
         } else if ($method === 'delete') {
             $response = $curl->delete($url, $params, $options);
@@ -1117,12 +1118,42 @@ class obf_client {
      * @return array The revoked data.
      */
     public function get_revoked($eventid) {
-        $url = $this->obf_url() . '/v1/event/' . $this->client_id() . '/' . $eventid . '/revoked';
-        $res = $this->request('get', $url);
+        $url = $this->obf_url() . '/v2/event/' . $this->client_id() . '/recipient';
 
-        return json_decode($res, true);
+        $offset = 0; 
+        $limit = 1000;
+        $map = [];
+
+        do {
+            $res  = $this->request('get', $url, ['event_id' => $eventid, 'offset' => $offset, 'limit' => $limit]);
+            $data = json_decode($res, true) ?: [];
+            $rows = $data['result'] ?? [];
+            $total = $data['total'] ?? null;
+
+            foreach ($rows as $r) {
+                $isrevoked = false;
+                if (array_key_exists('revoked', $r)) {
+                    $isrevoked = (bool)$r['revoked'];
+                } 
+                if (!$isrevoked) { continue; }
+
+                $email = $r['email'] ?? null;
+                if (!$email) { continue; }
+                $email = strtolower($email);
+
+                $ts = null;
+                if (!empty($r['issued_on'])) {
+                    $ts = (int)$r['issued_on'];
+                } 
+                $map[$email] = $ts ?: time();
+            }
+
+            $offset += $limit;
+        } while ($total !== null && $offset < (int)$total);
+
+        return ['revoked' => $map];
     }
-
+    
     /**
      * Get badge categories from Badges data.
      *
@@ -1425,9 +1456,9 @@ class obf_client {
      * @param string[] $emails Array of emails to revoke the event for.
      */
     public function revoke_event($eventid, $emails) {
-        $emails = array_map('urlencode', $emails);
-        $url = $this->obf_url() . '/v1/event/' . $this->client_id() . '/' . $eventid . '/?email=' . implode('|', $emails);
-        $this->request('delete', $url);
+        $url = $this->obf_url() . '/v2/event/' . $this->client_id() . '/' . $eventid . '/revoke';
+        $query = ['recipient' => $emails];
+        $this->request('put', $url, $query);
     }
 
     public function pub_get_badge($badgeid, $eventid) {
