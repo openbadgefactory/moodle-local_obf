@@ -996,25 +996,17 @@ class obf_client {
     /**
      * Get single recipient's all badge issuing events from the API for all connections.
      *
-     * @param string $badgeid The id of the badge.
      * @param string $email The email address of the recipient.
      * @param array $params Optional extra params for the query.
      * @return array The event data.
      */
-    public function get_assertions_all($email, $params = array()) {
+    public function get_recipient_assertions($email, $params = array()) {
         global $DB;
 
         if ($this->local_events()) {
             $params['api_consumer_id'] = OBF_API_CONSUMER_ID;
         }
         $params['email'] = $email;
-
-        if (get_config('local_obf', 'obfclientid')) {
-            // Legacy connection, only one client.
-            $url = $this->obf_url() . '/v1/event/' . $this->client_id();
-            $res = $this->request('get', $url, $params);
-            return $this->decode_ldjson($res);
-        }
 
         $this->eventlookup = [];
 
@@ -1024,19 +1016,50 @@ class obf_client {
 
         $out = [];
         if (!empty($oauth2)) {
+            // Iterate through all OAuth2 clients.
             foreach ($oauth2 as $o2) {
                 $this->set_oauth2($o2);
 
                 $host = $this->obf_url();
-                $url = $host . '/v1/event/' . $this->client_id();
-                $res = $this->request('get', $url, $params);
+                $url = $host . '/v2/event/' . $this->client_id();
+                $limit  = $params['limit']  ?? 1000;
+                $offset = 0;
+                
+                // Fetch events in batches until all events are retrieved.
+                do {
+                    $query = $params;
+                    $query['limit'] = $limit;
+                    $query['offset'] = $offset;
 
-                foreach ($this->decode_ldjson($res) as $r) {
-                    // Collect host info and add to $out
-                    $this->eventlookup[$r['id']] = ['host' => $host];
-                    $out[] = $r;
-                }
+                    $res = $this->request('get', $url, $query);
 
+                    $data = json_decode($res, true);
+                    if (!is_array($data) || !isset($data['result'])) {
+                        break; // No results or invalid response.
+                    }
+
+                    // Map the results to the output format.
+                    foreach ($data['result'] as $event) {
+                        // Saving host for pub_get_badge to use.
+                        $this->eventlookup[$event['id']] = ['host' => $host];
+                        $out[] = array(
+                            'id' => $event['id'],
+                            'badge_id' => $event['badge_id'] ?? null,
+                            'name' => $event['name'] ?? '',
+                            'issued_on' => $event['issued_on'] ?? null,
+                            'expires' => $event['expires_on'] ?? null,
+                            'timestamp' => $event['mtime'] ?? $event['ctime'] ?? null,
+                            'recipient_count' => [$event['recipient_count']] ?? [], // Ei vielä käytössä, mutta v2 mahdollisuudet.
+                            // V1 compatibility.
+                            'recipient' => [], // Ei pitäisi tarvita tässä vaiheessa, mutta v1 yhteensopivuus.
+                            'revoked' => [],
+                            'log_entry' => [],
+                        );
+                    }
+
+                    $offset += $limit;
+                    $total = $data['total'] ?? 0;
+                } while ($offset < $total);
             }
         }
         $this->set_oauth2($prevo2);
@@ -1461,7 +1484,14 @@ class obf_client {
         $this->request('put', $url, $query);
     }
 
-    public function pub_get_badge($badgeid, $eventid) {
+    /**
+     * Get badge details for an issued badge.
+     *
+     * @param string $badgeid
+     * @param string $eventid
+     * @return array|null V1 compatible BadgeClass
+     */
+    public function get_single_badge($badgeid, $eventid) {
         if ($this->eventlookup && isset($this->eventlookup[$eventid]['host'])) {
             $host = $this->eventlookup[$eventid]['host'];
         } 
@@ -1469,11 +1499,42 @@ class obf_client {
             $host = $this->obf_url();
         }
 
-        $url = $host . '/v1/badge/_/' . $badgeid . '.json';
-        $params = array('v' => '1.1', 'event' => $eventid);
+        $url = $host . '/v2/badge/' . $this->client_id() . '/' . $badgeid;
+
         try {
-            $res = $this->request('get', $url, $params);
-            return json_decode($res, true);
+            $res = $this->request('get', $url);
+            $badge = json_decode($res, true);
+
+            if (!is_array($badge)) {
+                return null; // Invalid response.
+            }
+            // Get the badge data in primary language.
+            $primaryLang = $badge['primary_language'] ?? 'en';
+            $badgecontent = $badge['content'] ?? [];
+            $chosencontent = null;
+            foreach ($badgecontent as $content) {
+                if (($content['language'] ?? '') === $primaryLang) {
+                    $chosencontent = $content;
+                    break;
+                }
+            }
+            if (!$chosencontent && !empty($content)) {
+                $chosencontent = $content[0]; // fallback
+            }
+
+            // Return the badge data in a format compatible with V1 functions.
+            return [
+                'id' => $badge['id'] ?? '',
+                'type' => 'BadgeClass',
+                'image' => $badge['image'] ?? '',
+                'issuer' => $creator['url'] ?? '',
+                'description' => $chosencontent['description'] ?? '',
+                'tags' => $chosencontent['tag'] ?? [],
+                'criteria' => $chosencontent['criteria'] ?? '',
+                '@context' => 'https://w3id.org/openbadges/v1',
+                'name' => $chosencontent['name'] ?? '',
+            ];
+
         } catch (Exception $e) {
             debugging('');
         }

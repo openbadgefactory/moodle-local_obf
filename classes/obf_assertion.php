@@ -543,7 +543,7 @@ class obf_assertion {
         $cacheid = $badgeid . '/' . $eventid;
         $arr = $cache->get($cacheid);
         if (!$arr) {
-            $arr = $client->pub_get_badge($badgeid, $eventid);
+            $arr = $client->get_recipient_assertions($badgeid, $eventid);
             $cache->set($cacheid, $arr);
         }
         if ($arr) {
