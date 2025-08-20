@@ -1213,22 +1213,29 @@ class obf_client {
      * @param obf_badge $badge The badge.
      */
     public function export_badge(obf_badge $badge) {
+
         $params = array(
-            'name' => $badge->get_name(),
-            'description' => $badge->get_description(),
+            'category' => $badge->get_categories(),
             'image' => $badge->get_image(),
-            'css' => $badge->get_criteria_css(),
-            'criteria_html' => $badge->get_criteria_html(),
-            'email_subject' => $badge->get_email()->get_subject(),
-            'email_body' => $badge->get_email()->get_body(),
-            'email_link_text' => $badge->get_email()->get_link_text(),
-            'email_footer' => $badge->get_email()->get_footer(),
+            'primary_language' => $badge->get_primary_language(),
+            'content' => array(array(
+                'language' => $badge->get_primary_language(),
+                'name' => $badge->get_name(),
+                'description' => $badge->get_description(),
+                'criteria' => $badge->get_criteria_html(),
+                'tag' => $badge->get_tags(),
+            )),
+            'email_message' => array(
+                'subject' => $badge->get_email()->get_subject(),
+                'body' => $badge->get_email()->get_body(),
+                'link_text' => $badge->get_email()->get_link_text(),
+                'footer' => $badge->get_email()->get_footer(),
+            ),
             'expires' => '',
-            'tags' => array(),
             'draft' => $badge->is_draft()
         );
 
-        $url = $this->obf_url() . '/v1/badge/' . $this->client_id();
+        $url = $this->obf_url() . '/v2/badge/' . $this->client_id();
         $this->request('post', $url, $params);
     }
 
