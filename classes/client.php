@@ -386,22 +386,6 @@ class obf_client {
     }
 
     /**
-     * Decode line-delimited json
-     *
-     * @param string $input response string
-     * @return array The json-decoded response.
-     */
-    private function decode_ldjson($input) {
-        $out = array();
-        foreach (explode("\r\n", $input) as $chunk) {
-            if ($chunk) {
-                $out[] = json_decode($chunk, true);
-            }
-        }
-        return $out;
-    }
-
-    /**
      * Get raw response.
      *
      * @return string[] Raw response.
@@ -1196,19 +1180,31 @@ class obf_client {
     }
 
     /**
-     * Delete a badge. Use with caution.
+     * Delete a badge. Use with caution. 
      */
     public function delete_badge($badgeid) {
-        $url = $this->obf_url() . '/v1/badge/' . $this->client_id() . '/' . $badgeid;
+        $url = $this->obf_url() . '/v2/badge/' . $this->client_id() . '/' . $badgeid;
         $this->request('delete', $url);
     }
 
     /**
      * Deletes all client badges. Use with caution.
-     */
+     */ 
     public function delete_badges() {
-        $url = $this->obf_url() . '/v1/badge/' . $this->client_id();
-        $this->request('delete', $url);
+        
+        // Get all badges.
+        $badges = $this->get_badges();
+
+        // Loop through badges and delete them.
+        foreach ($badges as $badge) {
+            if (isset($badge['id']) && !empty($badge['id'])) {
+                try {
+                    $this->delete_badge($badge['id']);
+                } catch (Exception $e) {
+                    error_log("Failed to delete badge with ID {$badge['id']}: " . $e->getMessage());
+                }   
+            }
+        }
     }
 
     /**
@@ -1540,199 +1536,6 @@ class obf_client {
         }
     }
 
-    // LEGACY api auth.
-
-    /**
-     * Deauthenticates the plugin.
-     */
-    public function deauthenticate() {
-        @unlink($this->get_cert_filename());
-        @unlink($this->get_pkey_filename());
-
-        unset_config('obfclientid', 'local_obf');
-        unset_config('apiurl', 'local_obf');
-    }
-
-    /**
-     * creates apiurl
-     *
-     * @return url
-     */
-    private function url_checker($url) {
-        if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
-            $url = "https://" . $url;
-        }
-        if (!preg_match("/\/$/", $url)) {
-            $url = $url . "/";
-        }
-
-        return $url;
-    }
-
-    /**
-     * set v1 to end of url.
-     * example: https://openbadgefactory.com/v1
-     *
-     * @param  $url
-     * @return url/v1
-     */
-    private function api_url_maker($url) {
-        $version = "v1";
-        return $url . $version;
-    }
-
-    public function get_branding_image_url($imagename = 'issued_by') {
-        return $this->obf_url() . '/v1/badge/_/' . $imagename . '.png';
-    }
-
-    public function get_branding_image($imagename = 'issued_by') {
-        $curl = $this->get_transport();
-        $curlopts = $this->get_curl_options();
-        $curlopts['FOLLOWLOCATION'] = true;
-        $image = $curl->get($this->get_branding_image_url($imagename), array(), $curlopts);
-        if ($curl->info['http_code'] !== 200) {
-            return null;
-        }
-        return $image;
-    }
-
-    /**
-     * Tries to authenticate the plugin against OBF API.
-     *
-     * @param string $signature The request token from OBF.
-     * @return boolean Returns true on success.
-     * @throws Exception If something goes wrong.
-     */
-    public function authenticate($signature, $url) {
-        $pkidir = realpath($this->get_pki_dir());
-
-        // Certificate directory not writable.
-        if (!is_writable($pkidir)) {
-            throw new Exception(get_string(
-                'pkidirnotwritable',
-                'local_obf',
-                $pkidir
-            ));
-        }
-
-        $signature = trim($signature);
-        $token = base64_decode($signature);
-        $curl = $this->get_transport();
-        $curlopts = $this->get_curl_options(false);
-
-        $url = $this->url_checker($url);
-
-        $apiurl = $this->api_url_maker($url);
-
-        // For localhost test server.
-        if (strpos($apiurl, 'https://localhost/') === 0) {
-            $curlopts['SSL_VERIFYHOST'] = 0;
-            $curlopts['SSL_VERIFYPEER'] = 0;
-        }
-
-        // We don't need these now, we haven't authenticated yet.
-        unset($curlopts['SSLCERT']);
-        unset($curlopts['SSLKEY']);
-
-        $pubkey = $curl->get($apiurl . '/client/OBF.rsa.pub', array(), $curlopts);
-
-        // CURL-request failed.
-        if ($pubkey === false) {
-            throw new Exception(get_string('pubkeyrequestfailed', 'local_obf') .
-                ': ' . $curl->error);
-        }
-
-        // Server gave us an error.
-        if ($curl->info['http_code'] !== 200) {
-            throw new Exception(get_string('pubkeyrequestfailed', 'local_obf') . ': ' .
-                get_string('apierror' . $curl->info['http_code'], 'local_obf'));
-        }
-
-        $decrypted = '';
-
-        // Get the public key...
-        $key = openssl_pkey_get_public($pubkey);
-
-        // ... That didn't go too well.
-        if ($key === false) {
-            throw new Exception(get_string('pubkeyextractionfailed', 'local_obf') .
-                ': ' . openssl_error_string());
-        }
-
-        // Couldn't decrypt data with provided key.
-        if (openssl_public_decrypt(
-            $token,
-            $decrypted,
-            $key,
-            OPENSSL_PKCS1_PADDING
-        ) === false) {
-            throw new Exception(get_string('tokendecryptionfailed', 'local_obf') .
-                ': ' . openssl_error_string());
-        }
-
-        $json = json_decode($decrypted);
-
-        // Yay, we have the client-id. Let's store it somewhere.
-        set_config('obfclientid', $json->id, 'local_obf');
-        set_config('apiurl', $url, 'local_obf');
-
-        // Create a new private key.
-        $config = array('private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA);
-        $privkey = openssl_pkey_new($config);
-
-        // Export the new private key to a file for later use.
-        openssl_pkey_export_to_file($privkey, $this->get_pkey_filename());
-
-        $csrout = '';
-        $dn = array('commonName' => $json->id);
-
-        // Create a new CSR with the private key we just created.
-        $csr = openssl_csr_new($dn, $privkey);
-
-        // Export the CSR into string.
-        if (openssl_csr_export($csr, $csrout) === false) {
-            throw new Exception(get_string('csrexportfailed', 'local_obf'));
-        }
-
-        if (empty($csrout)) {
-            $opensslerrors = 'CSR output empty.';
-            while (($opensslerror = openssl_error_string()) !== false) {
-                $opensslerrors .= $opensslerror . " \n ";
-            }
-            throw new Exception($opensslerrors);
-        }
-
-        $postdata = json_encode(array('signature' => $signature, 'request' => $csrout));
-        $cert = $curl->post(
-            $apiurl . '/client/' . $json->id . '/sign_request',
-            $postdata,
-            $curlopts
-        );
-
-        // Fetching certificate failed.
-        if ($cert === false) {
-            throw new Exception(get_string('certrequestfailed', 'local_obf') . ': ' . $curl->error);
-        }
-
-        $httpcode = $curl->info['http_code'];
-
-        // Server gave us an error.
-        if ($httpcode !== 200) {
-            $jsonresp = json_decode($cert);
-            $extrainfo = is_null($jsonresp) ? get_string(
-                'apierror' . $httpcode,
-                'local_obf'
-            ) : $jsonresp->error;
-
-            throw new Exception(get_string('certrequestfailed', 'local_obf') . ': ' . $extrainfo);
-        }
-
-        // Everything's ok, store the certificate into a file for later use.
-        file_put_contents($this->get_cert_filename(), $cert);
-
-        return true;
-    }
-
     /**
      * Returns the expiration date of the OBF certificate as a unix timestamp.
      *
@@ -1749,34 +1552,6 @@ class obf_client {
         $ssl = openssl_x509_parse($cert);
 
         return $ssl['validTo_time_t'];
-    }
-
-    /**
-     * Get absolute filename of certificate key-file.
-     *
-     * @return string
-     */
-    public function get_pkey_filename() {
-        return $this->get_pki_dir() . 'obf.key';
-    }
-
-    /**
-     * Get absolute filename of certificate pem-file.
-     *
-     * @return string
-     */
-    public function get_cert_filename() {
-        return $this->get_pki_dir() . 'obf.pem';
-    }
-
-    /**
-     * Get absolute path of certificate directory.
-     *
-     * @return string
-     */
-    public function get_pki_dir() {
-        global $CFG;
-        return $CFG->dataroot . '/local_obf/pki/';
     }
 
     /**
