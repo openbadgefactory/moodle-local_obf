@@ -426,7 +426,6 @@ class obf_client {
         if ($method === 'get') {
             $response = $curl->get($url, $params, $options);
         } else if ($method === 'post') {
-            $options['POSTFIELDS'] = json_encode($params);
             // Add Content-Type without overwriting Authorization.
             $options['HTTPHEADER'][] = 'Content-Type: application/json';
             $response = $curl->post($url, json_encode($params), $options);
@@ -1213,17 +1212,32 @@ class obf_client {
      * @param obf_badge $badge The badge.
      */
     public function export_badge(obf_badge $badge) {
+        $img = $badge->get_image();
+        // These methods provide no data atm.
+        $criteriaMd = $badge->get_criteria_html();        
+        $categories = $badge->get_categories();
+        $tags = $badge->get_tags();
+
+        // If criteria is empty, but badge has criteria URL, use that.
+        if ($criteriaMd === '' && $badge->has_criteria_url()) {
+            $criteriaMd = 'Criteria: ' . $badge->get_criteria_url(); 
+        }
+
+        // If image header is not valid, add a default PNG header and remove whitespace.
+        if (!preg_match('#^data:image/(png|svg\+xml);base64,#', $img)) {
+            $img = 'data:image/png;base64,' . preg_replace('/\s+/', '', $img);
+        }
 
         $params = array(
-            'category' => $badge->get_categories(),
-            'image' => $badge->get_image(),
+            'category' => $categories,
+            'image' => $img,
             'primary_language' => $badge->get_primary_language(),
             'content' => array(array(
                 'language' => $badge->get_primary_language(),
                 'name' => $badge->get_name(),
                 'description' => $badge->get_description(),
-                'criteria' => $badge->get_criteria_html(),
-                'tag' => $badge->get_tags(),
+                'criteria' => $criteriaMd,
+                'tag' => $tags,
             )),
             'email_message' => array(
                 'subject' => $badge->get_email()->get_subject(),
@@ -1231,12 +1245,17 @@ class obf_client {
                 'link_text' => $badge->get_email()->get_link_text(),
                 'footer' => $badge->get_email()->get_footer(),
             ),
-            'expires' => '',
+            'expires' => 0,
             'draft' => $badge->is_draft()
         );
 
         $url = $this->obf_url() . '/v2/badge/' . $this->client_id();
-        $this->request('post', $url, $params);
+
+        try {
+            $this->request('post', $url, $params);
+        } catch (Exception $e) {
+            error_log('Export failed: HTTP=' . $e->getCode() . ' msg=' . $e->getMessage());
+        }
     }
 
     /**
