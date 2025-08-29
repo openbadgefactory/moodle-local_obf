@@ -497,7 +497,7 @@ class obf_assertion {
      */
     public static function get_assertions_all(obf_client $client, $email) {
 
-        $arr = $client->get_assertions_all($email);
+        $arr = $client->get_recipient_assertions($email);
         $assertions = array();
 
         if (is_array($arr)) {
@@ -543,7 +543,7 @@ class obf_assertion {
         $cacheid = $badgeid . '/' . $eventid;
         $arr = $cache->get($cacheid);
         if (!$arr) {
-            $arr = $client->get_recipient_assertions($badgeid, $eventid);
+            $arr = $client->get_single_badge($badgeid, $eventid);
             $cache->set($cacheid, $arr);
         }
         if ($arr) {

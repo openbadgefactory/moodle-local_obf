@@ -303,14 +303,15 @@ class obf_client {
             $curl = $this->get_transport();
             $options = $this->get_curl_options(false);
 
-            // Add HTTPHEADER option for POST request.
-            $options['HTTPHEADER'] = array('Content-Type: application/x-www-form-urlencoded');
+            // Add HTTPHEADER option for this special request.
+            $options['HTTPHEADER'][] = 'Content-Type: application/x-www-form-urlencoded';
 
+            // Make sure http_build_query() $arg_separator is '&' as required by OBF API.
             $res = $curl->post($url, http_build_query($params, '', '&'), $options);
             $res = json_decode($res);
 
             if (!isset($res)) {
-                $res = new stdClass(); // Initialiser $res comme un objet.
+                $res = new stdClass(); // Create a default object when the response is missing.
                 $res->error = get_string('apierror503', 'local_obf');
             }
 
@@ -365,24 +366,23 @@ class obf_client {
         $url = $this->obf_url();
         $secure = strpos($url, 'https://localhost/') !== 0;
 
-        $opt = array(
+        $options = [
             'RETURNTRANSFER' => true,
             'FOLLOWLOCATION' => false,
             'SSL_VERIFYHOST' => $secure ? 2 : 0,
             'SSL_VERIFYPEER' => $secure ? 1 : 0
-        );
+        ];
 
         if ($auth) {
             if (isset($this->oauth2)) {
                 $token = $this->oauth2_access_token();
-                $opt['HTTPHEADER'] = array("Authorization: Bearer " . $token['access_token']);
+                $options['HTTPHEADER'][] = "Authorization: Bearer " . $token['access_token'];
             } else {
-                $opt['SSLCERT'] = $this->get_cert_filename();
-                $opt['SSLKEY'] = $this->get_pkey_filename();
+                throw new Exception("OAuth2 not configured");
             }
         }
 
-        return $opt;
+        return $options;
     }
 
     /**
@@ -418,18 +418,17 @@ class obf_client {
     public function request($method, $url = '', $params = array(), $retry = true, $otheroauth2 = null) {
         global $DB;
 
-        // error_log('[OBF] request: ' . $method . ' ' . $url . ' params: ' . json_encode($params));
-
         $curl = $this->get_transport();
         $options = $this->get_curl_options();
 
         if ($method === 'get') {
             $response = $curl->get($url, $params, $options);
         } else if ($method === 'post') {
-            // Add Content-Type without overwriting Authorization.
+            // Add Content-Type without overwriting get_curl_options() Authorization.
             $options['HTTPHEADER'][] = 'Content-Type: application/json';
             $response = $curl->post($url, json_encode($params), $options);
         } else if ($method === 'put') {
+            // Add Content-Type without overwriting get_curl_options() Authorization.
             $options['HTTPHEADER'][] = 'Content-Type: application/json';
             $response = $curl->put($url, json_encode($params), $options);
         } else if ($method === 'delete') {
@@ -769,7 +768,6 @@ class obf_client {
             'searchable' => $issuer['searchable'] ? 1 : 0,
             'paid_until' => $issuer['paid_until'] ?? 0,
             // API v1 fields not present in v2, remove later.
-            // Ei käytössä, ei tulossa.
             'is_active' => 1, // Old API v1 field is_active is always set true to ensure potential is_active checks in other classes.
             'deleted' => 0, // Old API v1 field deleted is always set to 0 to ensure potential deleted checks in other classes.
             'suspended' => 0, // Old API v1 field suspended is always set to 0 to ensure potential suspended checks in other classes.
@@ -793,7 +791,6 @@ class obf_client {
      * @return array The event data.
      */
     public function get_assertions($badgeid = null, $email = null, $params = array()) {
-
         if (is_null($badgeid) && !is_null($email)) {
             return array();
         }
@@ -880,7 +877,7 @@ class obf_client {
             $offset += $limit; // Increase the offset for the next request.
             $min_needed = ($page + 1) * $perpage; // Calculate the minimum number of events needed for the current page.
 
-            // Continue fetching events until total count is reached or we have enough events for the current page.
+        // Continue fetching events until total count is reached or we have enough events for the current page.
         } while (
             count($all_events) < $total
             && count($all_events) < $min_needed
@@ -913,16 +910,14 @@ class obf_client {
      */
     public function get_all_assertions(array $params = []) {
 
-        error_log("[OBF] get all assertions NEW method in client.php");
 
         $url = $this->obf_url() . '/v2/event/' . $this->client_id();
         $res = $this->request('get', $url, $params);
         $data = json_decode($res, true);
-        $total = $data['total'] ?? 0;
         $out = [];
 
         foreach ($data['result'] ?? [] as $event) {
-            $out[] = array(
+            $out[] = [
                 'id' => $event['id'],
                 'name' => $event['name'] ?? '',
                 'recipient' => [$event['recipient_count']] ?? [], // v2 does not return recipient emails in this endpoint
@@ -933,7 +928,7 @@ class obf_client {
                 'revoked' => null,
                 'log_entry' => [],
                 'timestamp' => $event['mtime'] ?? $event['issued_on'] ?? null,
-            );
+            ];
         }
         return $out;
     }
@@ -985,7 +980,7 @@ class obf_client {
      */
     public function get_recipient_assertions($email, $params = array()) {
         global $DB;
-
+        
         if ($this->local_events()) {
             $params['api_consumer_id'] = OBF_API_CONSUMER_ID;
         }
@@ -1057,8 +1052,8 @@ class obf_client {
      * @return array The event data.
      */
     // TODO: Re-enabled offset parameter later when load-more functionality is integrated.
-    public function get_event($eventid, $offset = 0)
-    {
+    public function get_event($eventid, $offset = 0) {
+        
         $url = $this->obf_url() . '/v2/event/' . $this->client_id() . '/' . $eventid;
         $res = $this->request('get', $url);
         $event = json_decode($res, true);
