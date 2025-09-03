@@ -1309,7 +1309,7 @@ class local_obf_renderer extends plugin_renderer_base {
      * @throws dml_exception
      */
     public function create_csv($badge) {
-        $history = $badge->get_assertions();
+        $history = $badge->get_assertions_for_creating_csv();
         $assertioncount = $badge->get_assertions()->count();
         $filename = s($badge->get_name()) . '.csv';
 

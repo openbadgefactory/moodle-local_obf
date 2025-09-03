@@ -445,10 +445,10 @@ class obf_assertion {
     /**
      * Returns all assertions related to a badge.
      */
-    public static function get_assertions_for_badge(obf_client $client, obf_badge $badge, array $searchparams = []) {
-                
+    public static function get_assertions_for_badge(obf_client $client, obf_badge $badge, $export_csv = false) {
+
         $badgeid = $badge->get_id();
-        $arr = $client->get_assertions_per_badge($badgeid, null, $searchparams);
+        $arr = $client->get_assertions_per_badge($badgeid, $export_csv);
         $assertions = array();
 
         if (is_array($arr)) {
@@ -611,10 +611,11 @@ class obf_assertion {
      *
      * @param obf_badge $badge The badge.
      * @param obf_client $client
+     * @param boolean $export_csv
      * @return obf_assertion_collection The related assertions.
      */
-    public static function get_badge_assertions(obf_badge $badge, obf_client $client) {
-        return self::get_assertions_for_badge($client, $badge);
+    public static function get_badge_assertions(obf_badge $badge, obf_client $client, $export_csv) {
+        return self::get_assertions_for_badge($client, $badge, $export_csv);
     }
 
     /**
