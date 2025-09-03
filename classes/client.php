@@ -934,13 +934,10 @@ class obf_client {
 
         $out = [];
         foreach ($all_events as $event) {
-            $recipient = $export_csv ? // Build the output array from the two request to match the V1 output in the case of CSV export.
-                ($recipients_by_event[$event['id']] ?? []) : 
-                ([$event['recipient_count']] ?? []);
             $out[] = array(
                 'id' => $event['id'],
                 'name' => $event['name'] ?? '',
-                'recipient' => $export_csv ? 
+                'recipient' => $export_csv ? // Build the output array from the two request to match the V1 output in the case of CSV export.
                     ($recipients_by_event[$event['id']] ?? []) : 
                     ([$event['recipient_count']] ?? []),
                 'recipient_count' => $event['recipient_count'] ?? [],
