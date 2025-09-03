@@ -535,7 +535,7 @@ class obf_badge {
     }
 
     /**
-     * Get assertions related to this badge.
+     * Get all assertions and recipients related to this badge for CSV export.
      *
      * @return obf_assertion_collection The assertions.
      */
