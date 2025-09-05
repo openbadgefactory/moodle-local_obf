@@ -624,13 +624,12 @@ class obf_client {
                     'category' => $badge['category'] ?? [],
                     'tag' => $badge['tag'] ?? [],
                     'client_alias_id' => $badge['client_alias_id'] ?? [],
-                    'creator_id' => $badge['creator_id'] ?? null,
                     'draft' => $badge['draft'] ?? true,
                     'ctime' => $badge['ctime'] ?? 0,
                     'mtime' => $badge['mtime'] ?? 0,
                     'readyforissuing' => isset($badge['draft']) ? !$badge['draft'] : false,
                     'expires' => $badge['expires'] ?? 0, // Probably legacy API keys stuff, remove later.
-                    'client_id' => $this->client_id(),
+                    'client_id' => $badge['creator_id'] ?? null,
                 ];
             }
 
@@ -701,7 +700,6 @@ class obf_client {
             'language' => $badge['primary_language'] ?? '',
             'tags' => $content['tag'] ?? [],
             'alignment' => $content['alignment'] ?? [],
-            'client_alias_id' => $badge['client_alias_id'] ?? [], // Not used yet.
             'creator_id' => $badge['creator']['id'] ?? null, // Not used yet.
             'intent' => $badge['intent'] ?? '',
             'email_subject' => $badge['email_message']['subject'] ?? '',
@@ -712,7 +710,8 @@ class obf_client {
             'ctime' => $badge['ctime'] ?? 0,
             'mtime' => $badge['mtime'] ?? 0,
             'expires' => $badge['expires'] ?? 0,
-            'client_id' => $this->client_id(),
+            'client_id' => $badge['creator']['id'] ?? null, // Not used yet.
+            'client_alias_id' => $badge['client_alias_id'] ?? [], // Not used yet.
             'criteria_html' => $content['criteria'] ?? '',
             // New Badge v3 fields start.
             'achievement_type' => $content['achievement_type'] ?? '',
