@@ -837,8 +837,124 @@ class obf_client {
      * Get badge issuing events from the API for a single badge and recipient.
      * @param string $badgeid The id of the badge.
      */
-    public function get_assertions_per_badge($badgeid = null) {
+    public function get_assertions_per_badge($badgeid = null, $export_csv = false) {
 
+        if (is_null($badgeid)) {
+            return [];
+        }
+
+        $all_events = [];
+        $limit = 1000;
+        $total = null;
+        $offset = 0;
+        $page = optional_param('page', 0, PARAM_INT); // Page number.
+        $perpage = 10; // Number of events per page, used for pagination.
+        $recipients_by_event = []; // arrays event_id array of recipient emails
+
+        do {
+            // Get badge issuing data.
+            $url = $this->obf_url() . '/v2/event/' . $this->client_id();
+            $query = [
+                'badge_id' => $badgeid,
+                'offset' => $offset,
+                'limit' => $limit
+            ];
+            $res = $this->request('get', $url, $query);
+            $data = json_decode($res, true);
+
+            // Make sure the response contains events.
+            if (!isset($data['result']) || !is_array($data['result'])) {
+                break;
+            }
+
+            // Save the number of total amount of issuing events once.
+            if (is_null($total) && isset($data['total'])) {
+                $total = $data['total'];
+                $this->total_assertions = $total;
+            }
+
+            // Current batch of events.
+            $events = $data['result'];
+
+            // If exporting to CSV.
+            if ($export_csv) {
+                // Go through all events.
+                foreach ($events as $event) {
+
+                    // Prepare to collect all recipients for this event.
+                    $all_recipients_for_event = [];
+                    $recipient_limit = 1000;
+                    $recipient_total = null;
+                    $recipient_offset = 0;
+                    $recipient_query = [
+                        'badge_id' => $badgeid,
+                        'event_id' => $event['id'],
+                        'offset' => $recipient_offset,
+                        'limit' => $recipient_limit
+                    ];
+
+                    // Get all recipients for this event.
+                    do {
+                        $recipient_url = $this->obf_url() . '/v2/event/' . $this->client_id() . '/recipient';
+                        $recipient_res = $this->request('get', $recipient_url, $recipient_query);
+                        $recipient_data = json_decode($recipient_res, true);
+
+                        error_log("[OBF] get_assertions_per_badge, RESPONSE recipient_data: " . json_encode($recipient_data));
+                        if (!isset($recipient_data['result']) || !is_array($recipient_data['result'])) {
+                            break;
+                        }
+                        if (is_null($recipient_total) && isset($recipient_data['total'])) {
+                            $recipient_total = $recipient_data['total'];
+                        }
+                        // Collect the emails of the recipients for this event.
+                        foreach ($recipient_data['result'] as $recipient) {
+                            if (isset($recipient['email']) && $recipient['email'] !== '') {
+                                $all_recipients_for_event[] = $recipient['email'];
+                            }
+                        }
+                        // Prepare for next request if needed.
+                        $recipient_offset += $recipient_limit;
+
+                    } while (count($all_recipients_for_event) < $recipient_total);
+
+                    // Save the recipients for this event.
+                    $recipients_by_event[$event['id']] = $all_recipients_for_event;
+                }
+            }
+
+            $all_events = array_merge($all_events, $events); // Merge the current batch of events with the all_events array.
+            $offset += $limit; // Increase the offset for the next request.
+            $min_needed = $export_csv ? $total : ($page + 1) * $perpage; // Calculate the minimum number of events needed for the current page.
+
+        // Continue fetching events until total count is reached or we have enough events for the current page.
+        } while (
+            count($all_events) < $total
+            && count($all_events) < $min_needed
+        );
+
+        $out = [];
+        foreach ($all_events as $event) {
+            $out[] = array(
+                'id' => $event['id'],
+                'name' => $event['name'] ?? '',
+                'recipient' => $export_csv ? // Build the output array from the two request to match the V1 output in the case of CSV export.
+                    ($recipients_by_event[$event['id']] ?? []) : 
+                    ([$event['recipient_count']] ?? []),
+                'recipient_count' => $event['recipient_count'] ?? [],
+                'issued_on' => $event['issued_on'] ?? null,
+                'badge_id' => $event['badge_id'] ?? null,
+                'expires' => $event['expires_on'] ?? null,
+                'revoked' => [],
+                'log_entry' => [],
+                'timestamp' => $event['mtime'] ?? $recipient['issued_on'] ?? null,
+            );
+        }
+        return $out;
+    }
+
+    public function get_assertions_per_badge_for_export($badgeid = null) {
+
+        error_log("[OBF] get_assertions_per_badge_for_export ");
         if (is_null($badgeid)) {
             return [];
         }

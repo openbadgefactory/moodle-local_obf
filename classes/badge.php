@@ -531,7 +531,16 @@ class obf_badge {
      * @return obf_assertion_collection The assertions.
      */
     public function get_assertions() {
-        return obf_assertion::get_badge_assertions($this, $this->get_client());
+        return obf_assertion::get_badge_assertions($this, $this->get_client(), false);
+    }
+
+    /**
+     * Get all assertions and recipients related to this badge for CSV export.
+     *
+     * @return obf_assertion_collection The assertions.
+     */
+    public function get_assertions_for_creating_csv() {
+        return obf_assertion::get_badge_assertions($this, $this->get_client(), true);
     }
 
     /**
