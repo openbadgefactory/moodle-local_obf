@@ -479,3 +479,5 @@ $string['failedtogetaccesstoken'] = 'Failed to get access token:';
 $string['deletelink'] = 'Delete';
 
 $string['norecordsfound'] = 'No records found.';
+
+$string['loadmorerecipients'] = 'Load more recipients';

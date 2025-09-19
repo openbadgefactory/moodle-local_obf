@@ -146,11 +146,6 @@ class obf_badge {
     private $courseid = null;
 
     /**
-     * @var string Primary language.
-     */
-    private $primarylanguage = '';
-
-    /**
      * Returns an instance of the class. If <code>$id</code> isn't set, this
      * will return a new instance.
      *
@@ -354,7 +349,6 @@ class obf_badge {
      */
     public function populate_from_moodle_badge($moodlebadge) {
         global $DB;
-        global $CFG;
 
         $this->set_description($moodlebadge->description)->set_isdraft((bool) false);
 
@@ -367,13 +361,6 @@ class obf_badge {
         $this->set_image($imageurl);
 
         $this->set_created($moodlebadge->timecreated)->set_name($moodlebadge->name);
-
-        // Primary language from Moodle badge.
-        if (!empty($moodlebadge->language)) {
-            $this->set_primary_language($moodlebadge->language);
-        } else {
-            $this->set_primary_language($CFG->lang ?? 'en');
-        }
 
         $expiresabs = (int) (!empty($moodlebadge->expireperiod) ? time() + $moodlebadge->expireperiod : $moodlebadge->expiredate);
         if ($expiresabs > 0) {
@@ -531,16 +518,7 @@ class obf_badge {
      * @return obf_assertion_collection The assertions.
      */
     public function get_assertions() {
-        return obf_assertion::get_badge_assertions($this, $this->get_client(), false);
-    }
-
-    /**
-     * Get all assertions and recipients related to this badge for CSV export.
-     *
-     * @return obf_assertion_collection The assertions.
-     */
-    public function get_assertions_for_creating_csv() {
-        return obf_assertion::get_badge_assertions($this, $this->get_client(), true);
+        return obf_assertion::get_badge_assertions($this, $this->get_client());
     }
 
     /**
@@ -1066,26 +1044,6 @@ class obf_badge {
      */
     public function set_course_id($courseid) {
         $this->courseid = $courseid;
-        return $this;
-    }
-
-    /**
-     * Get primary language code.
-     * 
-     */
-    public function get_primary_language() {
-        return $this->primarylanguage;
-    }
-
-    /**
-     * Set primary language code.
-     *
-     */
-    public function set_primary_language(?string $lang) {
-        if (!empty($lang)) {
-            $lang = strtolower($lang);
-            $this->primarylanguage = $lang;
-        }
         return $this;
     }
 

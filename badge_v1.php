@@ -83,9 +83,9 @@ switch ($action) {
                 'api_consumer_id' => OBF_API_CONSUMER_ID,
                 'count_only' => 1
             );
-            $res = $client->get_all_assertions($searchparams);
-            
-            $historysize = count($res);
+            $res = $client->get_assertions(null, null, $searchparams);
+
+            $historysize = $res[0]['result_count'];
 
             $searchparams['count_only'] = 0;
             $searchparams['limit'] = 10;

@@ -119,8 +119,9 @@ $PAGE->set_title(get_string('obf', 'local_obf'));
 
 navigation_node::override_active_url(new moodle_url('/local/obf/badge.php',
     array('action' => 'history')));
-
-$assertion = obf_assertion::get_instance_by_id($eventid, $client);
+// TODO: This offset is meant for "load more" recipients link in Recipient(s) list.
+$offset = optional_param('offset', 0, PARAM_INT);
+$assertion = obf_assertion::get_instance_by_id($eventid, $client, $offset);
 $assertion->get_revoked($client);
 $badge = $assertion->get_badge();
 

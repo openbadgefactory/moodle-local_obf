@@ -318,24 +318,6 @@ class local_obf_renderer extends plugin_renderer_base {
             }
 
             $assertionitems[get_string('recipients', 'local_obf')] = $list;
-
-            /** 
-             * Create load more link if there's more recipients to get 
-             * TODO: Render "load more" link to get more recipients.
-             */
-            if ($assertion->get_more_recipients_available()) {
-
-                $nextoffset = $assertion->get_next_offset();
-                $loadmoreurl = new moodle_url('/local/obf/event.php', [
-                    'action' => 'show',
-                    'show' => 'history',
-                    'id' => $assertion->get_id(),
-                    'offset' => $nextoffset,
-                    'clientid' => $assertion->get_client_id()
-                ]);
-                $link = html_writer::link($loadmoreurl, get_string('loadmorerecipients', 'local_obf'));               
-                $assertionitems[get_string('recipients', 'local_obf')] .= html_writer::div($link, 'recipient-loadmore');
-            }
         }
 
         if ($printheading) {
@@ -627,14 +609,6 @@ class local_obf_renderer extends plugin_renderer_base {
 
         $badgedetails .= $this->render_definition_list($definitions);
         $issuer = $badge->get_issuer();
-
-        // Recipient(s) section.
-        $assertion = new obf_assertion();
-        $recipientemails = $assertion->get_recipient_emails();
-        if (!empty($recipientemails)) {
-            $html .= $this->print_heading('recipients', 3);
-            $html .= html_writer::alist($recipientemails, ['class' => 'recipient-list']);
-        }
 
         // Issuer details table.
         $badgedetails .= $this->print_heading('issuerdetails');
@@ -1268,14 +1242,7 @@ class local_obf_renderer extends plugin_renderer_base {
             $courses = 'Manual issuing';
         }
 
-        // Show recipient_count in Recipient(s) column
-        if (method_exists($assertion, 'get_recipient_count') && $assertion->get_recipient_count() !== null) {
-            $count = $assertion->get_recipient_count();
-            if (is_numeric($count)) {
-                $recipienthtml .= html_writer::tag('p',
-                    get_string('historyrecipients', 'local_obf', $count));
-            }
-        } else if (count($users) > 1) {
+        if (count($users) > 1) {
             $recipienthtml .= html_writer::tag('p', get_string('historyrecipients', 'local_obf', count($users)),
                 array('title' => $this->render_userlist($users, false)));
         } else {
@@ -1309,7 +1276,7 @@ class local_obf_renderer extends plugin_renderer_base {
      * @throws dml_exception
      */
     public function create_csv($badge) {
-        $history = $badge->get_assertions_for_creating_csv();
+        $history = $badge->get_assertions();
         $assertioncount = $badge->get_assertions()->count();
         $filename = s($badge->get_name()) . '.csv';
 
