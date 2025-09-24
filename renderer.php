@@ -640,6 +640,17 @@ class local_obf_renderer extends plugin_renderer_base {
         $badgedetails .= $this->print_heading('issuerdetails');
         $badgedetails .= $this->render_issuer_details($issuer);
 
+        // Sub-organisation (aka aliases) section.
+        $aliases = $badge->get_aliases();
+        foreach ($aliases ?? [] as $alias) {
+            $alias_names[] = html_writer::tag('dd', $alias['name']);
+        }
+
+        if (!empty($alias_names)) {
+            $badgedetails .= $this->print_heading('suborganization');
+            $badgedetails .= html_writer::tag('dd', implode('', $alias_names));
+        }
+
         $boxes .= local_obf_html::div($badgedetails, 'obf-badgedetails');
         $html .= local_obf_html::div($boxes, 'obf-badgewrapper');
 
@@ -1102,6 +1113,7 @@ class local_obf_renderer extends plugin_renderer_base {
             $headingrow[] = new local_obf_table_header('recipients');
             $headingrow[] = new local_obf_table_header('issuedon');
             $headingrow[] = new local_obf_table_header('expiresby');
+            $headingrow[] = new local_obf_table_header('issuer');
             $headingrow[] = new local_obf_table_header('issuedfrom');
             $headingrow[] = new html_table_cell();
             $historytable->head = $headingrow;
@@ -1204,6 +1216,7 @@ class local_obf_renderer extends plugin_renderer_base {
             $headingrow[] = new local_obf_table_header('recipients');
             $headingrow[] = new local_obf_table_header('issuedon');
             $headingrow[] = new local_obf_table_header('expiresby');
+            $headingrow[] = new local_obf_table_header('issuer');
             $headingrow[] = new local_obf_table_header('issuedfrom');
             $headingrow[] = new html_table_cell();
             $historytable->head = $headingrow;
@@ -1285,6 +1298,7 @@ class local_obf_renderer extends plugin_renderer_base {
         $row->cells[] = $recipienthtml;
         $row->cells[] = userdate($assertion->get_issuedon(), get_string('dateformatdate', 'local_obf'));
         $row->cells[] = $expirationdate;
+        $row->cells[] = s($assertion->get_issuer_name());
         $row->cells[] = $courses;
         $row->cells[] = html_writer::link(new moodle_url('/local/obf/event.php',
             array('id' => $assertion->get_id(), 'clientid' => $this->get_client_id(), 'course_id' => $logs)),

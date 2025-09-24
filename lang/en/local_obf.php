@@ -378,6 +378,7 @@ $string['exportbadgename'] = 'Badge Name';
 $string['exportrecipients'] = 'Recipients';
 $string['exportissuedon'] = 'Issued On';
 $string['exportexpiresby'] = 'Expires By';
+$string['exportissuer'] = 'Issuer';
 $string['exportissuedfrom'] = 'Issued From';
 $string['delete_rule'] = 'Delete rule';
 $string['delete_rule_button'] = 'Delete this rule';
@@ -482,3 +483,7 @@ $string['deletelink'] = 'Delete';
 $string['norecordsfound'] = 'No records found.';
 
 $string['loadmorerecipients'] = 'Load more recipients';
+$string['choosebadgeissuer'] = 'Badge issuer';
+$string['suborganization'] = 'Sub-organization';
+$string['invalidalias'] = 'Selected issuer is not available for this badge.';
+$string['selectissuerheader'] = 'Select badge issuer';
