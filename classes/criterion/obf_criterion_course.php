@@ -476,7 +476,12 @@ class obf_criterion_course extends obf_criterion_item {
 
         /* Select issuer section */
         $courseid = $this->get_courseid();
-        $badgeid = optional_param('id', '', PARAM_ALPHANUMEXT);
+
+        $badgeid = ''; 
+        $crit = $this->get_criterion(); 
+        if ($crit) {
+            $badgeid = $crit->get_badgeid();
+        }
 
         if ($badgeid !== '') {
             $badge = obf_badge::get_instance($badgeid);

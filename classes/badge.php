@@ -157,6 +157,19 @@ class obf_badge {
     private $aliases = array();
 
     /**
+     * @var string Client alias for issuing.
+     * null        = not provided
+     * ''          = main organisation
+     * 'QWE123...' = alias
+     */
+    protected $alias_id = null;
+    
+    public function set_alias_id($id) {
+        $this->alias_id = $id;
+        return $this;
+    }
+
+    /**
      * Returns an instance of the class. If <code>$id</code> isn't set, this
      * will return a new instance.
      *
@@ -497,22 +510,14 @@ class obf_badge {
         }
 
         // Get the selected issuer from the form: null = not provided; '' = main organisation
-        $clientaliasid = optional_param('badgeissuer', null, PARAM_ALPHANUMEXT);
+        $clientaliasid = $this->alias_id;
 
-        // Get the selected course from the form: 0 = no course
-        $courseid = optional_param('courseid', 0, PARAM_INT);
 
         // If courseid but no clientaliasid, get POST field first, then try DB
-        if ($clientaliasid === null && $courseid) {
-            // Get the optional parameter badgeissuer for the specific course POST: null = not provided, '' = main organisation
-            $clientaliasid = optional_param('badgeissuer_' . $courseid, null, PARAM_ALPHANUMEXT);
-
-            // If no specific badgeissuer for the course in POST, get saved rule from DB
-            if ($clientaliasid === null) {
-                $criterion = new obf_criterion_course($this->get_client(), $this, $courseid);
-                $params = $criterion->get_params();
-                $clientaliasid = $params[$courseid]['badgeissuer'] ?? null;
-            }
+        if ($clientaliasid === null && $course !== null) {
+            $criterion = new obf_criterion_course($this->get_client(), $this, $course);
+            $params = $criterion->get_params();
+            $clientaliasid = $params[$course]['badgeissuer'] ?? null;
         }
 
         // If clientaliasid = null or '', use main organisation; otherwise use clientaliasid
