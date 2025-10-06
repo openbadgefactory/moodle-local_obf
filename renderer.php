@@ -833,7 +833,9 @@ class local_obf_renderer extends plugin_renderer_base {
                 $criterioncourse = obf_criterion_item::get_instance($criterioncourseid);
             }
 
-            $criterionform = new obf_coursecriterion_form($url, array('criterioncourse' => $criterioncourse));
+            $criterionform = new obf_coursecriterion_form(
+                $url, array('criterioncourse' => $criterioncourse,'badgeid' => $badge->get_id())
+            );
 
             // Deleting the rule is done via cancel-button.
             if ($criterionform->is_cancelled()) {
@@ -871,7 +873,9 @@ class local_obf_renderer extends plugin_renderer_base {
                 if ($pickingtype) {
                     if (!is_null($courseid)) {
 
-                        $criterionform = new obf_coursecriterion_form($url, array('criterioncourse' => $criterioncourse));
+                        $criterionform = new obf_coursecriterion_form(
+                            $url, array('criterioncourse' => $criterioncourse, 'badgeid' => $badge->get_id())
+                        );
                     }
                 } else { // Saving the rule.
                     if (!$criterioncourse->exists()) {

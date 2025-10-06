@@ -438,7 +438,6 @@ class obf_criterion_course extends obf_criterion_item {
      * @param mixed& $obj Form object.
      */
     public function get_options(&$mform, &$obj) {
-        $criterioncourseid = $this->get_id();
         $courseid = $this->get_courseid();
         $grade = $this->get_grade();
         $completedby = $this->get_completedby();
@@ -475,12 +474,12 @@ class obf_criterion_course extends obf_criterion_item {
         }
 
         /* Select issuer section */
-        $courseid = $this->get_courseid();
-
         $badgeid = ''; 
         $crit = $this->get_criterion(); 
         if ($crit) {
             $badgeid = $crit->get_badgeid();
+        } else if (is_object($obj) && method_exists($obj, 'get_badgeid')) {
+            $badgeid = $obj->get_badgeid();
         }
 
         if ($badgeid !== '') {

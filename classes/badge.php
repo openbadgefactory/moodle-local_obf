@@ -512,11 +512,10 @@ class obf_badge {
         // Get the selected issuer from the form: null = not provided; '' = main organisation
         $clientaliasid = $this->alias_id;
 
-
         // If courseid but no clientaliasid, get POST field first, then try DB
-        if ($clientaliasid === null && $course !== null) {
-            $criterion = new obf_criterion_course($this->get_client(), $this, $course);
-            $params = $criterion->get_params();
+        if ($clientaliasid === null && $course !== null && !empty($items)) {
+            // either obf_criterion_course or obf_criterion_activity
+            $params = $items[0]->get_params();
             $clientaliasid = $params[$course]['badgeissuer'] ?? null;
         }
 
