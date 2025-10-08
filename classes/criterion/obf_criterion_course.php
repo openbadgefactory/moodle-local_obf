@@ -507,6 +507,7 @@ class obf_criterion_course extends obf_criterion_item {
                 $badgeissuerfield = 'badgeissuer_' . $courseid;      
                 $mform->addElement('select', $badgeissuerfield, get_string('choosebadgeissuer', 'local_obf'), $options);
                 $mform->setDefault($badgeissuerfield, $saved);
+                $mform->setType($badgeissuerfield, PARAM_ALPHANUMEXT);
             }
         }
     }

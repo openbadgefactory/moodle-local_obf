@@ -29,7 +29,6 @@ use html_writer;
 use MoodleQuickForm;
 use Set;
 use stdClass;
-use classes\obf_badge;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -58,7 +57,7 @@ class obf_criterion_activity extends obf_criterion_course {
      * @var string[] $optionalparams Optional params to be saved.
      * @see obf_criterion_course::save_params
      */
-    protected $optionalparams = array('completedby', 'badgeissuer');
+    protected $optionalparams = array('completedby');
 
     /**
      * Get the instance of this class by id.
@@ -288,7 +287,7 @@ class obf_criterion_activity extends obf_criterion_course {
         $modules = self::get_course_activities($this->get_courseid());
         $params = $this->get_params();
 
-        $this->get_form_activities($mform, $modules, $params, $obj);
+        $this->get_form_activities($mform, $modules, $params);
     }
 
     /**
@@ -380,7 +379,7 @@ class obf_criterion_activity extends obf_criterion_course {
      * @param array $modules modules so the database is not accessed too much
      * @param array $params
      */
-    private function get_form_activities(&$mform, $modules, $params, $obj = null) {
+    private function get_form_activities(&$mform, $modules, $params) {
         $mform->addElement('html', html_writer::tag('h2', get_string('selectactivity', 'local_obf')));
 
         $existing = array();
@@ -420,44 +419,6 @@ class obf_criterion_activity extends obf_criterion_course {
 
         foreach ($existing as $modid) {
             $mform->setDefault('module_' . $modid, $modid);
-        }
-
-        /** Select issuer section */
-        $courseid = $this->get_courseid();
-        $badgeid = '';
-        $crit = $this->get_criterion();
-        if ($crit) {
-            $badgeid = $crit->get_badgeid();
-        } else if (is_object($obj) && method_exists($obj, 'get_badgeid')) {
-            $badgeid = $obj->get_badgeid();
-        }
-
-        if ($badgeid !== '') {
-            $badge = obf_badge::get_instance($badgeid);
-            $aliases = $badge->get_aliases(); // Possible suborganisations for this badge if any
-
-            if (!empty($aliases)) {
-                // Issuer header
-                $mform->addElement('header', 'header_select_issuer_activity', get_string('selectissuerheader', 'local_obf'));
-                // Course parameters
-                $params = $this->get_params();
-                $saved  = (string)($params[$courseid]['badgeissuer'] ?? ''); // empty string = main organisation 
-                $options = ['' => (string)$badge->get_issuer()->get_name()]; // add main org to options
-
-                foreach ($aliases as $alias) {
-                    $id = isset($alias['id']) ? (string)$alias['id'] : '';
-                    $name = isset($alias['name']) ? (string)$alias['name'] : $id;
-                    if ($id !== '') {
-                        $options[$id] = $name;
-                    }
-                }
-
-                // Field in right format for save_params()
-                $fieldname = 'badgeissuer_' . $courseid;
-                $mform->addElement('select', $fieldname, get_string('choosebadgeissuer', 'local_obf'), $options);
-                $mform->setDefault($fieldname, $saved);
-                $mform->setType($fieldname, PARAM_ALPHANUMEXT);
-            }
         }
     }
 
