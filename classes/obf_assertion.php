@@ -443,50 +443,6 @@ class obf_assertion {
     }
 
     /**
-     * Returns all assertions related to a badge.
-     */
-    public static function get_assertions_for_badge(obf_client $client, obf_badge $badge, $export_csv = false) {
-
-        $badgeid = $badge->get_id();
-        $arr = $client->get_assertions_per_badge($badgeid, $export_csv);
-        $assertions = array();
-
-        if (is_array($arr)) {
-            foreach ($arr as $item) {
-                $b = $badge;
-
-                if (!is_null($b)) {
-                    $assertion = self::get_instance();
-                    $assertion->set_badge($b)->set_id($item['id'])->set_recipients($item['recipient']);
-                    $assertion->set_client_id($b->get_client_id());
-
-                    if (isset($item['log_entry'])) {
-                        $assertion->set_log_entry($item['log_entry']);
-                    }
-                    // New field for showing recipient count in Recipient(s) column.
-                    if (isset($item['recipient_count'])) {
-                        $assertion->set_recipient_count((int)$item['recipient_count']);
-                    }
-                    $assertion->set_expires($item['expires'])->set_name($item['name']);
-                    $assertion->set_issuedon($item['issued_on'])->set_source(self::ASSERTION_SOURCE_OBF);
-                    if (array_key_exists('revoked', $item)) {
-                        $assertion->set_revoked($item['revoked']);
-                    }
-                    $assertions[] = $assertion;
-                }
-            }
-        }
-
-        // Sort the assertions by date...
-        usort($assertions,
-            function (obf_assertion $a1, obf_assertion $a2) {
-                return $a1->get_issuedon() - $a2->get_issuedon();
-            });
-
-        return new obf_assertion_collection($assertions);
-    }
-
-    /**
      * Returns all assertions matching the search criteria, for all connected clients.
      *
      * @param obf_client $client The client instance.

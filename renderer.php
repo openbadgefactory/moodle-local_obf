@@ -421,11 +421,9 @@ class local_obf_renderer extends plugin_renderer_base {
      * @param string $message
      * @return string
      */
-    public function page_badgedetails(obf_client $client, obf_badge $badge, context $context, $tab = 'details', $page = 0,
+    public function page_badgedetails(obf_client $client, obf_badge $badge, context $context, $page = 0,
         $message = '', $onlydetailstab = null) {
 
-        $methodprefix = 'print_badge_info_';
-        $rendererfunction = $methodprefix . $tab;
         $html = '';
 
         if (!method_exists($this, $rendererfunction)) {
@@ -436,7 +434,7 @@ class local_obf_renderer extends plugin_renderer_base {
             }
 
             $html .= $this->print_badge_tabs($badge, $context, $tab, $onlydetailstab);
-            $html .= call_user_func(array($this, $rendererfunction), $client, $badge, $context, $page);
+            $html .= $this->print_badge_info_details($client, $badge, $context, $page);
         }
 
         return $html;
@@ -664,25 +662,6 @@ class local_obf_renderer extends plugin_renderer_base {
         return $html;
     }
 
-    /**
-     * Renders the badge criteria page.
-     *
-     * @param obf_client $client
-     * @param obf_badge $badge
-     * @param context $context
-     * @return string HTML
-     */
-    public function print_badge_info_criteria(obf_client $client, obf_badge $badge, context $context) {
-        $html = '';
-
-        if ($context instanceof context_course) {
-            $html .= $this->render_badge_criteria_course($badge, $context->instanceid);
-        } else {
-            $html .= $this->render_badge_criteria_site($badge);
-        }
-
-        return $html;
-    }
 
     /**
      * Renders the form for modifying the criteria of a single course
@@ -1027,114 +1006,13 @@ class local_obf_renderer extends plugin_renderer_base {
      * Renders badge issuance history.
      *
      * @param obf_client $client
-     * @param obf_badge $badge
-     * @param context $context
-     * @param int $currentpage
-     * @param obf_issue_event[] $eventfilter
-     * @return string HTML
-     */
-    public function print_badge_info_history(obf_client $client, obf_badge $badge = null, context $context, $currentpage = 0,
-        $eventfilter = null) {
-        $singlebadgehistory = !is_null($badge);
-
-        $history = $singlebadgehistory ? $badge->get_assertions() : obf_assertion::get_assertions($client);
-        if (!is_null($eventfilter)) {
-            $eventidfilter = array();
-            foreach ($eventfilter as $event) {
-                $eventidfilter[] = $event->get_eventid();
-            }
-            $newhistory = new obf_assertion_collection();
-            foreach ($history as $assertion) {
-                if (in_array($assertion->get_id(), $eventidfilter)) {
-                    $newhistory->add_assertion($assertion);
-                }
-            }
-            $history = $newhistory;
-        }
-        $historytable = new html_table();
-        $historytable->attributes = array('class' => 'local-obf generaltable historytable');
-
-        $html = $this->print_heading('history', 2);
-
-        if (isset($badge)) {
-            $csvbutton = $this->csv_button($badge);
-            $html .= $csvbutton;
-        }
-        $historysize = count($history);
-        $langkey = $singlebadgehistory ? 'nobadgehistory' : 'nohistory';
-
-        if ($historysize == 0) {
-            $html .= $this->output->notification(get_string($langkey, 'local_obf'), 'generalbox');
-        } else {
-            // Paging settings.
-            $perpage = 10; // TODO: Hard-coded here.
-            if ($this->page->pagetype == 'local-obf-courseuserbadges') {
-                $path = '/local/obf/courseuserbadges.php';
-            } else {
-                $path = '/local/obf/badge.php';
-            }
-
-            $urlparams = $singlebadgehistory ? array('action' => 'show', 'id' => $badge->get_id(), 'show' => 'history') :
-                array('action' => 'history');
-
-            $urlparams['clientid'] = $client->client_id();
-
-            if (!$singlebadgehistory && $context instanceof context_course) {
-                $urlparams['courseid'] = $context->instanceid;
-            }
-
-            $url = new moodle_url($path, $urlparams);
-            $pager = new paging_bar($historysize, $currentpage, $perpage, $url, 'page');
-            $htmlpager = $this->render($pager);
-            $startindex = $currentpage * $perpage;
-            $endindex = $startindex + $perpage > $historysize ? $historysize : $startindex + $perpage;
-
-            // Heading row.
-            $headingrow = array();
-
-            if (!$singlebadgehistory) {
-                $headingrow[] = new local_obf_table_header('badgename');
-                $historytable->headspan = array(2, 1, 1, 1, 1);
-            } else {
-                $historytable->headspan = array();
-            }
-
-            $headingrow[] = new local_obf_table_header('recipients');
-            $headingrow[] = new local_obf_table_header('issuedon');
-            $headingrow[] = new local_obf_table_header('expiresby');
-            $headingrow[] = new local_obf_table_header('issuedfrom');
-            $headingrow[] = new html_table_cell();
-            $historytable->head = $headingrow;
-
-            // Add history rows.
-            for ($i = $startindex; $i < $endindex; $i++) {
-                $assertion = $history->get_assertion($i);
-                $users = $history->get_assertion_users($assertion);
-
-                if ($users) {
-                    $historytable->data[] = $this->render_historytable_row($assertion, $singlebadgehistory, $path, $users);
-                }
-            }
-
-            $html .= $htmlpager;
-            $html .= html_writer::table($historytable);
-            $html .= $htmlpager;
-        }
-
-        return $html;
-    }
-
-    /**
-     * Renders badge issuance history.
-     *
-     * @param obf_client $client
      * @param context $context
      * @param int $historysize
      * @param int $currentpage
      * @param array $history
      * @return string HTML
      */
-    public function print_issuing_history(obf_client $client, context $context, $historysize, $currentpage, $history) {
+    public function print_issuing_history(obf_client $client, obf_badge $badge = null, context $context, $historysize, $currentpage, $history) {
         global $PAGE;
 
         $historytable = new html_table();
@@ -1186,6 +1064,10 @@ class local_obf_renderer extends plugin_renderer_base {
             $urlparams = array('action' => 'history');
 
             $urlparams['clientid'] = $client->client_id();
+
+            if ($badge != null) {
+                $urlparams['id'] = $badge->get_id();
+            }
 
             if ($context instanceof context_course) {
                 $urlparams['courseid'] = $context->instanceid;

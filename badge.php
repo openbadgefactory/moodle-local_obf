@@ -81,13 +81,9 @@ switch ($action) {
 
             $searchparams = array(
                 'api_consumer_id' => OBF_API_CONSUMER_ID,
-                'count_only' => 1
             );
-            $res = $client->get_all_assertions($searchparams);
-            
-            $historysize = count($res);
+            $historysize = $client->get_assertions_count(null, null, $searchparams);
 
-            $searchparams['count_only'] = 0;
             $searchparams['limit'] = 10;
             $searchparams['offset'] = $currpage * 10;
             $searchparams['order_by'] = 'asc';
@@ -95,8 +91,7 @@ switch ($action) {
             $history = obf_assertion::get_assertions($client, null, null, -1, false, $searchparams);
 
             $content .= $PAGE->get_renderer('local_obf')->render_client_selector($url, $clientid);
-            $content .= $PAGE->get_renderer('local_obf')->print_issuing_history($client, $context,
-                $historysize, $currpage, $history);
+            $content .= $PAGE->get_renderer('local_obf')->print_issuing_history($client, null, $context, $historysize, $currpage, $history);
         } catch (Exception $e) {
             $content .= $OUTPUT->notification($e->getMessage());
         }
@@ -200,8 +195,7 @@ switch ($action) {
                 $taburl = clone $badgeurl;
                 $taburl->param('show', $show);
 
-                $content .= $PAGE->get_renderer('local_obf')->page_badgedetails(
-                    $client, $badge, $context, $show, $page, $message);
+                $content .= $PAGE->get_renderer('local_obf')->page_badgedetails($client, $badge, $context, $page, $message);
 
                 $content .= $PAGE->get_renderer('local_obf')->issue_button($badge, $context);
 
@@ -211,8 +205,23 @@ switch ($action) {
                 // Badge criteria.
             case 'history':
                 // Badge issuance history.
-                $content .= $PAGE->get_renderer('local_obf')->page_badgedetails(
-                    $client, $badge, $context, $show, $page, $message);
+                try {
+                    $searchparams = array(
+                        'api_consumer_id' => OBF_API_CONSUMER_ID,
+                        'badge_id' => $badgeid
+                    );
+                    $historysize = $client->get_assertions_count(null, null, $searchparams);
+
+                    $searchparams['limit'] = 10;
+                    $searchparams['offset'] = $page * 10;
+                    $searchparams['order_by'] = 'asc';
+
+                    $history = obf_assertion::get_assertions($client, null, null, -1, false, $searchparams);
+
+                    $content .= $PAGE->get_renderer('local_obf')->print_issuing_history($client, $badge, $context, $historysize, $page, $history);
+                } catch (Exception $e) {
+                    $content .= $OUTPUT->notification($e->getMessage());
+                }
                 break;
         }
 

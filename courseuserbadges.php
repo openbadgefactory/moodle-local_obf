@@ -75,8 +75,7 @@ switch ($action) {
         switch ($show) {
             // Badge details.
             case 'details':
-                $content .= $PAGE->get_renderer('local_obf')->page_badgedetails(
-                    $client, $badge, $context, $show, null, null, $onlydetailstab);
+                $content .= $PAGE->get_renderer('local_obf')->page_badgedetails($client, $badge, $context, null, null, $onlydetailstab);
         }
         break;
 
@@ -90,25 +89,20 @@ switch ($action) {
         require_capability('local/obf:viewhistory', $context);
         $client = obf_client::get_instance();
 
-        $search = optional_param('search', null, PARAM_TEXT);
         $searchparams = array(
             'api_consumer_id' => OBF_API_CONSUMER_ID,
-            'log_entry' => 'course_id:' . (string)$courseid,
-            'count_only' => 1,
-            'query' => $search
+            'log_entry' => 'course_id:' . (string)$courseid
         );
-        $res = $client->get_course_assertions($searchparams);
 
-        $historysize = $res[0]['result_count'];
+        $historysize = $client->get_assertions_count(null, null, $searchparams);
 
-        $searchparams['count_only'] = 0;
         $searchparams['limit'] = 10;
         $searchparams['offset'] = $currpage * 10;
         $searchparams['order_by'] = 'asc';
 
         $history = obf_assertion::get_assertions($client, null, null, -1, false, $searchparams);
         $content  = $PAGE->get_renderer('local_obf')->render_client_selector($url, $clientid);
-        $content .= $PAGE->get_renderer('local_obf')->print_issuing_history($client, $context, $historysize, $currpage, $history);
+        $content .= $PAGE->get_renderer('local_obf')->print_issuing_history($client, $badge, $context, $historysize, $currpage, $history);
         break;
 }
 
