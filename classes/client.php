@@ -1096,7 +1096,7 @@ class obf_client {
      */
     public function get_recipient_assertions($email, $params = array()) {
         global $DB;
-        
+
         if ($this->local_events()) {
             $params['api_consumer_id'] = OBF_API_CONSUMER_ID;
         }
@@ -1118,7 +1118,7 @@ class obf_client {
                 $url = $host . '/v2/event/' . $this->client_id();
                 $limit  = $params['limit']  ?? 1000;
                 $offset = 0;
-                
+
                 // Fetch events in batches until all events are retrieved.
                 do {
                     $query = $params;
@@ -1169,7 +1169,7 @@ class obf_client {
      */
     // TODO: Re-enabled offset parameter later when load-more functionality is integrated.
     public function get_event($eventid, $offset = 0) {
-        
+
         $url = $this->obf_url() . '/v2/event/' . $this->client_id() . '/' . $eventid;
         $res = $this->request('get', $url);
         $event = json_decode($res, true);
@@ -1180,9 +1180,9 @@ class obf_client {
         // $total = 0;
         // $offset = optional_param('offset', 0, PARAM_INT);
 
-        /** 
-         * We cannot get all the recipients at once, 
-         * currently we'll get first 1000, 
+        /**
+         * We cannot get all the recipients at once,
+         * currently we'll get first 1000,
          * we can easily raise this limit later if needed for example ten times.
          */
         // do { // Get recipients for the event.
@@ -1270,7 +1270,7 @@ class obf_client {
 
         return ['revoked' => $map];
     }
-    
+
     /**
      * Get badge categories from Badges data.
      *
@@ -1290,7 +1290,7 @@ class obf_client {
     }
 
     /**
-     * Delete a badge. Use with caution. 
+     * Delete a badge. Use with caution.
      */
     public function delete_badge($badgeid) {
         $url = $this->obf_url() . '/v2/badge/' . $this->client_id() . '/' . $badgeid;
@@ -1299,9 +1299,9 @@ class obf_client {
 
     /**
      * Deletes all client badges. Use with caution.
-     */ 
+     */
     public function delete_badges() {
-        
+
         // Get all badges.
         $badges = $this->get_badges();
 
@@ -1312,7 +1312,7 @@ class obf_client {
                     $this->delete_badge($badge['id']);
                 } catch (Exception $e) {
                     error_log("Failed to delete badge with ID {$badge['id']}: " . $e->getMessage());
-                }   
+                }
             }
         }
     }
@@ -1325,7 +1325,7 @@ class obf_client {
     public function export_badge(obf_badge $badge) {
         $img = $badge->get_image();
         // These methods provide no data atm.
-        $criteriaMd = $badge->get_criteria_html();        
+        $criteriaMd = $badge->get_criteria_html();
         $categories = $badge->get_categories();
         $tags = $badge->get_tags();
 
@@ -1699,6 +1699,7 @@ class obf_client {
     public function get_oauth2id() {
         return $this->oauth2;
     }
+
     /**
      * Get the total number of assertions issued.
      */
