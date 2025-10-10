@@ -96,7 +96,7 @@ class obf_client {
     /**
      * @var array Total badge issuing events.
      */
-    private static $total_assertions = null;
+    private $total_assertions = null;
 
     const RETRIEVE_ALL = 'all';
     const RETRIEVE_LOCAL = 'local';
