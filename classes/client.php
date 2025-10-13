@@ -1415,11 +1415,17 @@ class obf_client {
                     throw $e;
                 }
             }
-            // Add username, if available. // luuppaa täällä recipient list muodosta jo täällä
+            // Add username, if available.
             if ($user->firstname && $user->lastname && $user->email && !preg_match('/[><]/', $user->email)) {
-                $recipientsnameemail[] = fullname($user) . ' <' . $user->email . '>';
+                $recipientsnameemail[] = [
+                    'email' => $user->email,
+                    'name' => fullname($user),
+                ];
             } else {
-                $recipientsnameemail[] = $user->email;
+                $recipientsnameemail[] = [
+                    'email' => $user->email,
+                    'name' => ''
+                ];
             }
 
             // Sending notification.
@@ -1479,11 +1485,6 @@ class obf_client {
                     'courselink' => $courselink,
                 ]) . '<br>';
 
-            // Prepare recipient params for the API.
-            $recipientparams[] = [
-                'email' => $user->email,
-                'name' => fullname($user),
-            ];
         }
 
         // Send notification to teachers.
@@ -1557,7 +1558,7 @@ class obf_client {
         $coursename = $badge->get_course_name($course);
 
         $params = [
-            'recipient' => $recipientparams,
+            'recipient' => $recipientsnameemail,
             'issued_on' => $issuedon,
             'api_consumer_id' => OBF_API_CONSUMER_ID,
             'send_email' => true,
