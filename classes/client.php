@@ -790,10 +790,11 @@ class obf_client {
      * @param array $params Optional extra params for the query.
      * @return array The event data.
      */
-    public function get_assertions($badgeid = null, $email = null, $params = array()) {
+    public function get_assertions($badgeid = null, $email = null, $params = array(), $include_recipients = false) {
         if (is_null($badgeid) && !is_null($email)) {
             return array();
         }
+
         if ($this->local_events()) {
             $params['api_consumer_id'] = OBF_API_CONSUMER_ID;
         }
@@ -810,27 +811,107 @@ class obf_client {
         $data = json_decode($res, true);
 
         /** Build the output array from the two requests to match the V1 output. */
+        $rec_begin = 0;
+        $rec_end = 0;
         $out = [];
         foreach ($data['result'] ?? [] as $event) {
+            $log_entry = [];
+            if (!empty($event['log_entry'])) {
+                $log_entry = json_decode($event['log_entry'], true);
+            }
+
             $out[] = array(
                 'id' => $event['id'],
                 'name' => $event['name'] ?? '',
-                'recipient' => [], // For v1 compatibility, recipient data is not included in the v2 API.
-                'recipient_count' => [$event['recipient_count']] ?? [],
+                'recipient' => [],
+                'recipient_count' => $event['recipient_count'],
                 'issued_on' => $event['issued_on'] ?? null,
                 'badge_id' => $event['badge_id'] ?? null,
                 'expires' => $event['expires_on'] ?? null,
                 'revoked' => [],
-                'log_entry' => [
-                    'wwwroot' => $GLOBALS['CFG']->wwwroot ?? '',
-                    'course_id' => '',
-                    'course_name' => null,
-                    'activity_name' => null
-                ],
-                'timestamp' => $event['mtime'] ?? $recipient['issued_on'] ?? null,
+                'log_entry' => $log_entry ?? [],
+                'timestamp' => $event['ctime'] ?? null,
             );
+
+            $rec_begin = min($rec_begin, $event['ctime']);
+            $rec_end = max($rec_end, $event['ctime']);
         }
+
+        if (!empty($out) && $include_recipients) {
+            $recipients = [];
+            $rec_params = $params;
+            $rec_params['begin'] = $rec_begin - 1;
+            $rec_params['end'] = $rec_end + 1;
+            $rec_params['limit'] = 1000;
+            $rec_params['offset'] = 0;
+
+            $req_count = 0;
+            $count = 0;
+
+            $url = $this->obf_url() . '/v2/event/' . $this->client_id() . '/recipient';
+            for ($i=0; $i < 1000; $i++) {
+                $res = $this->request('get', $url, $rec_params);
+                $data = json_decode($res, true);
+
+                $rec_params['offset'] += $rec_params['limit'];
+
+                if (!isset($recipients[$data['result']['event_id']])) {
+                    $recipients[$data['result']['event_id']] = [];
+                }
+
+                foreach ($data['result'] as $r) {
+                    $recipients[$data['result']['event_id']][] = $r['email'];
+                }
+
+                $req_count++;
+                $count += count($data['result']);
+
+                if ($count >= $data['total'] || count($data['result']) < $rec_params['limit']) {
+                    break;
+                }
+                if ($req_count % 5 === 0) {
+                    sleep(1);
+                }
+            }
+
+            foreach ($out as &$o) {
+                $o['recipient'] = $recipients[$o['id']] ?? [];
+            }
+        }
+
         return $out;
+    }
+
+    /**
+     * Get badge issuing events from the API, count only.
+     *
+     * @param string $badgeid The id of the badge.
+     * @param string $email The email address of the recipient.
+     * @param array $params Optional extra params for the query.
+     * @return int result count.
+     */
+    public function get_assertions_count($badgeid = null, $email = null, $params = array()) {
+        if (is_null($badgeid) && !is_null($email)) {
+            return 0;
+        }
+        if ($this->local_events()) {
+            $params['api_consumer_id'] = OBF_API_CONSUMER_ID;
+        }
+        if (!empty($badgeid)) {
+            $params['badge_id'] = $badgeid;
+        }
+        if (!empty($email)) {
+            $params['email'] = $email;
+        }
+
+        $params['limit'] = 1;
+        $params['offset'] = 0;
+
+        $url = $this->obf_url() . '/v2/event/' . $this->client_id();
+        $res = $this->request('get', $url, $params);
+        $data = json_decode($res, true);
+
+        return $data['total'] ?? 0;
     }
 
     /**
