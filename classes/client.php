@@ -944,7 +944,7 @@ class obf_client {
 
                 $host = $this->obf_url();
                 $url = $host . '/v2/event/' . $this->client_id();
-                $limit  = $params['limit']  ?? 1000;
+                $limit  = 1000;
                 $offset = 0;
 
                 // Fetch events in batches until all events are retrieved.
@@ -971,9 +971,9 @@ class obf_client {
                             'issued_on' => $event['issued_on'] ?? null,
                             'expires' => $event['expires_on'] ?? null,
                             'timestamp' => $event['mtime'] ?? $event['ctime'] ?? null,
-                            'recipient_count' => [$event['recipient_count']] ?? [], // Ei vielä käytössä, mutta v2 mahdollisuudet.
+                            'recipient_count' => $event['recipient_count'] ?? 0,
                             // V1 compatibility.
-                            'recipient' => [], // Ei pitäisi tarvita tässä vaiheessa, mutta v1 yhteensopivuus.
+                            'recipient' => [],
                             'revoked' => [],
                             'log_entry' => [],
                         );
