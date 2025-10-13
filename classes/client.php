@@ -535,10 +535,10 @@ class obf_client {
 
             // Construct the SQL query.
             $sql = "SELECT * FROM {local_obf_rulescateg} WHERE oauth2_id = ? AND (coursecategorieid IN ($placeholders))";
-            $params = [obf_client::get_instance()->oauth2->id];
-            $params = array_merge($params, $categoryids);
+            $args = [obf_client::get_instance()->oauth2->id];
+            $args = array_merge($args, $categoryids);
 
-            $rules = $DB->get_records_sql($sql, $params);
+            $rules = $DB->get_records_sql($sql, $args);
 
             $haszero = false; // Variable to track if at least one occurrence of zero is found.
 
