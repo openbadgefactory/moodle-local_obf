@@ -499,16 +499,12 @@ class obf_assertion {
         $cacheid = $badgeid . '/' . $eventid;
         $arr = $cache->get($cacheid);
         if (!$arr) {
-            $arr = $client->get_single_badge($badgeid, $eventid);
+            $arr = $client->pub_get_badge($badgeid, $eventid);
             $cache->set($cacheid, $arr);
         }
         if ($arr) {
             $badge = obf_badge::get_instance_from_array($arr);
             $badge->set_id($badgeid);
-            // We can at the moment assume issuer is the same as the defined client.
-            // Because we only get assertions for api_consumer_id
-            // otherwise issuer could also be a suborganisation.
-
             return $badge;
         }
         return null;
