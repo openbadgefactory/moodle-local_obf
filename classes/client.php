@@ -1453,50 +1453,19 @@ class obf_client {
      * @param string $eventid
      * @return array|null V1 compatible BadgeClass
      */
-    public function get_single_badge($badgeid, $eventid) {
+    public function pub_get_badge($badgeid, $eventid) {
         if ($this->eventlookup && isset($this->eventlookup[$eventid]['host'])) {
             $host = $this->eventlookup[$eventid]['host'];
-        } 
+        }
         else {
             $host = $this->obf_url();
         }
 
-        $url = $host . '/v2/badge/' . $this->client_id() . '/' . $badgeid;
-
+        $url = $host . '/v1/badge/_/' . $badgeid . '.json';
+        $params = array('v' => '1.1', 'event' => $eventid);
         try {
-            $res = $this->request('get', $url);
-            $badge = json_decode($res, true);
-
-            if (!is_array($badge)) {
-                return null; // Invalid response.
-            }
-            // Get the badge data in primary language.
-            $primaryLang = $badge['primary_language'] ?? 'en';
-            $badgecontent = $badge['content'] ?? [];
-            $chosencontent = null;
-            foreach ($badgecontent as $content) {
-                if (($content['language'] ?? '') === $primaryLang) {
-                    $chosencontent = $content;
-                    break;
-                }
-            }
-            if (!$chosencontent && !empty($content)) {
-                $chosencontent = $content[0]; // fallback
-            }
-
-            // Return the badge data in a format compatible with V1 functions.
-            return [
-                'id' => $badge['id'] ?? '',
-                'type' => 'BadgeClass',
-                'image' => $badge['image'] ?? '',
-                'issuer' => $creator['url'] ?? '',
-                'description' => $chosencontent['description'] ?? '',
-                'tags' => $chosencontent['tag'] ?? [],
-                'criteria' => $chosencontent['criteria'] ?? '',
-                '@context' => 'https://w3id.org/openbadges/v1',
-                'name' => $chosencontent['name'] ?? '',
-            ];
-
+            $res = $this->request('get', $url, $params);
+            return json_decode($res, true);
         } catch (Exception $e) {
             debugging('');
         }
