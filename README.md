@@ -29,13 +29,9 @@ Totara Learn does not include an add-on installer, all additional plugins must b
 Post install
 ------------------
 
-To connect to Open Badge Factory, the plugin needs a request token or API key.
+To connect to Open Badge Factory, the plugin needs an API key.
 
 To generate the required API key, log in to Open Badge Factory. When logged in, navigate to `Admin tools > API`.
-
-Legacy key:
-
-On the API key page click on `Generate certificate signing request token` for legacy type key. Copy the generated token into OBF Moodle plugin settings, in `Site administration > Open Badges > Settings`.
 
 OAuth2 key:
 
@@ -45,6 +41,10 @@ On the API key page click on `Generate new client secret` for OAuth2 Client Cred
 
 Changelog
 ------------------
+
+1.1.2
+
+- Removed the possibility to create new API connections with a legacy key.
 
 1.1.1
 
