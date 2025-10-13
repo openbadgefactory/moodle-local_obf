@@ -1038,7 +1038,7 @@ class obf_client {
             'next_offset' => $offset + $limit,
             'mtime' => $event['mtime'] ?? 0,
             'timestamp' => $event['mtime'] ?? $event['issued_on'] ?? 0,
-            'client_id' => $event['client_alias_id'] ?? $this->client_id() ?? '', // How should this work tbh?
+            'client_id' => $this->client_id(),
             'client_alias' => $event['client_alias_id'] ?? '',
             'api_consumer_id' => $event['api_consumer_id'] ?? '',
             'log_entry' => $event['log_entry'] ?? '',
