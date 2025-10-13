@@ -29,7 +29,6 @@ if (empty($clientid)) {
 $courseid = optional_param('courseid', null, PARAM_INT);
 $action = optional_param('action', 'list', PARAM_ALPHANUM);
 
-
 global $DB;
 
 $url = new moodle_url('/local/obf/badge.php', array('action' => $action));
@@ -47,10 +46,7 @@ require_capability('local/obf:viewhistory', $context);
 
 $client = obf_client::connect($clientid, $USER);
 
-$search = optional_param('search', null, PARAM_TEXT);
-$searchparams['query'] = $search;
-
-$history = obf_assertion::get_assertions($client, null, null, -1, false, $searchparams);
+$history = obf_assertion::get_assertions_export($client, $courseid);
 
 // CSV output filename.
 $filename = 'badge_history.csv';

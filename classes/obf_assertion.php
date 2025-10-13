@@ -487,6 +487,53 @@ class obf_assertion {
     }
 
     /**
+     * Returns all assertions and recipients for CSV export.
+     *
+     * @param obf_client $client The client instance.
+     * @param  $geteachseparately
+     * @return obf_assertion_collection The assertions.
+     */
+    public static function get_assertions_export($client, $courseid) {
+        $searchparams = array(
+            'api_consumer_id' => OBF_API_CONSUMER_ID,
+            'order_by' => 'asc'
+        );
+
+        if (!empty($courseid)) {
+            $searchparams['log_entry'] = 'course_id:' . (string)$courseid;
+        }
+
+        $historysize = $client->get_assertions_count(null, null, $searchparams);
+
+        $searchparams['limit'] = 1000;
+        $searchparams['offset'] = 0;
+
+        $req_count = 0;
+        $count = 0;
+
+        $out = [];
+        for ($i=0; $i < 1000; $i++) {
+            $res = self::get_assertions($client, null, null, -1, false, $searchparams, true);
+
+            $searchparams['offset'] += $searchparams['limit'];
+
+            $req_count++;
+            $count += count($res);
+
+            $out = array_merge($out, $res);
+
+            if ($count >= $data['total'] || count($data['result']) < $rec_params['limit']) {
+                break;
+            }
+            if ($req_count % 5 === 0) {
+                sleep(1);
+            }
+        }
+
+        return $out;
+    }
+
+    /**
      * Get badge details for an issued badge.
      *
      * @param type $client The client instance.

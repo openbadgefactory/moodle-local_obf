@@ -1023,15 +1023,19 @@ class local_obf_renderer extends plugin_renderer_base {
             $html .= $this->output->notification(get_string('nohistory', 'local_obf'), 'generalbox');
         } else {
             // Export to CSV.
-            $courseid = optional_param('courseid', null, PARAM_INT);
-            $search = optional_param('search', '', PARAM_TEXT);
-            $clientid = optional_param('clientid', null, PARAM_ALPHANUM);
+            $courseid = '';
+            if ($context instanceof context_course) {
+                $courseid = $context->instanceid;
+            }
+            $clientid = $client->client_id();
 
-            $html .= "<form action='export.php?courseid=$courseid' method='post'>";
-            $html .= "<input type='hidden' name='search' value='$search' placeholder='Search'>";
-            $html .= "<input type='hidden' name='clientid' value='$clientid' placeholder='Client id'>";
+            $html .= "<div>";
+            $html .= "<form action='export.php' method='post'>";
+            $html .= "<input type='hidden' name='courseid' value='" . s($courseid) . "' placeholder='Client id'>";
+            $html .= "<input type='hidden' name='clientid' value='" . s($clientid) . "' placeholder='Client id'>";
             $html .= '<button type="submit" class="btn btn-secondary">Export to CSV</button>';
             $html .= '</form>';
+            $html .= '</div>';
 
             // TODO: uncomment this when request with query param is allowed on /v1/event with a search on badge name and description.
             //// Search form.
