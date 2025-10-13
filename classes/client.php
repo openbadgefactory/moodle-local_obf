@@ -563,7 +563,7 @@ class obf_client {
         }
 
         if (!empty($query)) {
-            $params['query'] = $query;
+            $query = mb_strtolower($query);
         }
 
         $badges = []; // Initialize badges array that'll be combined from batches.
@@ -587,7 +587,7 @@ class obf_client {
             }
 
             // Handle the response data to align with badge.php expectations.
-            foreach ($batch as &$badge) {
+            foreach ($batch as $badge) {
                 // Filter badges by categories if categories are provided.
                 if (!empty($categories)) {
                     if (
@@ -602,7 +602,7 @@ class obf_client {
                 if (!empty($query)) {
                     // Filter badges by query, mb_ to support letters with diacritics.
                     $badge_name = mb_strtolower($badge['name'] ?? '');
-                    if (mb_strpos($badge_name, mb_strtolower($query)) === false) {
+                    if (mb_strpos($badge_name, $query) === false) {
                         continue;
                     }
                 }
