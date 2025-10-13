@@ -21,8 +21,14 @@ require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/classes/client.php');
 require_once($CFG->libdir . '/csvlib.class.php');
 
+$clientid = optional_param('clientid', null, PARAM_ALPHANUM);
+if (empty($clientid)) {
+    $clientid = null;
+}
+
 $courseid = optional_param('courseid', null, PARAM_INT);
 $action = optional_param('action', 'list', PARAM_ALPHANUM);
+
 
 global $DB;
 
@@ -35,9 +41,11 @@ if (empty($courseid)) {
     require_login($courseid);
 }
 
-// Retrieve history data from the form.
-$clientid = optional_param('clientid', null, PARAM_ALPHANUM);
-$client = obf_client::connect($clientid);
+$context = empty($courseid) ? context_system::instance() : context_course::instance($courseid);
+
+require_capability('local/obf:viewhistory', $context);
+
+$client = obf_client::connect($clientid, $USER);
 
 $search = optional_param('search', null, PARAM_TEXT);
 $searchparams['query'] = $search;
@@ -64,6 +72,7 @@ foreach ($history as $assertion) {
     $users = $history->get_assertion_users($assertion);
     $logs = $assertion->get_log_entry('course_id');
     $courses = '';
+    $coursefullname = '';
     if (!empty($logs)) {
         $course = $DB->get_record('course', array('id' => $courseid), '*');
         if (is_bool($course)) {
