@@ -42,6 +42,11 @@ On the API key page click on `Generate new client secret` for OAuth2 Client Cred
 Changelog
 ------------------
 
+1.1.3
+
+- CSV export fixes
+- Debug notice error fixes
+
 1.1.2
 
 - Removed the possibility to create new API connections with a legacy key.
