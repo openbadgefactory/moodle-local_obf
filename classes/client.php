@@ -1025,6 +1025,11 @@ class obf_client {
         // $total = $recipients_data['total'] ?? 0;
         // } while (count($recipients) < $total);
 
+        $log_entry = [];
+        if (!empty($event['log_entry'])) {
+            $log_entry = json_decode($event['log_entry'], true);
+        }
+
         /** Handle data to respond v1 specs */
         return [
             'id' => $event['id'] ?? '',
@@ -1041,7 +1046,7 @@ class obf_client {
             'client_id' => $this->client_id(),
             'client_alias' => $event['client_alias_id'] ?? '',
             'api_consumer_id' => $event['api_consumer_id'] ?? '',
-            'log_entry' => $event['log_entry'] ?? '',
+            'log_entry' => $log_entry ?? [],
             'earnable_application_id' => $event['earnable_application_id'] ?? '',
             'email_subject' => $event['email_message']['subject'] ?? '',
             'email_body' => $event['email_message']['body'] ?? '',
