@@ -416,25 +416,45 @@ class local_obf_renderer extends plugin_renderer_base {
      * @param obf_client $client
      * @param obf_badge $badge
      * @param context $context
-     * @param string $tab
      * @param int $page
      * @param string $message
      * @return string
      */
-    public function page_badgedetails(obf_client $client, obf_badge $badge, context $context, $page = 0,
-        $message = '', $onlydetailstab = null) {
-
+    public function page_badgedetails(obf_client $client, obf_badge $badge, context $context, $page = 0, $message = '', $onlydetailstab = null) {
         $html = '';
 
-        if (!method_exists($this, $rendererfunction)) {
-            $html .= $this->output->notification(get_string('invalidtab', 'local_obf'));
-        } else {
-            if (!empty($message)) {
-                $html .= $this->output->notification($message, 'notifysuccess');
-            }
+        if (!empty($message)) {
+            $html .= $this->output->notification($message, 'notifysuccess');
+        }
 
-            $html .= $this->print_badge_tabs($badge, $context, $tab, $onlydetailstab);
-            $html .= $this->print_badge_info_details($client, $badge, $context, $page);
+        $html .= $this->print_badge_tabs($badge, $context, 'details', $onlydetailstab);
+        $html .= $this->print_badge_info_details($client, $badge, $context, $page);
+
+        return $html;
+    }
+
+    /**
+     * Renders the page with the badge awarding rules.
+     *
+     * @param obf_client $client
+     * @param obf_badge $badge
+     * @param context $context
+     * @param string $message
+     * @return string
+     */
+    public function page_badgecriteria(obf_client $client, obf_badge $badge, context $context, $message = '', $onlydetailstab = null) {
+        $html = '';
+
+        if (!empty($message)) {
+            $html .= $this->output->notification($message, 'notifysuccess');
+        }
+
+        $html .= $this->print_badge_tabs($badge, $context, 'criteria', $onlydetailstab);
+
+        if ($context instanceof context_course) {
+            $html .= $this->render_badge_criteria_course($badge, $context->instanceid);
+        } else {
+            $html .= $this->render_badge_criteria_site($badge);
         }
 
         return $html;

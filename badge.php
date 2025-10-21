@@ -203,6 +203,8 @@ switch ($action) {
 
             case 'criteria':
                 // Badge criteria.
+                $content .= $PAGE->get_renderer('local_obf')->page_badgecriteria($client, $badge, $context, $message);
+                break;
             case 'history':
                 // Badge issuance history.
                 try {
@@ -218,7 +220,9 @@ switch ($action) {
 
                     $history = obf_assertion::get_assertions($client, null, null, -1, false, $searchparams);
 
-                    $content .= $PAGE->get_renderer('local_obf')->print_issuing_history($client, $badge, $context, $historysize, $page, $history);
+                    $renderer = $PAGE->get_renderer('local_obf');
+                    $content .= $renderer->print_badge_tabs($badge, $context, 'history');
+                    $content .= $renderer->print_issuing_history($client, $badge, $context, $historysize, $page, $history);
                 } catch (Exception $e) {
                     $content .= $OUTPUT->notification($e->getMessage());
                 }
