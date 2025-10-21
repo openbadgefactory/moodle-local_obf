@@ -46,6 +46,10 @@ class certificate_expiration_reminder extends \core\task\scheduled_task {
         require_once($CFG->libdir . '/datalib.php');
 
         $certexpiresin = obf_client::get_instance()->get_certificate_expiration_date();
+        if (!$certexpiresin) {
+            return true;
+        }
+
         $diff = $certexpiresin - time();
         $days = floor($diff / (60 * 60 * 24));
 
