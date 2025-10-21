@@ -334,8 +334,6 @@ class obf_badge {
             if (isset($arr['email_link_text'])) {
                 $email->set_link_text($arr['email_link_text']);
             }
-
-            $email->save($DB);
         }
 
         if (!is_null($email)) {
