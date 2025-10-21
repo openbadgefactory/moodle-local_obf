@@ -1472,7 +1472,7 @@ class obf_client {
             $res = $this->request('get', $url, $params);
             return json_decode($res, true);
         } catch (Exception $e) {
-            debugging('');
+            debugging('request failed: GET ' . $url);
         }
     }
 

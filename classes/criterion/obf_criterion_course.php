@@ -376,7 +376,7 @@ class obf_criterion_course extends obf_criterion_item {
         $this->save();
 
         if (!property_exists($this, 'optionalparams') || !property_exists($this, 'requiredparam')) {
-            debugging('No optionalparams or requiredparams, exiting. ' . var_export(get_class($this), true));
+            //debugging('No optionalparams or requiredparams, exiting. ' . var_export(get_class($this), true));
             return;
         }
 
