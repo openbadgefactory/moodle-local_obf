@@ -18,7 +18,7 @@
  * OBF Client.
  *
  * @package    local_obf
- * @copyright  2013-2021, Open Badge Factory Oy
+ * @copyright  2013-2025, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -790,7 +790,8 @@ class obf_client {
      * @param array $params Optional extra params for the query.
      * @return array The event data.
      */
-    public function get_assertions($badgeid = null, $email = null, $params = array(), $include_recipients = false) {
+    public function get_assertions($badgeid = null, $email = null, $params = array(), $include_recipients = true) {
+
         if (is_null($badgeid) && !is_null($email)) {
             return array();
         }
@@ -805,43 +806,81 @@ class obf_client {
             $params['email'] = $email;
         }
 
-        /** Get badge issuing data. */
-        $url = $this->obf_url() . '/v2/event/' . $this->client_id();
-        $res = $this->request('get', $url, $params);
-        $data = json_decode($res, true);
-
         /** Build the output array from the two requests to match the V1 output. */
-        $rec_begin = 0;
+        $rec_begin = time();
         $rec_end = 0;
         $out = [];
-        foreach ($data['result'] ?? [] as $event) {
-            $log_entry = [];
-            if (!empty($event['log_entry'])) {
-                $log_entry = json_decode($event['log_entry'], true);
+
+        $paginated = false;
+        $max_get = 1000;
+        if (isset($params['limit']) || isset($params['offset'])) {
+            $max_get = 1;
+            $paginated = true;
+        }
+        else {
+            $params['limit'] = 1000;
+            $params['offset'] = 0;
+        }
+
+        $req_count = 0;
+        $count = 0;
+
+        for ($i=0; $i < $max_get; $i++) {
+
+            /** Get badge issuing data. */
+            $url = $this->obf_url() . '/v2/event/' . $this->client_id();
+            $res = $this->request('get', $url, $params);
+            $data = json_decode($res, true);
+
+            if (!isset($data['result'])) {
+                break;
             }
 
-            $out[] = array(
-                'id' => $event['id'],
-                'name' => $event['name'] ?? '',
-                'recipient' => [],
-                'recipient_count' => $event['recipient_count'],
-                'issued_on' => $event['issued_on'] ?? null,
-                'badge_id' => $event['badge_id'] ?? null,
-                'expires' => $event['expires_on'] ?? null,
-                'revoked' => [],
-                'log_entry' => $log_entry ?? [],
-                'timestamp' => $event['ctime'] ?? null,
-            );
+            $params['offset'] += $params['limit'];
 
-            $rec_begin = min($rec_begin, $event['ctime']);
-            $rec_end = max($rec_end, $event['ctime']);
+            foreach ($data['result'] ?? [] as $event) {
+                $log_entry = [];
+                if (!empty($event['log_entry'])) {
+                    $log_entry = json_decode($event['log_entry'], true);
+                }
+
+                $out[] = array(
+                    'id' => $event['id'],
+                    'name' => $event['name'] ?? '',
+                    'recipient' => [],
+                    'recipient_count' => $event['recipient_count'],
+                    'issued_on' => $event['issued_on'] ?? null,
+                    'badge_id' => $event['badge_id'] ?? null,
+                    'expires' => $event['expires_on'] ?? null,
+                    'revoked' => [],
+                    'log_entry' => $log_entry ?? [],
+                    'timestamp' => $event['ctime'] ?? null,
+                );
+
+                $rec_begin = min($rec_begin, $event['ctime']);
+                $rec_end = max($rec_end, $event['ctime']);
+            }
+
+            $req_count++;
+            $count += count($data['result']);
+
+            if ($count >= $data['total'] || count($data['result']) < $params['limit']) {
+                break;
+            }
+            if ($req_count % 5 === 0) {
+                sleep(1);
+            }
         }
 
         if (!empty($out) && $include_recipients) {
             $recipients = [];
+            $revoked = [];
             $rec_params = $params;
-            $rec_params['begin'] = $rec_begin - 1;
-            $rec_params['end'] = $rec_end + 1;
+            if ($paginated) {
+                // Event results are paginated, limit recipient list by time range.
+                $rec_params['begin'] = $rec_begin - 1;
+                $rec_params['end'] = $rec_end + 1;
+            }
             $rec_params['limit'] = 1000;
             $rec_params['offset'] = 0;
 
@@ -850,17 +889,29 @@ class obf_client {
 
             $url = $this->obf_url() . '/v2/event/' . $this->client_id() . '/recipient';
             for ($i=0; $i < 1000; $i++) {
+
                 $res = $this->request('get', $url, $rec_params);
                 $data = json_decode($res, true);
 
-                $rec_params['offset'] += $rec_params['limit'];
-
-                if (!isset($recipients[$data['result']['event_id']])) {
-                    $recipients[$data['result']['event_id']] = [];
+                if (!isset($data['result'])) {
+                    break;
                 }
 
+                $rec_params['offset'] += $rec_params['limit'];
+
                 foreach ($data['result'] as $r) {
-                    $recipients[$data['result']['event_id']][] = $r['email'];
+                    if (!isset($recipients[$r['event_id']])) {
+                        $recipients[$r['event_id']] = [];
+                    }
+                    if (!isset($revoked[$r['event_id']])) {
+                        $revoked[$r['event_id']] = [];
+                    }
+
+                    $recipients[$r['event_id']][] = $r['email'];
+
+                    if ($r['revoked']) {
+                        $revoked[$r['event_id']][$r['email']] = 1;
+                    }
                 }
 
                 $req_count++;
@@ -876,6 +927,7 @@ class obf_client {
 
             foreach ($out as &$o) {
                 $o['recipient'] = $recipients[$o['id']] ?? [];
+                $o['revoked'] = $revoked[$o['id']] ?? [];
             }
         }
 
@@ -925,11 +977,6 @@ class obf_client {
     public function get_recipient_assertions($email, $params = array()) {
         global $DB;
 
-        if ($this->local_events()) {
-            $params['api_consumer_id'] = OBF_API_CONSUMER_ID;
-        }
-        $params['email'] = $email;
-
         $this->eventlookup = [];
 
         $prevo2 = $this->oauth2;
@@ -941,47 +988,13 @@ class obf_client {
             // Iterate through all OAuth2 clients.
             foreach ($oauth2 as $o2) {
                 $this->set_oauth2($o2);
-
                 $host = $this->obf_url();
-                $url = $host . '/v2/event/' . $this->client_id();
-                $limit  = 1000;
-                $offset = 0;
-
-                // Fetch events in batches until all events are retrieved.
-                do {
-                    $query = $params;
-                    $query['limit'] = $limit;
-                    $query['offset'] = $offset;
-
-                    $res = $this->request('get', $url, $query);
-
-                    $data = json_decode($res, true);
-                    if (!is_array($data) || !isset($data['result'])) {
-                        break; // No results or invalid response.
-                    }
-
-                    // Map the results to the output format.
-                    foreach ($data['result'] as $event) {
-                        // Saving host for pub_get_badge to use.
-                        $this->eventlookup[$event['id']] = ['host' => $host];
-                        $out[] = array(
-                            'id' => $event['id'],
-                            'badge_id' => $event['badge_id'] ?? null,
-                            'name' => $event['name'] ?? '',
-                            'issued_on' => $event['issued_on'] ?? null,
-                            'expires' => $event['expires_on'] ?? null,
-                            'timestamp' => $event['mtime'] ?? $event['ctime'] ?? null,
-                            'recipient_count' => $event['recipient_count'] ?? 0,
-                            // V1 compatibility.
-                            'recipient' => [],
-                            'revoked' => [],
-                            'log_entry' => [],
-                        );
-                    }
-
-                    $offset += $limit;
-                    $total = $data['total'] ?? 0;
-                } while ($offset < $total);
+                $res = $this->get_assertions(null, $email, $params);
+                foreach ($res as $r) {
+                    // Saving host for pub_get_badge to use.
+                    $this->eventlookup[$r['id']] = ['host' => $host];
+                    $out[] = $r;
+                }
             }
         }
         $this->set_oauth2($prevo2);

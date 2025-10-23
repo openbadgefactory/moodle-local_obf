@@ -380,7 +380,7 @@ class obf_assertion {
      * @return obf_assertion_collection The assertions.
      */
     public static function get_assertions(obf_client $client, obf_badge $badge = null, $email = null, $limit = -1,
-        $geteachseparately = false, $searchparams = array(), $include_recipients = false) {
+        $geteachseparately = false, $searchparams = array(), $include_recipients = true) {
         $badgeid = is_null($badge) ? null : $badge->get_id();
         $arr = $client->get_assertions($badgeid, $email, $searchparams, $include_recipients);
 
@@ -613,7 +613,7 @@ class obf_assertion {
      * @param boolean $include_recipients
      * @return obf_assertion_collection The related assertions.
      */
-    public static function get_badge_assertions(obf_badge $badge, obf_client $client, $include_recipients) {
+    public static function get_badge_assertions(obf_badge $badge, obf_client $client, $include_recipients = true) {
         return self::get_assertions($client, $badge, null, -1, false, array(), $include_recipients);
     }
 

@@ -529,7 +529,7 @@ class obf_badge {
      * @return obf_assertion_collection The assertions.
      */
     public function get_assertions() {
-        return obf_assertion::get_badge_assertions($this, $this->get_client(), false);
+        return obf_assertion::get_badge_assertions($this, $this->get_client(), true);
     }
 
     /**
