@@ -16,9 +16,11 @@
 
 use classes\obf_assertion;
 use classes\obf_client;
+use classes\obf_badge;
 
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/classes/client.php');
+require_once(__DIR__ . '/classes/badge.php');
 require_once($CFG->libdir . '/csvlib.class.php');
 
 $clientid = optional_param('clientid', null, PARAM_ALPHANUM);
@@ -26,8 +28,10 @@ if (empty($clientid)) {
     $clientid = null;
 }
 
+$badgeid = optional_param('badgeid', null, PARAM_ALPHANUM);
 $courseid = optional_param('courseid', null, PARAM_INT);
 $action = optional_param('action', 'list', PARAM_ALPHANUM);
+
 
 global $DB;
 
@@ -46,7 +50,24 @@ require_capability('local/obf:viewhistory', $context);
 
 $client = obf_client::connect($clientid, $USER);
 
-$history = obf_assertion::get_assertions_export($client, $courseid);
+$badge = empty($badgeid) ? null : obf_badge::get_instance($badgeid);
+
+
+$searchparams = array(
+    'api_consumer_id' => OBF_API_CONSUMER_ID,
+    'order_by' => 'asc'
+);
+
+if (!empty($courseid)) {
+    $searchparams['log_entry'] = 'course_id:' . (string)$courseid;
+}
+
+$badgeid = is_null($badge) ? null : $badge->get_id();
+if (!empty($badgeid)) {
+    $searchparams['badge_id'] = $badgeid;
+}
+
+$history = obf_assertion::get_assertions($client, $badge, null, -1, false, $searchparams);
 
 // CSV output filename.
 $filename = 'badge_history.csv';
@@ -107,5 +128,3 @@ foreach ($history as $assertion) {
 
 // Close the CSV file.
 $csvfile->download_file();
-
-redirect($url);

@@ -1051,8 +1051,11 @@ class local_obf_renderer extends plugin_renderer_base {
 
             $html .= "<div>";
             $html .= "<form action='export.php' method='post'>";
-            $html .= "<input type='hidden' name='courseid' value='" . s($courseid) . "' placeholder='Client id'>";
-            $html .= "<input type='hidden' name='clientid' value='" . s($clientid) . "' placeholder='Client id'>";
+            $html .= "<input type='hidden' name='courseid' value='" . s($courseid) . "'>";
+            $html .= "<input type='hidden' name='clientid' value='" . s($clientid) . "'>";
+            if ($badge != null) {
+                $html .= "<input type='hidden' name='badgeid' value='" . s($badge->get_id()) . "'>";
+            }
             $html .= '<button type="submit" class="btn btn-secondary">Export to CSV</button>';
             $html .= '</form>';
             $html .= '</div>';
