@@ -1174,14 +1174,10 @@ class local_obf_renderer extends plugin_renderer_base {
             $courses = 'Manual issuing';
         }
 
-        // Show recipient_count in Recipient(s) column
-        if (method_exists($assertion, 'get_recipient_count') && $assertion->get_recipient_count() !== null) {
-            $count = $assertion->get_recipient_count();
-            if (is_numeric($count)) {
-                $recipienthtml .= html_writer::tag('p',
-                    get_string('historyrecipients', 'local_obf', $count));
-            }
-        } else if (count($users) > 1) {
+        if (!$users || count($users) === 0) {
+            $recipienthtml .= html_writer::tag('p', '-');
+        }
+        else if (count($users) > 1) {
             $recipienthtml .= html_writer::tag('p', get_string('historyrecipients', 'local_obf', count($users)),
                 array('title' => $this->render_userlist($users, false)));
         } else {
@@ -1273,10 +1269,12 @@ class local_obf_renderer extends plugin_renderer_base {
      * @return string User list as HTML
      */
     private function render_userlist(array $users, $addlinks = true) {
+        if (count($users) === 1 && is_string($users[0]) && $users[0] === 'userremoved') {
+            return '-';
+        }
+
         $userlist = array();
-
         foreach ($users as $user) {
-
 
             if (is_string($user)) {
                 if ($user == 'userremoved') {
