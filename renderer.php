@@ -312,7 +312,9 @@ class local_obf_renderer extends plugin_renderer_base {
                     if ($user instanceof stdClass) {
                         return fullname($user);
                     }
-
+                    if ($user == 'userremoved') {
+                        return '[' . get_string('userremoved', 'local_obf') . ']';
+                    }
                     return $user;
                 }, $users));
             }
@@ -333,7 +335,7 @@ class local_obf_renderer extends plugin_renderer_base {
                     'offset' => $nextoffset,
                     'clientid' => $assertion->get_client_id()
                 ]);
-                $link = html_writer::link($loadmoreurl, get_string('loadmorerecipients', 'local_obf'));               
+                $link = html_writer::link($loadmoreurl, get_string('loadmorerecipients', 'local_obf'));
                 $assertionitems[get_string('recipients', 'local_obf')] .= html_writer::div($link, 'recipient-loadmore');
             }
         }
@@ -1080,7 +1082,7 @@ class local_obf_renderer extends plugin_renderer_base {
             //$html .= '</form>';
 
             // Paging settings.
-            $perpage = 10;
+            $perpage = 20;
 
             if ($PAGE->pagetype == 'local-obf-courseuserbadges') {
                 $path = '/local/obf/courseuserbadges.php';
@@ -1180,8 +1182,8 @@ class local_obf_renderer extends plugin_renderer_base {
         if (!$users || count($users) === 0) {
             $recipienthtml .= html_writer::tag('p', '-');
         }
-        else if (count($users) > 1) {
-            $recipienthtml .= html_writer::tag('p', get_string('historyrecipients', 'local_obf', count($users)),
+        else if ($assertion->get_recipient_count() > 1) {
+            $recipienthtml .= html_writer::tag('p', get_string('historyrecipients', 'local_obf', $assertion->get_recipient_count()),
                 array('title' => $this->render_userlist($users, false)));
         } else {
             $recipienthtml .= $this->render_userlist($users);

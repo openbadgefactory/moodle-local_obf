@@ -91,16 +91,16 @@ switch ($action) {
 
         $searchparams = array(
             'api_consumer_id' => OBF_API_CONSUMER_ID,
-            'log_entry' => 'course_id:' . (string)$courseid
+            'log_entry' => 'course_id:' . (string)$courseid,
+            'limit' => 20,
+            'offset' => $currpage * 20,
+            'order_by' => 'asc'
         );
 
-        $historysize = $client->get_assertions_count(null, null, $searchparams);
-
-        $searchparams['limit'] = 10;
-        $searchparams['offset'] = $currpage * 10;
-        $searchparams['order_by'] = 'asc';
-
         $history = obf_assertion::get_assertions($client, null, null, -1, false, $searchparams);
+
+        $historysize = $history->get_total();
+
         $content  = $PAGE->get_renderer('local_obf')->render_client_selector($url, $clientid);
         $content .= $PAGE->get_renderer('local_obf')->print_issuing_history($client, $badge, $context, $historysize, $currpage, $history);
         break;

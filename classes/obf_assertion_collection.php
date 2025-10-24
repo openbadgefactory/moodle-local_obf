@@ -51,6 +51,11 @@ class obf_assertion_collection implements Countable, IteratorAggregate {
     private $assertions = array();
 
     /**
+     * @var int $total total number of items for pagination.
+     */
+    private $total = 0;
+
+    /**
      * Assertion recipients mapped as Moodle users
      *
      * @var array
@@ -61,9 +66,11 @@ class obf_assertion_collection implements Countable, IteratorAggregate {
      * Class constructor.
      *
      * @param obf_assertion[] $assertions The assertions.
+     * @param int $total total number of items for pagination.
      */
-    public function __construct(array $assertions = array()) {
+    public function __construct(array $assertions = array(), int $total = 0) {
         $this->assertions = $assertions;
+        $this->total = $total;
     }
 
     /**
@@ -188,6 +195,10 @@ class obf_assertion_collection implements Countable, IteratorAggregate {
 
     public function get_assertions() {
         return $this->assertions;
+    }
+
+    public function get_total() {
+        return $this->total;
     }
 
     /**

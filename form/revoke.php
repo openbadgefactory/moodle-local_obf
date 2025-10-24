@@ -52,6 +52,9 @@ class obf_revoke_form extends local_obf_form_base {
 
         foreach ($users as $user) {
             if ($user == 'userremoved') {
+                if (!$showrevoke) {
+                    $mform->addElement('html', html_writer::tag('li', '[' . get_string('userremoved', 'local_obf') . ']'));
+                }
                 continue;
             } else {
                 $anyuser = true;

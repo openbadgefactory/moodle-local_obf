@@ -855,6 +855,7 @@ class obf_client {
                     'revoked' => [],
                     'log_entry' => $log_entry ?? [],
                     'timestamp' => $event['ctime'] ?? null,
+                    '_total' => $data['total']
                 );
 
                 $rec_begin = min($rec_begin, $event['ctime']);

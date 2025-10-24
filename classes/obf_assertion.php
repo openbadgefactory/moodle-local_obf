@@ -391,6 +391,7 @@ class obf_assertion {
             $collection->populate(true);
         }
 
+        $total = 0;
         if (is_array($arr)) {
             foreach ($arr as $item) {
                 if (!is_null($badge)) {
@@ -422,6 +423,9 @@ class obf_assertion {
                     if (array_key_exists('revoked', $item)) {
                         $assertion->set_revoked($item['revoked']);
                     }
+                    if ($total == 0 && isset($item['_total'])) {
+                        $total = $item['_total'];
+                    }
                     $assertions[] = $assertion;
                 }
 
@@ -439,7 +443,7 @@ class obf_assertion {
             $assertions = array_slice($assertions, 0, $limit);
         }
 
-        return new obf_assertion_collection($assertions);
+        return new obf_assertion_collection($assertions, $total);
     }
 
     /**
