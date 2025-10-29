@@ -46,6 +46,8 @@ if (empty($courseid)) {
 
 $context = empty($courseid) ? context_system::instance() : context_course::instance($courseid);
 
+$PAGE->set_context($context);
+
 require_capability('local/obf:viewhistory', $context);
 
 $client = obf_client::connect($clientid, $USER);
