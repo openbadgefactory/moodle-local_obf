@@ -652,7 +652,7 @@ class obf_client {
      */
     public function get_assertions($badgeid = null, $email = null, $params = array()) {
 
-        if (is_null($badgeid) && !is_null($email)) {
+        if (is_null($badgeid) && !empty($email)) {
             return array();
         }
         if ($this->local_events()) {
@@ -681,6 +681,10 @@ class obf_client {
      */
     public function get_assertions_all($email, $params = array()) {
         global $DB;
+
+        if (empty($email)) {
+            return array();
+        }
 
         if ($this->local_events()) {
             $params['api_consumer_id'] = OBF_API_CONSUMER_ID;
