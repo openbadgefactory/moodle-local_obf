@@ -792,17 +792,13 @@ class obf_client {
      */
     public function get_assertions($badgeid = null, $email = null, $params = array(), $include_recipients = true) {
 
-        if (is_null($badgeid) && !empty($email)) {
-            return array();
-        }
-
         if ($this->local_events()) {
             $params['api_consumer_id'] = OBF_API_CONSUMER_ID;
         }
-        if (!is_null($badgeid)) {
+        if (!empty($badgeid)) {
             $params['badge_id'] = $badgeid;
         }
-        if (!is_null($email) && $email != "") {
+        if (!empty($email)) {
             $params['email'] = $email;
         }
 
@@ -822,7 +818,6 @@ class obf_client {
             $params['offset'] = 0;
         }
 
-        $req_count = 0;
         $count = 0;
 
         for ($i=0; $i < $max_get; $i++) {
@@ -862,15 +857,13 @@ class obf_client {
                 $rec_end = max($rec_end, $event['ctime']);
             }
 
-            $req_count++;
             $count += count($data['result']);
 
             if ($count >= $data['total'] || count($data['result']) < $params['limit']) {
                 break;
             }
-            if ($req_count % 5 === 0) {
-                sleep(1);
-            }
+
+            usleep(100000);
         }
 
         if (!empty($out) && $include_recipients) {
@@ -885,7 +878,6 @@ class obf_client {
             $rec_params['limit'] = 1000;
             $rec_params['offset'] = 0;
 
-            $req_count = 0;
             $count = 0;
 
             $url = $this->obf_url() . '/v2/event/' . $this->client_id() . '/recipient';
@@ -915,15 +907,13 @@ class obf_client {
                     }
                 }
 
-                $req_count++;
                 $count += count($data['result']);
 
                 if ($count >= $data['total'] || count($data['result']) < $rec_params['limit']) {
                     break;
                 }
-                if ($req_count % 5 === 0) {
-                    sleep(1);
-                }
+
+                usleep(100000);
             }
 
             foreach ($out as &$o) {
@@ -944,9 +934,6 @@ class obf_client {
      * @return int result count.
      */
     public function get_assertions_count($badgeid = null, $email = null, $params = array()) {
-        if (is_null($badgeid) && !is_null($email)) {
-            return 0;
-        }
         if ($this->local_events()) {
             $params['api_consumer_id'] = OBF_API_CONSUMER_ID;
         }
