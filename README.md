@@ -42,6 +42,11 @@ On the API key page click on `Generate new client secret` for OAuth2 Client Cred
 Changelog
 ------------------
 
+1.1.4
+
+- Privacy API fixes
+- Minor bug fixes and improvements
+
 1.1.3
 
 - CSV export fixes
