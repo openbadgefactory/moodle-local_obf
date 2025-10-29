@@ -1338,6 +1338,8 @@ class local_obf_renderer extends plugin_renderer_base {
      */
     public function print_badge_tabs($badge, context $context, $selectedtab = 'details', $onlydetailstab = null) {
 
+        $tabdata = array();
+
         if ($onlydetailstab != 1) {
             $tabdata = array('details', 'criteria');
         }

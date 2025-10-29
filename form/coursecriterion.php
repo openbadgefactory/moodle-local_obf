@@ -48,10 +48,16 @@ class obf_coursecriterion_form extends local_obf_form_base {
      * @var course Course criterion belogns to
      */
     private $course;
+
     /**
-     * @var mixed criterion_item
+     * @var obf_criterion_course Course criterion object
      */
     private $criterioncourse;
+
+    /**
+     * @var obf_criterion Criterion object
+     */
+    private $criterion;
 
     /**
      * Defines forms elements

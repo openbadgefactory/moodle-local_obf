@@ -35,6 +35,7 @@ class provider implements
     \core_privacy\local\metadata\provider,
     \core_privacy\local\request\data_provider,
     \core_privacy\local\request\plugin\provider,
+    \core_privacy\local\request\core_userlist_provider,
     \core_privacy\local\request\user_preference_provider {
 
     /**
@@ -143,6 +144,9 @@ class provider implements
             'privacy:metadata:remote_data'
         );
 
+        // Add user preferences
+        $collection->add_user_preference('badgesonprofile', 'showbadgesonmyprofile');
+
         return $collection;
     }
 
@@ -232,6 +236,90 @@ class provider implements
     }
 
     /**
+     * Get the list of users who have data within a context.
+     *
+     * @param userlist $userlist The userlist containing the list of users who have data in this context/plugin combination.
+     */
+    public static function get_users_in_context(userlist $userlist) {
+        $context = $userlist->get_context();
+
+        if ($context->contextlevel == CONTEXT_SYSTEM) {
+            $params = [];
+
+            $sql = "SELECT user_id FROM {local_obf_criterion_met}";
+            $userlist->add_from_sql('user_id', $sql, $params);
+
+            $sql = "SELECT user_id FROM {local_obf_backpack_emails}";
+            $userlist->add_from_sql('user_id', $sql, $params);
+
+            $sql = "SELECT user_id FROM {local_obf_user_preferences}";
+            $userlist->add_from_sql('user_id', $sql, $params);
+
+            $sql = "SELECT user_id FROM {local_obf_user_emails}";
+            $userlist->add_from_sql('user_id', $sql, $params);
+
+            $sql = "SELECT user_id FROM {local_obf_badge_blacklists}";
+            $userlist->add_from_sql('user_id', $sql, $params);
+
+            $sql = "SELECT user_id FROM {local_obf_issue_events}";
+            $userlist->add_from_sql('user_id', $sql, $params);
+
+            $sql = "SELECT user_id FROM {local_obf_history_emails}";
+            $userlist->add_from_sql('user_id', $sql, $params);
+
+        }
+        else if ($context->contextlevel == CONTEXT_COURSE) {
+
+            $params = [
+                'courseid'  => $context->instanceid
+            ];
+
+            $sql =
+               "SELECT user_id FROM {local_obf_criterion_met} cm
+                INNER JOIN {local_obf_criterion_courses} cc ON cm.obf_criterion_id = cc.obf_criterion_id
+                WHERE cc.courseid = :courseid";
+
+            $userlist->add_from_sql('user_id', $sql, $params);
+
+            $sql =
+               "SELECT user_id FROM {local_obf_issue_events} e
+                INNER JOIN {local_obf_criterion_courses} cc ON e.obf_criterion_id = cc.obf_criterion_id
+                WHERE cc.courseid = :courseid";
+
+            $userlist->add_from_sql('user_id', $sql, $params);
+        }
+        else if ($context->contextlevel == CONTEXT_USER) {
+
+            $params = [
+                'instanceid' => $context->instanceid
+            ];
+
+            $sql = "SELECT user_id FROM {local_obf_criterion_met} WHERE user_id = :instanceid";
+            $userlist->add_from_sql('user_id', $sql, $params);
+
+            $sql = "SELECT user_id FROM {local_obf_backpack_emails} WHERE user_id = :instanceid";
+            $userlist->add_from_sql('user_id', $sql, $params);
+
+            $sql = "SELECT user_id FROM {local_obf_user_preferences} WHERE user_id = :instanceid";
+            $userlist->add_from_sql('user_id', $sql, $params);
+
+            $sql = "SELECT user_id FROM {local_obf_user_emails} WHERE user_id = :instanceid";
+            $userlist->add_from_sql('user_id', $sql, $params);
+
+            $sql = "SELECT user_id FROM {local_obf_badge_blacklists} WHERE user_id = :instanceid";
+            $userlist->add_from_sql('user_id', $sql, $params);
+
+            $sql = "SELECT user_id FROM {local_obf_issue_events} WHERE user_id = :instanceid";
+            $userlist->add_from_sql('user_id', $sql, $params);
+
+            $sql = "SELECT user_id FROM {local_obf_history_emails} WHERE user_id = :instanceid";
+            $userlist->add_from_sql('user_id', $sql, $params);
+
+        }
+    }
+
+
+    /**
      * Delete all data for all users in the specified context.
      *
      * @param context $context The specific context to delete data for.
@@ -257,6 +345,18 @@ class provider implements
         $userid = $contextlist->get_user()->id;
 
         static::delete_user_data($userid);
+    }
+
+    /**
+     * Delete multiple users within a single context.
+     *
+     * @param approved_userlist $userlist The approved user information to delete information for.
+     */
+    public static function delete_data_for_users(approved_userlist $userlist) {
+        $users = $userlist->get_userids();
+        foreach ($users as $userid) {
+            static::delete_user_data($userid);
+        }
     }
 
     private static function delete_user_data($userid) {

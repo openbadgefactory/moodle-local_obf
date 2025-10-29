@@ -792,7 +792,7 @@ class obf_client {
      */
     public function get_assertions($badgeid = null, $email = null, $params = array(), $include_recipients = true) {
 
-        if (is_null($badgeid) && !is_null($email)) {
+        if (is_null($badgeid) && !empty($email)) {
             return array();
         }
 
@@ -977,6 +977,10 @@ class obf_client {
      */
     public function get_recipient_assertions($email, $params = array()) {
         global $DB;
+
+        if (empty($email)) {
+            return array();
+        }
 
         $this->eventlookup = [];
 
