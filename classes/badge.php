@@ -26,7 +26,6 @@ namespace classes;
 
 use classes\criterion\obf_criterion;
 use classes\criterion\obf_criterion_activity;
-use classes\criterion\obf_criterion_course;
 use context_course;
 use context_system;
 use dml_exception;
@@ -510,7 +509,7 @@ class obf_badge {
         // Get the selected issuer from the form: null = not provided; '' = main organisation
         $clientaliasid = $this->alias_id;
 
-        // If courseid but no clientaliasid, get POST field first, then try DB
+        // If clientaliasid is not set, try getting it from the criterion params.
         if ($clientaliasid === null && $course !== null && !empty($items)) {
             // either obf_criterion_course or obf_criterion_activity
             $params = $items[0]->get_params();
