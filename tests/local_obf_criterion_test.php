@@ -127,6 +127,7 @@ class local_obf_criterion_testcase extends advanced_testcase {
         $this->resetAfterTest();
         $curl = obf_mock_curl::get_mock_curl($this);
         set_config('obfclientid', 'PHPUNIT', 'local_obf');
+
         $client = obf_client::get_instance($curl);
         $client->set_transport($curl);
         $user = $this->getDataGenerator()->create_user();
@@ -134,8 +135,6 @@ class local_obf_criterion_testcase extends advanced_testcase {
         $badge = new obf_badge();
         $badge->set_image(obf_mock_curl::$emptypngdata);
         $badge->set_id('TESTBADGE');
-        obf_mock_curl::add_get_badge($this, $curl, 'PHPUNIT', $badge);
-        $client->get_badge($badge->get_id());
 
         $criterion = new obf_criterion();
         $criterion->set_badge($badge);

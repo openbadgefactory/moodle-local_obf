@@ -141,4 +141,24 @@ class obf_mock_curl {
         $curl->rawresponse = array('Location: https://localhost.localdomain/v1/event/PHPUNIT/PHPUNITEVENTID');
 
     }
+
+    /**
+     * Create mock token for oauth2.
+     */
+    public static function mock_oauth2_db() {
+        global $DB;
+
+        $row = array_merge([
+            'obf_url'       => 'https://example.test',
+            'client_id'     => 'PHPUNIT',
+            'client_secret' => 'SECRET',
+            'access_token'  => 'MOCK_ACCESS_TOKEN',
+            'refresh_token' => 'MOCK_REFRESH_TOKEN',
+            'token_expires' => time() + 3600,
+        ]);
+
+        // Make sure there is only one row.
+        $DB->delete_records('local_obf_oauth2', []);
+        $DB->insert_record('local_obf_oauth2', $row);
+    }
 }
