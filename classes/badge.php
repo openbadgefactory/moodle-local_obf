@@ -26,6 +26,7 @@ namespace classes;
 
 use classes\criterion\obf_criterion;
 use classes\criterion\obf_criterion_activity;
+use classes\criterion\obf_criterion_course;
 use context_course;
 use context_system;
 use dml_exception;
@@ -149,6 +150,24 @@ class obf_badge {
      * @var string Primary language.
      */
     private $primarylanguage = '';
+
+    /**
+     * @var string[] Sub-organisations aka aliases.
+     */
+    private $aliases = array();
+
+    /**
+     * @var string Client alias for issuing.
+     * null        = not provided
+     * ''          = main organisation
+     * 'QWE123...' = alias
+     */
+    protected $alias_id = null;
+    
+    public function set_alias_id($id) {
+        $this->alias_id = $id;
+        return $this;
+    }
 
     /**
      * Returns an instance of the class. If <code>$id</code> isn't set, this
@@ -309,6 +328,12 @@ class obf_badge {
         }
         if (isset($arr['criteria']) && preg_match('/^https?:\/\//', $arr['criteria'])) {
             $this->set_criteria_url($arr['criteria']);
+        }
+        if (isset($arr['issuer']) && is_array($arr['issuer'])) {
+            $this->set_issuer(obf_issuer::get_instance_from_arr($arr['issuer']));
+        }
+        if (isset($arr['aliases']) && is_array($arr['aliases'])) {
+            $this->set_aliases($arr['aliases']);
         }
 
         // Try to get the email template from the local database first.
@@ -482,9 +507,23 @@ class obf_badge {
             }
         }
 
+        // Get the selected issuer from the form: null = not provided; '' = main organisation
+        $clientaliasid = $this->alias_id;
+
+        // If courseid but no clientaliasid, get POST field first, then try DB
+        if ($clientaliasid === null && $course !== null && !empty($items)) {
+            // either obf_criterion_course or obf_criterion_activity
+            $params = $items[0]->get_params();
+            $clientaliasid = $params[$course]['badgeissuer'] ?? null;
+        }
+
+        // If clientaliasid = null or '', use main organisation; otherwise use clientaliasid
+        $clientaliasid = ($clientaliasid === '' || $clientaliasid === null) ? null : $clientaliasid;
+
+
         $this->get_client()->set_enable_raw_response(true);
         $this->get_client()->issue_badge($this, $recipients, $issuedon,
-            $email, $criteriaaddendum, $course, $activity);
+            $email, $criteriaaddendum, $course, $activity, $clientaliasid);
 
         $raw = $this->get_client()->get_raw_response();
         $this->get_client()->set_enable_raw_response(false);
@@ -1044,6 +1083,25 @@ class obf_badge {
      */
     public function set_categories($categories) {
         $this->categories = $categories;
+        return $this;
+    }
+
+    /**
+     * Get sub-organisations aka aliases
+     * 
+     * @return array
+     */
+    public function get_aliases() {
+        return $this->aliases;
+    }
+    /**
+     * Set sub-organisations aka aliases
+     * 
+     * @param array $aliases
+     * @return $this
+     */
+    public function set_aliases($aliases) {
+        $this->aliases = $aliases;
         return $this;
     }
 
