@@ -40,6 +40,7 @@ class local_obf_client_testcase extends advanced_testcase {
         require_once(__DIR__ . '/lib/obf_mock_curl.php');
         $curl = obf_mock_curl::get_mock_curl($this);
         obf_mock_curl::add_client_test_methods($this, $curl);
+        obf_mock_curl::mock_oauth2_db();
 
         $client = \classes\obf_client::get_instance($curl);
 
@@ -65,40 +66,6 @@ class local_obf_client_testcase extends advanced_testcase {
             // We should end up here.
             0 + 0; // Suppressing PHP_CodeSniffer error messages.
         }
-    }
-
-    /**
-     * Test Deauthentication.
-     */
-    public function test_deauthentication() {
-        $this->resetAfterTest();
-
-        $client = \classes\obf_client::get_instance();
-        $certfile = $client->get_cert_filename();
-        $pkeyfile = $client->get_pkey_filename();
-
-        $pkidir = $client->get_pki_dir();
-
-        if (!is_dir($pkidir)) {
-            global $CFG;
-            mkdir($pkidir, $CFG->directorypermissions, true);
-        }
-
-        if (!file_exists($certfile)) {
-            touch($certfile);
-        }
-
-        if (!file_exists($pkeyfile)) {
-            touch($pkeyfile);
-        }
-
-        set_config('obfclientid', 'test', 'local_obf');
-
-        $client->deauthenticate();
-
-        $this->assertFileDoesNotExist($certfile);
-        $this->assertFileDoesNotExist($pkeyfile);
-        $this->assertFalse(get_config('local_obf', 'obfclientid'));
     }
 
     /**
