@@ -108,4 +108,12 @@ class obf_coursecriterion_form extends local_obf_form_base {
     public function get_criterion() {
         return $this->criterion;
     }
+
+    /**
+     * Get badgeid.
+     * 
+     */
+    public function get_badgeid() {
+        return ($this->_customdata['badgeid']);
+    }
 }
