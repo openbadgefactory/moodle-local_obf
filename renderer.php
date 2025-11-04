@@ -687,10 +687,12 @@ class local_obf_renderer extends plugin_renderer_base {
         $url = $issuer->get_url();
         $description = $issuer->get_description();
         $issuerurl = empty($url) ? '' : html_writer::link($url, s($url));
-        $html = $this->render_definition_list(array(get_string('issuername', 'local_obf') => s($issuer->get_name()),
+        $html = $this->render_definition_list(array(
+            get_string('issuername', 'local_obf') => s($issuer->get_name()),
             get_string('issuerurl', 'local_obf') => $issuerurl,
             get_string('issuerdescription', 'local_obf') => empty($description) ? '-' : s($description),
-            get_string('issueremail', 'local_obf') => s($issuer->get_email())));
+            get_string('issueremail', 'local_obf') => s($issuer->get_email())
+        ));
 
         return $html;
     }

@@ -855,11 +855,6 @@ class obf_client {
                     $log_entry = json_decode($event['log_entry'], true);
                 }
 
-                // If suborganisation issued the badge, get the suborganisation id.
-                $issuerid = $event['client_alias_id'] ?? null;
-                if (is_array($issuerid)) {
-                    $issuerid = reset($issuerid);
-                }
 
                 $out[] = array(
                     'id' => $event['id'],
@@ -873,7 +868,7 @@ class obf_client {
                     'log_entry' => $log_entry ?? [],
                     'timestamp' => $event['ctime'] ?? null,
                     '_total' => $data['total'],
-                    'alias_id' => $issuerid
+                    'client_alias_id' => $event['client_alias_id'] ?? null
                 );
 
                 $rec_begin = min($rec_begin, $event['ctime']);
@@ -1072,7 +1067,7 @@ class obf_client {
             'mtime' => $event['mtime'] ?? 0,
             'timestamp' => $event['mtime'] ?? $event['issued_on'] ?? 0,
             'client_id' => $this->client_id(),
-            'client_alias' => $event['client_alias_id'] ?? '',
+            'client_alias_id' => $event['client_alias_id'] ?? '',
             'api_consumer_id' => $event['api_consumer_id'] ?? '',
             'log_entry' => $log_entry ?? [],
             'earnable_application_id' => $event['earnable_application_id'] ?? '',
