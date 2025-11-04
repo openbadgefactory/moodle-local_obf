@@ -147,6 +147,11 @@ class obf_assertion {
     private $next_offset = 0;
 
     /**
+     * @var string|null The id of the client alias used to issue the assertion
+     */
+    private $client_alias_id = null;
+
+    /**
      * @var Assertion source is unknown.
      */
     const ASSERTION_SOURCE_UNKNOWN = 0;
@@ -342,6 +347,16 @@ class obf_assertion {
 
         $obj->set_issuedon($arr['issued_on'])->set_id($arr['id'])->set_name($arr['name']);
         $obj->set_recipients($arr['recipient'])->set_badge(obf_badge::get_instance($arr['badge_id'], $client));
+
+        $alias = $arr['client_alias_id'] ?? null;
+        if (!empty($alias)) {
+            // If alias is used in the event, save the used alias
+            $obj->set_issuer_id($alias);
+        } else {
+            // Otherwise save the main organisation as issuer
+            $obj->set_issuer_id($obj->get_badge()->get_client_id());
+        }
+    
         $obj->set_source(self::ASSERTION_SOURCE_OBF);
         if (array_key_exists('revoked', $arr)) {
             $obj->set_revoked($arr['revoked']);
@@ -424,8 +439,8 @@ class obf_assertion {
                         $assertion->set_recipient_count((int)$item['recipient_count']);
                     }
                     // New column for showing issuer of the assertion.
-                    if (isset($item['alias_id']) && !empty($item['alias_id'])) {
-                        $assertion->set_issuer_id($item['alias_id']);
+                    if (isset($item['client_alias_id'])) {
+                        $assertion->set_issuer_id($item['client_alias_id']);
                     } else {
                         $assertion->set_issuer_id($b->get_client_id());
                     }
@@ -1083,4 +1098,22 @@ class obf_assertion {
         return $this;
     }
 
+    /** Get issuer id.
+     *
+     * @return string|null
+     */
+    public function get_client_alias_id() {
+        return $this->client_alias_id;
+    }
+
+    /**
+     * Set issuer id.
+     *
+     * @param string|null $id
+     * @return $this
+     */
+    public function set_client_alias_id($id) {
+        $this->client_alias_id = $id ?: null;
+        return $this;
+    }
 }
