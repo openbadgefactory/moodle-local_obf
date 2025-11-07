@@ -98,7 +98,7 @@ class obf_issuance_form extends local_obf_form_base {
         // Dropdown for selecting badge issuer.
         $options = [];
         $options[''] = s($this->badge->get_issuer()->get_name());
-        foreach ($this->badge->get_aliases() as $alias) {
+        foreach ($this->badge->get_client_aliases() as $alias) {
             $options[$alias['id']] = s($alias['name']);
         }
         $mform->addElement('select', 'badgeissuer', get_string('choosebadgeissuer', 'local_obf'), $options);

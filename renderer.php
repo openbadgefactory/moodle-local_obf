@@ -661,7 +661,7 @@ class local_obf_renderer extends plugin_renderer_base {
         $badgedetails .= $this->render_issuer_details($issuer);
 
         // Sub-organisation (aka aliases) section.
-        $aliases = $badge->get_aliases();
+        $aliases = $badge->get_client_aliases();
         foreach ($aliases ?? [] as $alias) {
             $alias_names[] = html_writer::tag('dd', $alias['name']);
         }

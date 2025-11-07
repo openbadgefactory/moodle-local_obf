@@ -151,22 +151,17 @@ class obf_badge {
     private $primarylanguage = '';
 
     /**
-     * @var string[] Sub-organisations aka aliases.
+     * @var string[] Sub-organisation aka alias objects:
+     * "id": "XYZ1234",
+     * "name": "string",
+     * "email": "string",
+     * "reply_to": "string",
+     * "url": "string",
+     * "description": "string",
+     * "ctime": 1234567890,
+     * "mtime": 1234567890
      */
-    private $aliases = array();
-
-    /**
-     * @var string Client alias for issuing.
-     * null        = not provided
-     * ''          = main organisation
-     * 'QWE123...' = alias
-     */
-    protected $alias_id = null;
-    
-    public function set_alias_id($id) {
-        $this->alias_id = $id;
-        return $this;
-    }
+    private $client_aliases = array();
 
     /**
      * Returns an instance of the class. If <code>$id</code> isn't set, this
@@ -331,8 +326,8 @@ class obf_badge {
         if (isset($arr['issuer']) && is_array($arr['issuer'])) {
             $this->set_issuer(obf_issuer::get_instance_from_arr($arr['issuer']));
         }
-        if (isset($arr['aliases']) && is_array($arr['aliases'])) {
-            $this->set_aliases($arr['aliases']);
+        if (isset($arr['client_aliases']) && is_array($arr['client_aliases'])) {
+            $this->set_client_aliases($arr['client_aliases']);
         }
 
         // Try to get the email template from the local database first.
@@ -467,7 +462,7 @@ class obf_badge {
      * @param string $email The email sent to user (template).
      * @param string $criteriaaddendum The criterai addendum.
      */
-    public function issue(array $recipients, $issuedon, $email, $criteriaaddendum = '', $items = null) {
+    public function issue(array $recipients, $issuedon, $email, $criteriaaddendum = '', $items = null, $clientaliasid = null) {
         global $DB;
 
         if (empty($this->id)) {
@@ -505,20 +500,13 @@ class obf_badge {
                 return true;
             }
         }
-
-        // Get the selected issuer from the form: null = not provided; '' = main organisation
-        $clientaliasid = $this->alias_id;
-
-        // If clientaliasid is not set, try getting it from the criterion params.
+    
+        // If clientaliasid is null, try getting it from criterion params.
         if ($clientaliasid === null && $course !== null && !empty($items)) {
             // either obf_criterion_course or obf_criterion_activity
             $params = $items[0]->get_params();
-            $clientaliasid = $params[$course]['badgeissuer'] ?? null;
+            $clientaliasid = $params[$course]['clientaliasid'] ?? null;
         }
-
-        // If clientaliasid = null or '', use main organisation; otherwise use clientaliasid
-        $clientaliasid = ($clientaliasid === '' || $clientaliasid === null) ? null : $clientaliasid;
-
 
         $this->get_client()->set_enable_raw_response(true);
         $this->get_client()->issue_badge($this, $recipients, $issuedon,
@@ -1086,21 +1074,21 @@ class obf_badge {
     }
 
     /**
-     * Get sub-organisations aka aliases
+     * Get sub-organisation aka alias objects
      * 
      * @return array
      */
-    public function get_aliases() {
-        return $this->aliases;
+    public function get_client_aliases() {
+        return $this->client_aliases;
     }
     /**
-     * Set sub-organisations aka aliases
+     * Set sub-organisation aka alias objects
      * 
      * @param array $aliases
      * @return $this
      */
-    public function set_aliases($aliases) {
-        $this->aliases = $aliases;
+    public function set_client_aliases($client_aliases) {
+        $this->client_aliases = $client_aliases;
         return $this;
     }
 

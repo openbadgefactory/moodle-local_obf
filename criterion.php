@@ -207,20 +207,6 @@ switch ($action) {
                             'local_obf', $recipientcount));
                 }
 
-                // Store the selected badge issuer id for issuing.
-                if (isset($data->badgeissuercriterion) && !empty($criterion->get_id())) {
-                    set_config('criterion_alias_' . $criterion->get_id(), trim($data->badgeissuercriterion), 'local_obf');
-                }
-
-
-                if (!empty($data->reviewaftersave)) {
-                    $storedissuerid = get_config('local_obf', 'criterion_alias_' . $criterion->get_id());
-                    if ($storedissuerid === false || $storedissuerid === '') {
-                        $storedissuerid = null;
-                    }
-                    $badge->set_alias_id($storedissuerid);
-                }
-
                 redirect($tourl);
             }
         } else {
@@ -384,20 +370,6 @@ switch ($action) {
                     $recipientcount = $criterion->review_previous_completions();
                     $tourl->param('msg', get_string('badgewasautomaticallyissued', 'local_obf', $recipientcount));
                 }
-            }
-
-            // Store the selected badge issuer id for issuing.
-            if (isset($data->badgeissuercriterion) && !empty($criterion->get_id())) {
-                set_config('criterion_alias_' . $criterion->get_id(), trim($data->badgeissuercriterion), 'local_obf');
-            }
-
-
-            if (!empty($data->reviewaftersave)) {
-                $storedissuerid = get_config('local_obf', 'criterion_alias_' . $criterion->get_id());
-                if ($storedissuerid === false || $storedissuerid === '') {
-                    $storedissuerid = null;
-                }
-                $badge->set_alias_id($storedissuerid);
             }
 
             redirect($tourl);

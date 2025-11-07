@@ -56,21 +56,6 @@ class obf_assertion {
     private $badge = null;
 
     /**
-     * @var string The email subject.
-     */
-    private $emailsubject = '';
-
-    /**
-     * @var string The bottom part of the email message.
-     */
-    private $emailfooter = '';
-
-    /**
-     * @var string The top part of the email message.
-     */
-    private $emailbody = '';
-
-    /**
      *
      * @var obf_email The email
      */
@@ -122,6 +107,11 @@ class obf_assertion {
     private $clientid = null;
 
     /**
+     * @var string|null The id of the possible client alias id used in the assertion
+     */
+    private $client_alias_id = null;
+
+    /**
      * @var string The criteria addendum
      */
     private $criteriaaddendum = '';
@@ -132,11 +122,6 @@ class obf_assertion {
     protected $recipientcount = null;
 
     /**
-     * @var int|null The id of the issuer of the assertion in OBF
-     */
-    private $issuer_id = null;
-
-    /**
      * @var bool Whether more recipients are available
      */
     private $more_recipients_available = false;
@@ -145,11 +130,6 @@ class obf_assertion {
      * @var int Offset for loading more recipients
      */
     private $next_offset = 0;
-
-    /**
-     * @var string|null The id of the client alias used to issue the assertion
-     */
-    private $client_alias_id = null;
 
     /**
      * @var Assertion source is unknown.
@@ -194,8 +174,14 @@ class obf_assertion {
      */
     public function process() {
         try {
-            $eventid = $this->badge->issue($this->recipients, $this->issuedon, $this->get_email_template(),
-                $this->get_criteria_addendum());
+            $eventid = $this->badge->issue(
+                $this->recipients, 
+                $this->issuedon, 
+                $this->get_email_template(),
+                $this->get_criteria_addendum(),
+                null,
+                $this->client_alias_id
+            );
             return $eventid;
         } catch (Exception $e) {
             $this->error = $e->getMessage();
@@ -348,13 +334,10 @@ class obf_assertion {
         $obj->set_issuedon($arr['issued_on'])->set_id($arr['id'])->set_name($arr['name']);
         $obj->set_recipients($arr['recipient'])->set_badge(obf_badge::get_instance($arr['badge_id'], $client));
 
-        $alias = $arr['client_alias_id'] ?? null;
-        if (!empty($alias)) {
+        $clientaliasid = $arr['client_alias_id'] ?? null;
+        if (!empty($clientaliasid)) {
             // If alias is used in the event, save the used alias
-            $obj->set_issuer_id($alias);
-        } else {
-            // Otherwise save the main organisation as issuer
-            $obj->set_issuer_id($obj->get_badge()->get_client_id());
+            $obj->set_client_alias_id($clientaliasid);
         }
     
         $obj->set_source(self::ASSERTION_SOURCE_OBF);
@@ -440,9 +423,7 @@ class obf_assertion {
                     }
                     // New column for showing issuer of the assertion.
                     if (isset($item['client_alias_id'])) {
-                        $assertion->set_issuer_id($item['client_alias_id']);
-                    } else {
-                        $assertion->set_issuer_id($b->get_client_id());
+                        $assertion->set_client_alias_id($item['client_alias_id']);
                     }
                     $assertion->set_expires($item['expires'])->set_name($item['name']);
                     $assertion->set_issuedon($item['issued_on'])->set_source(self::ASSERTION_SOURCE_OBF);
@@ -1007,54 +988,35 @@ class obf_assertion {
         $this->next_offset = $offset;
         return $this;
     }
-    
-    public function get_issuer_id() {
-        return $this->issuer_id;
-    }
-
-    public function set_issuer_id($issuerid) {
-        $this->issuer_id = $issuerid;
-        return $this;
-    }
 
     /**
      * Get the name of the issuer of the assertion.
      * 
      */
-    public function get_issuer_name(): string {
+    public function get_issuer_name() {
+        // Try getting badge's client aliases.
         $badge = $this->get_badge();
-        
-        if (empty($badge)) {
-            return (string)($this->issuer_id ?? '');
-        }
-
-        $issuerid = $this->issuer_id;
-
-        // If issuer id is empty or matches the client id of the badge, return the name of the client.
-        if (empty($issuerid) || $issuerid === $badge->get_client_id()) {
-            return (string)$badge->get_issuer()->get_name();
-        }
-
-        // Otherwise, try to find the alias matching the issuer id.
-        $aliases = $badge->get_aliases();
-        if (empty($aliases)) {
-            // No aliases found, try to get the badge again to see if we can get the aliases.
+        $clientaliases = $badge->get_client_aliases();
+        // If no aliases found, try GET badge and its aliases.
+        if (empty($clientaliases)) {
             $arr = $badge->get_client()->get_badge($badge->get_id());
-            if (!empty($arr['aliases'])) {
-                $badge->set_aliases($arr['aliases']);
-                $aliases = $badge->get_aliases();
+            // If aliases found, set them to the badge for future use.
+            if (!empty($arr['client_aliases'])) {
+                $badge->set_client_aliases($arr['client_aliases']);
+                $clientaliases = $badge->get_client_aliases();
             }
         }
 
-        foreach ($aliases as $alias) {
-            $aliasid = is_array($alias) ? ($alias['id'] ?? '') : ($alias->id ?? '');
-            if ($aliasid == $issuerid) {
-                return is_array($alias) ? ($alias['name'] ?? $aliasid) : ($alias->name ?? $aliasid);
+        // Find the client alias name matching the client alias id.
+        $clientaliasid = $this->client_alias_id;
+        foreach ($clientaliases as $alias) {
+            if ($alias['id'] == $clientaliasid) {
+                return $alias['name'];
             }
         }
 
-        // If not found, return the issuer id.
-        return (string)$issuerid;
+        // Otherwise return the default issuer name.
+        return $badge->get_issuer()->get_name();
     }
 
     /**

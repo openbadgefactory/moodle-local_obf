@@ -691,13 +691,13 @@ class obf_client {
             throw new Exception("Invalid badge response");
         }
 
-        // Get all aliases for the client.
+        // Get all alias objects for the client.
         $url_aliases = $this->obf_url() . '/v2/client/' . $this->client_id() . '/alias';
         $res_aliases = $this->request('get', $url_aliases);
         $data_aliases = json_decode($res_aliases, true);
         $result_aliases = $data_aliases['result'] ?? [];
 
-        // Filter aliases that are available for this badge.
+        // Filter alias objects that are available for this badge.
         $available_aliases = [];
 
         foreach ($result_aliases as $alias) {
@@ -716,7 +716,6 @@ class obf_client {
             'language' => $badge['primary_language'] ?? '',
             'tags' => $content['tag'] ?? [],
             'alignment' => $content['alignment'] ?? [],
-            'client_alias_id' => $badge['client_alias_id'] ?? [], // Not used yet.
             'creator_id' => $badge['creator']['id'] ?? null, // Not used yet.
             'intent' => $badge['intent'] ?? '',
             'email_subject' => $badge['email_message']['subject'] ?? '',
@@ -744,7 +743,8 @@ class obf_client {
             'image_small' => null,
             'deleted' => 0,
             'lastmodifiedby' => null,
-            'aliases' => $available_aliases,
+            'client_aliases' => $available_aliases,
+            'client_alias_id' => $badge['client_alias_id'] ?? [], // Not used, client_alias_id's are part of client_aliases objects.
         ];
     }
 

@@ -109,60 +109,6 @@ class obf_criterion_form extends local_obf_form_base implements renderable {
                         get_string('criteriaaddcourse', 'local_obf'), array('class' => 'addcourse'));
                 }
                 $criterioncourses[0]->get_form_completion_options($mform, $this, $criterioncourses);
-
-                // Badge issuer section.
-                $badge = $this->criterion ? $this->criterion->get_badge() : null;
-                if ($badge) {
-                    $aliases = $badge->get_aliases();
-
-                    // Show this section only in the form's last phase.
-                    $resolved = false;
-                    foreach ($criterioncourses as $ci) {
-                        // Targeting Activity/Course completion (get_courseid()) OR Profile completion (requires_field()).
-                        if ($ci->get_courseid() != -1 || !$ci->requires_field('courseid')) {
-                            $resolved = true;
-                            break;
-                        }
-                    }
-
-                    if (!empty($aliases) && $resolved) {
-                        // Header element.
-                        $mform->addElement('header', 'header_select_issuer', get_string('selectissuerheader', 'local_obf'));
-                        $this->setexpanded($mform, 'header_select_issuer');
-
-                        /* Possible existing badge issuer id for editing view.
-                         * In create view empty sting.
-                         * */
-                        $issuerid = '';
-                        if ($this->criterion->exists()) {
-                            $storedissuerid = get_config('local_obf', 'criterion_alias_' . $this->criterion->get_id());
-                            if ($storedissuerid !== false) {
-                                $issuerid = $storedissuerid;
-                            }
-                        }
-
-                        // Badge issuer options for dropdown.
-                        $options = ['' => $badge->get_issuer()->get_name()];
-                        foreach ($aliases as $alias) {
-                            $id = isset($alias['id']) ? $alias['id'] : '';
-                            $name = isset($alias['name']) ? $alias['name'] : $id;
-                            if ($id !== '') {
-                                $options[$id] = $name;
-                            }
-                        }
-
-                        // Badge issuer dropdown element.
-                        $mform->addElement('select', 'badgeissuercriterion', get_string('choosebadgeissuer', 'local_obf'), $options);
-                        $mform->setDefault('badgeissuercriterion', $issuerid);
-                        $mform->setType('badgeissuercriterion', PARAM_ALPHANUMEXT);
-
-                        // If criterion already met, freeze the dropdown.
-                        if (method_exists($this->criterion, 'is_met') && $this->criterion->is_met()) {
-                            $mform->freeze('badgeissuercriterion');
-                        }
-                    }
-                }
-
                 $criterioncourses[0]->get_form_after_save_options($mform, $this);
                 $criterioncourses[0]->get_form_criteria_addendum_options($mform, $this);
             }

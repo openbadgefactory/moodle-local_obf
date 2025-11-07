@@ -58,7 +58,7 @@ class obf_criterion_activity extends obf_criterion_course {
      * @var string[] $optionalparams Optional params to be saved.
      * @see obf_criterion_course::save_params
      */
-    protected $optionalparams = array('completedby', 'badgeissuer');
+    protected $optionalparams = array('completedby', 'clientaliasid');
 
     /**
      * Get the instance of this class by id.
@@ -434,14 +434,14 @@ class obf_criterion_activity extends obf_criterion_course {
 
         if ($badgeid !== '') {
             $badge = obf_badge::get_instance($badgeid);
-            $aliases = $badge->get_aliases(); // Possible suborganisations for this badge if any
+            $aliases = $badge->get_client_aliases(); // Possible suborganisations for this badge if any
 
             if (!empty($aliases)) {
                 // Issuer header
                 $mform->addElement('header', 'header_select_issuer_activity', get_string('selectissuerheader', 'local_obf'));
                 // Course parameters
                 $params = $this->get_params();
-                $saved  = (string)($params[$courseid]['badgeissuer'] ?? ''); // empty string = main organisation 
+                $saved  = $params[$courseid]['clientaliasid'] ?? ''; // empty string = main organisation 
                 $options = ['' => (string)$badge->get_issuer()->get_name()]; // add main org to options
 
                 foreach ($aliases as $alias) {
@@ -453,7 +453,7 @@ class obf_criterion_activity extends obf_criterion_course {
                 }
 
                 // Field in right format for save_params()
-                $fieldname = 'badgeissuer_' . $courseid;
+                $fieldname = 'clientaliasid_' . $courseid;
                 $mform->addElement('select', $fieldname, get_string('choosebadgeissuer', 'local_obf'), $options);
                 $mform->setDefault($fieldname, $saved);
                 $mform->setType($fieldname, PARAM_ALPHANUMEXT);
