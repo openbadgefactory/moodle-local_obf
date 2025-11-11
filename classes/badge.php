@@ -500,13 +500,6 @@ class obf_badge {
                 return true;
             }
         }
-    
-        // If clientaliasid is null, try getting it from criterion params.
-        if ($clientaliasid === null && $course !== null && !empty($items)) {
-            // either obf_criterion_course or obf_criterion_activity
-            $params = $items[0]->get_params();
-            $clientaliasid = $params[$course]['clientaliasid'] ?? null;
-        }
 
         $this->get_client()->set_enable_raw_response(true);
         $this->get_client()->issue_badge($this, $recipients, $issuedon,
