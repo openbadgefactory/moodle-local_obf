@@ -474,47 +474,7 @@ class obf_criterion_course extends obf_criterion_item {
         }
 
         /* Select issuer section */
-        $badgeid = ''; 
-        $crit = $this->get_criterion(); 
-        if ($crit) {
-            $badgeid = $crit->get_badgeid();
-        } else if (is_object($obj) && method_exists($obj, 'get_badgeid')) {
-            $badgeid = $obj->get_badgeid();
-        }
-
-        if ($badgeid !== '') {
-            $badge = obf_badge::get_instance($badgeid);
-            $aliases = $badge->get_client_aliases(); // Array of alias objects for this badge
-
-            // If there's aliases, create badge issuer section
-            if (!empty($aliases)) {
-                // Issuer header
-                $mform->addElement('header', 'header_select_issuer', get_string('selectissuerheader', 'local_obf'));
-                // Course parameters
-                $params = $this->get_params();
-                $savedid = $params[$courseid]['clientaliasid'] ?? ''; // '' = main org
-                $options = ['' => $badge->get_issuer()->get_name()]; // add main org name to options
-
-                foreach ($aliases as $alias) {
-                    $id = isset($alias['id']) ? $alias['id'] : '';
-                    $name = isset($alias['name']) ? $alias['name'] : '';
-                    if ($id !== '') {
-                        $options[$id] = $name;
-                    }
-                }
-
-                // Field in right format for save_params()
-                $badgeissuerfield = 'clientaliasid_' . $courseid;      
-                $mform->addElement('select', $badgeissuerfield, get_string('choosebadgeissuer', 'local_obf'), $options);
-                $mform->setDefault($badgeissuerfield, $savedid);
-                $mform->setType($badgeissuerfield, PARAM_ALPHANUMEXT);
-
-                // If criterion has been used to issue badges
-                if (method_exists($this->criterion, 'is_met') && $this->criterion->is_met()) {
-                    $mform->freeze($badgeissuerfield);
-                }
-            }
-        }
+        $this->add_issuer_selector_section($mform, $obj);
     }
 
     /**
@@ -727,10 +687,9 @@ class obf_criterion_course extends obf_criterion_item {
      * Add "Select issuer" section for criterion.
      *
      * @param MoodleQuickForm $mform
-     * @param mixed& $obj Form object, used to read badgeid if criterion is not yet set
+     * @param mixed $obj Form object, used to read badgeid if criterion is not yet set
      */
-    protected function add_issuer_selector_section($mform, $obj) {
-        $courseid = $this->get_courseid();
+    public function add_issuer_selector_section($mform, $obj) {
         $badgeid = '';
         $crit = $this->get_criterion();
         if ($crit) {
@@ -749,35 +708,38 @@ class obf_criterion_course extends obf_criterion_item {
         if (empty($aliases)) {
             return;
         }
-        $headerid = ''; // TODO: unique header id 
-        // Header
-        $mform->addElement('header', $headerid, get_string('selectissuerheader', 'local_obf'));
+
+        $courseid = $this->get_courseid();
+        // Unique header name belonging to specific course and specific badge
+        $headername = 'header_select_issuer_' . $courseid . '_' . $badgeid;
+        $mform->addElement('header', $headername, get_string('selectissuerheader', 'local_obf'));
+        $mform->setExpanded($headername, true);
 
         $params = $this->get_params();
-        // Get clientaliasid if exists, if not set '' = main org
+        // Get 'clientaliasid' from optionalparams if exists, if not set empty string for main org
         $issuer = isset($params[$courseid]['clientaliasid']) ? $params[$courseid]['clientaliasid'] : '';
 
-        // Options
+        // Options, add main org as first option
         $options = array('' => $badge->get_issuer()->get_name());
-            foreach ($aliases as $alias) {
-                $id = isset($alias['id']) ? (string)$alias['id'] : '';
-                $name = isset($alias['name']) ? (string)$alias['name'] : '';
-                if ($id !== '') {
-                    // Set aliases to options
-                    $options[$id] = $name;
-                }
+        foreach ($aliases as $alias) {
+            $id = $alias['id'] ?? '';
+            $name = $alias['name'] ?? '';
+            if ($id !== '') {
+                // Set aliases to options
+                $options[$id] = $name;
             }
+        }
 
-            $fieldname = 'clientaliasid_' . $courseid;
-            $mform->addElement('select', $fieldname, get_string('choosebadgeissuer', 'local_obf'), $options);
-            $mform->setDefault($fieldname, $issuer);
-            $mform->setType($fieldname, PARAM_ALPHANUMEXT);
+        $fieldname = 'clientaliasid_' . $courseid;
+        $mform->addElement('select', $fieldname, get_string('choosebadgeissuer', 'local_obf'), $options);
+        $mform->setDefault($fieldname, $issuer);
+        $mform->setType($fieldname, PARAM_ALPHANUMEXT);
 
-            // Freeze if already used to issue badges.
-            $crit = $this->get_criterion();
-            if ($crit && method_exists($crit, 'is_met') && $crit->is_met()) {
-                $mform->freeze($fieldname);
-            }
+        // Freeze if already used to issue badges.
+        $crit = $this->get_criterion();
+        if ($crit && method_exists($crit, 'is_met') && $crit->is_met()) {
+            $mform->freeze($fieldname);
+        }
     }
 
     /**

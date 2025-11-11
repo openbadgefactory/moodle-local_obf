@@ -96,6 +96,10 @@ class obf_criterion_form extends local_obf_form_base implements renderable {
                         $coursename = $courses[$course->get_courseid()]->fullname;
                         $mform->addElement('html', $OUTPUT->heading($coursename, 3));
                     }
+                    // If course is already selected, do not show add course button.
+                    if ($course->get_courseid() != -1) {
+                        $showaddcourse = false;
+                    }
                     $course->get_options($mform, $this);
                     if (!$course->criteria_supports_multiple_courses()) {
                         $showaddcourse = false;
@@ -266,6 +270,18 @@ class obf_criterion_form extends local_obf_form_base implements renderable {
      */
     public function get_form() {
         return $this->_form;
+    }
+
+    /**
+     * Get badgeid.
+     *
+     * @return string|null
+     */
+    public function get_badgeid() {
+        if (!empty($this->criterion) && method_exists($this->criterion, 'get_badgeid')) {
+            return $this->criterion->get_badgeid();
+        }
+        return null;
     }
 
     /**

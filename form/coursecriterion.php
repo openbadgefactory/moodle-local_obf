@@ -114,6 +114,14 @@ class obf_coursecriterion_form extends local_obf_form_base {
      * 
      */
     public function get_badgeid() {
-        return ($this->_customdata['badgeid']);
+        // Try to get badgeid from criterion first.
+        if (!empty($this->criterion) && method_exists($this->criterion, 'get_badgeid')) {
+            $badgeid = $this->criterion->get_badgeid();
+            if (!empty($badgeid)) {
+                return $badgeid;
+            }
+        }
+        // Fallback to customdata.
+        return isset($this->_customdata['badgeid']) ? $this->_customdata['badgeid'] : null;
     }
 }
