@@ -94,20 +94,17 @@ $csvfile->add_data($headers);
 foreach ($history as $assertion) {
     $users = $history->get_assertion_users($assertion);
     $logs = $assertion->get_log_entry('course_id');
+    $activity = $assertion->get_log_entry('activity_name');
     $courses = '';
     $coursefullname = '';
     if (!empty($logs)) {
-        $course = $DB->get_record('course', array('id' => $courseid), '*');
-        if (is_bool($course)) {
-            $coursefullname = '';
-        } else {
-            $coursefullname = $course->fullname;
-        }
-        $activity = $assertion->get_log_entry('activity_name');
-
+        $course = $DB->get_record('course', ['id' => $logs], '*');
+        $coursefullname = $course ? $course->fullname : '';
         if (!empty($activity)) {
             $coursefullname .= ' (' . $activity . ')';
         }
+    } else {
+        $coursefullname = 'Manual issuing';
     }
 
     $recipients = array();
@@ -127,10 +124,9 @@ foreach ($history as $assertion) {
         $rowdata = array(
             $assertion->get_badge()->get_name(), // Badge name
             implode(', ', $recipients), // Recipients
-            userdate($assertion->get_issuedon(), // Issued on
-            get_string('dateformatdate', 'local_obf')), // Expires by
-            $assertion->get_expires(), // Expires by
-            $issuername = $assertion->get_issuer_name(), // Issuer
+            userdate($assertion->get_issuedon(), get_string('dateformatdate', 'local_obf')), // Issued on
+            userdate($assertion->get_expires(), get_string('dateformatdate', 'local_obf')), // Expires by
+            $issuername = $assertion->get_issuer_name_used_in_assertion(), // Issuer
             $coursefullname // Issued from
         );
 

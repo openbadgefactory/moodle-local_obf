@@ -837,7 +837,7 @@ class local_obf_renderer extends plugin_renderer_base {
             }
 
             $criterionform = new obf_coursecriterion_form(
-                $url, array('criterioncourse' => $criterioncourse,'badgeid' => $badge->get_id())
+                $url, array('criterioncourse' => $criterioncourse, 'badgeid' => $badge->get_id())
             );
 
             // Deleting the rule is done via cancel-button.
@@ -1210,7 +1210,7 @@ class local_obf_renderer extends plugin_renderer_base {
         $row->cells[] = $recipienthtml;
         $row->cells[] = userdate($assertion->get_issuedon(), get_string('dateformatdate', 'local_obf'));
         $row->cells[] = $expirationdate;
-        $row->cells[] = s($assertion->get_issuer_name());
+        $row->cells[] = s($assertion->get_issuer_name_used_in_assertion());
         $row->cells[] = $courses;
         $row->cells[] = html_writer::link(new moodle_url('/local/obf/event.php',
             array('id' => $assertion->get_id(), 'clientid' => $this->get_client_id(), 'course_id' => $logs)),
