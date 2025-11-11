@@ -29,7 +29,6 @@ use html_writer;
 use MoodleQuickForm;
 use Set;
 use stdClass;
-use classes\obf_badge;
 
 defined('MOODLE_INTERNAL') || die();
 
