@@ -118,7 +118,7 @@ class obf_criterion {
     /**
      * Check all items for clientaliasid and return it if found
      */
-    private function get_clientaliasid_from_items($items) {
+    public function get_clientaliasid_from_items($items) {
         foreach ($items as $item) {
             if (!method_exists($item, 'get_params')) { 
                 continue; 
@@ -271,7 +271,7 @@ class obf_criterion {
         try {
             $items = $this->get_items();
             $clientaliasid = $this->get_clientaliasid_from_items($items);
-            $eventid = $badge->issue($recipients, time(), $email, $criteriaaddendum, $this->get_items(), $clientaliasid);
+            $eventid = $badge->issue($recipients, time(), $email, $criteriaaddendum, $items, $clientaliasid);
         } catch (Exception $e) {
             $this->handle_issuefailed($recipients, time(), $email, $criteriaaddendum, $this->get_items());
             return false;
@@ -714,7 +714,7 @@ class obf_criterion {
 
             $items = $this->get_items();
             $clientaliasid = $this->get_clientaliasid_from_items($items);
-            $eventid = $badge->issue($recipientemails, time(), $email, $criteriaaddendum, $this->get_items(), $clientaliasid);
+            $eventid = $badge->issue($recipientemails, time(), $email, $criteriaaddendum, $items, $clientaliasid);
 
             if ($eventid && !is_bool($eventid)) {
                 $issuevent = new obf_issue_event($eventid, $DB);
