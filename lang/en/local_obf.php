@@ -483,6 +483,6 @@ $string['norecordsfound'] = 'No records found.';
 
 $string['loadmorerecipients'] = 'Load more recipients';
 $string['choosebadgeissuer'] = 'Badge issuer';
-$string['suborganization'] = 'Sub-organization';
+$string['suborganization'] = 'Sub-organisation';
 $string['invalidalias'] = 'Selected issuer is not available for this badge.';
 $string['selectissuerheader'] = 'Select badge issuer';
