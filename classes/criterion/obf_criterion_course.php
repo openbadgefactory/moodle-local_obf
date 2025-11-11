@@ -346,7 +346,7 @@ class obf_criterion_course extends obf_criterion_item {
     }
 
     /**
-     * Check if criterion item is ready to be saved for the first time,get
+     * Check if criterion item is ready to be saved for the first time,
      * assuming it will be saved with given params / request.
      *
      * @param stdClass|array $data
