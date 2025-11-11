@@ -323,9 +323,6 @@ class obf_badge {
         if (isset($arr['criteria']) && preg_match('/^https?:\/\//', $arr['criteria'])) {
             $this->set_criteria_url($arr['criteria']);
         }
-        if (isset($arr['issuer']) && is_array($arr['issuer'])) {
-            $this->set_issuer(obf_issuer::get_instance_from_arr($arr['issuer']));
-        }
         if (isset($arr['client_aliases']) && is_array($arr['client_aliases'])) {
             $this->set_client_aliases($arr['client_aliases']);
         }
