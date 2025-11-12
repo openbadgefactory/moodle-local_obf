@@ -732,6 +732,7 @@ class obf_criterion_course extends obf_criterion_item {
 
         $fieldname = 'clientaliasid_' . $courseid;
         $mform->addElement('select', $fieldname, get_string('choosebadgeissuer', 'local_obf'), $options);
+        $mform->addHelpButton($fieldname, 'choosebadgeissuer', 'local_obf');
         $mform->setDefault($fieldname, $issuer);
         $mform->setType($fieldname, PARAM_ALPHANUMEXT);
 

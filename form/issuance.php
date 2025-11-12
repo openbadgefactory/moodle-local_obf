@@ -104,6 +104,7 @@ class obf_issuance_form extends local_obf_form_base {
                 $options[$alias['id']] = s($alias['name']);
             }
             $mform->addElement('select', 'clientaliasid', get_string('choosebadgeissuer', 'local_obf'), $options);
+            $mform->addHelpButton('clientaliasid', 'choosebadgeissuer', 'local_obf');
             $mform->setType('clientaliasid', PARAM_ALPHANUMEXT);
             $mform->setDefault('clientaliasid', '');
         }
