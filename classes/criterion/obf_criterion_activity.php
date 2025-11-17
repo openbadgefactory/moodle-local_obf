@@ -57,7 +57,7 @@ class obf_criterion_activity extends obf_criterion_course {
      * @var string[] $optionalparams Optional params to be saved.
      * @see obf_criterion_course::save_params
      */
-    protected $optionalparams = array('completedby');
+    protected $optionalparams = array('completedby', 'clientaliasid');
 
     /**
      * Get the instance of this class by id.
@@ -287,7 +287,7 @@ class obf_criterion_activity extends obf_criterion_course {
         $modules = self::get_course_activities($this->get_courseid());
         $params = $this->get_params();
 
-        $this->get_form_activities($mform, $modules, $params);
+        $this->get_form_activities($mform, $modules, $params, $obj);
     }
 
     /**
@@ -379,7 +379,7 @@ class obf_criterion_activity extends obf_criterion_course {
      * @param array $modules modules so the database is not accessed too much
      * @param array $params
      */
-    private function get_form_activities(&$mform, $modules, $params) {
+    private function get_form_activities(&$mform, $modules, $params, $obj = null) {
         $mform->addElement('html', html_writer::tag('h2', get_string('selectactivity', 'local_obf')));
 
         $existing = array();
@@ -420,6 +420,9 @@ class obf_criterion_activity extends obf_criterion_course {
         foreach ($existing as $modid) {
             $mform->setDefault('module_' . $modid, $modid);
         }
+
+        /** Select issuer section */
+        $this->add_issuer_selector_section($mform, $obj);
     }
 
 

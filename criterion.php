@@ -206,6 +206,7 @@ switch ($action) {
                         get_string('badgewasautomaticallyissued',
                             'local_obf', $recipientcount));
                 }
+
                 redirect($tourl);
             }
         } else {

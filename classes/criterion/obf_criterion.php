@@ -116,6 +116,31 @@ class obf_criterion {
     private static $coursecache = array();
 
     /**
+     * Check all items for clientaliasid and return it if found
+     */
+    public function get_clientaliasid_from_items($items) {
+        foreach ($items as $item) {
+            if (!method_exists($item, 'get_params')) { 
+                continue; 
+            }
+            $courseid = $item->get_courseid();
+            if ($courseid === null || $courseid === -1) { 
+                continue; 
+            }
+            $params = $item->get_params();
+            if (!isset($params[$courseid]['clientaliasid'])) { 
+                continue; 
+            }
+            $clientaliasid = $params[$courseid]['clientaliasid'];
+            // Finally, if clientaliasid found, return it
+            if ($clientaliasid !== '') { 
+                return $clientaliasid;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Returns the criterion instance identified by $id
      *
      * @param int $id The id of the criterion
@@ -244,7 +269,9 @@ class obf_criterion {
         $criteriaaddendum = $this->get_use_addendum() ? $this->get_criteria_addendum() : '';
 
         try {
-            $eventid = $badge->issue($recipients, time(), $email, $criteriaaddendum, $this->get_items());
+            $items = $this->get_items();
+            $clientaliasid = $this->get_clientaliasid_from_items($items);
+            $eventid = $badge->issue($recipients, time(), $email, $criteriaaddendum, $items, $clientaliasid);
         } catch (Exception $e) {
             $this->handle_issuefailed($recipients, time(), $email, $criteriaaddendum, $this->get_items());
             return false;
@@ -685,7 +712,9 @@ class obf_criterion {
 
             $criteriaaddendum = $this->get_use_addendum() ? $this->get_criteria_addendum() : '';
 
-            $eventid = $badge->issue($recipientemails, time(), $email, $criteriaaddendum, $this->get_items());
+            $items = $this->get_items();
+            $clientaliasid = $this->get_clientaliasid_from_items($items);
+            $eventid = $badge->issue($recipientemails, time(), $email, $criteriaaddendum, $items, $clientaliasid);
 
             if ($eventid && !is_bool($eventid)) {
                 $issuevent = new obf_issue_event($eventid, $DB);

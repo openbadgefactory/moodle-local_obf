@@ -129,13 +129,18 @@ class obf_issuefailedrecord_task extends \core\task\scheduled_task {
                     $email->set_footer($issuefailed->getemail()['footer']);
                     $email->set_link_text($issuefailed->getemail()['linktext']);
 
+                    // Get client alias id if used in criterion.
+                    $items = $criterion->get_items();
+                    $clientaliasid = $criterion->get_clientaliasid_from_items($items);
+                    
                     // Attempt to issue the badge for the recipient.
                     $eventid = $badge->issue(
                         array_values($recipients),
                         $issuefailed->gettimestamp(),
                         $email,
                         $issuefailed->getcriteriaaddendum(),
-                        $criterion->get_items(),
+                        $items,
+                        $clientaliasid,
                     );
 
                     // Mark the criterion as met for the users.

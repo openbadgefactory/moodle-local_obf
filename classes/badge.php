@@ -151,6 +151,19 @@ class obf_badge {
     private $primarylanguage = '';
 
     /**
+     * @var string[] Sub-organisation aka alias objects:
+     * "id": "XYZ1234",
+     * "name": "string",
+     * "email": "string",
+     * "reply_to": "string",
+     * "url": "string",
+     * "description": "string",
+     * "ctime": 1234567890,
+     * "mtime": 1234567890
+     */
+    private $client_aliases = array();
+
+    /**
      * Returns an instance of the class. If <code>$id</code> isn't set, this
      * will return a new instance.
      *
@@ -310,6 +323,9 @@ class obf_badge {
         if (isset($arr['criteria']) && preg_match('/^https?:\/\//', $arr['criteria'])) {
             $this->set_criteria_url($arr['criteria']);
         }
+        if (isset($arr['client_aliases']) && is_array($arr['client_aliases'])) {
+            $this->set_client_aliases($arr['client_aliases']);
+        }
 
         // Try to get the email template from the local database first.
         $email = obf_email::get_by_badge($this, $DB);
@@ -443,7 +459,7 @@ class obf_badge {
      * @param string $email The email sent to user (template).
      * @param string $criteriaaddendum The criterai addendum.
      */
-    public function issue(array $recipients, $issuedon, $email, $criteriaaddendum = '', $items = null) {
+    public function issue(array $recipients, $issuedon, $email, $criteriaaddendum = '', $items = null, $clientaliasid = null) {
         global $DB;
 
         if (empty($this->id)) {
@@ -484,7 +500,7 @@ class obf_badge {
 
         $this->get_client()->set_enable_raw_response(true);
         $this->get_client()->issue_badge($this, $recipients, $issuedon,
-            $email, $criteriaaddendum, $course, $activity);
+            $email, $criteriaaddendum, $course, $activity, $clientaliasid);
 
         $raw = $this->get_client()->get_raw_response();
         $this->get_client()->set_enable_raw_response(false);
@@ -1044,6 +1060,25 @@ class obf_badge {
      */
     public function set_categories($categories) {
         $this->categories = $categories;
+        return $this;
+    }
+
+    /**
+     * Get sub-organisation aka alias objects
+     * 
+     * @return array
+     */
+    public function get_client_aliases() {
+        return $this->client_aliases;
+    }
+    /**
+     * Set sub-organisation aka alias objects
+     * 
+     * @param array $aliases
+     * @return $this
+     */
+    public function set_client_aliases($client_aliases) {
+        $this->client_aliases = $client_aliases;
         return $this;
     }
 

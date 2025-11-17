@@ -75,8 +75,12 @@ $history = obf_assertion::get_assertions($client, $badge, null, -1, false, $sear
 $filename = 'badge_history.csv';
 
 // CSV headers.
-$headers = array(get_string('exportbadgename', 'local_obf'), get_string('exportrecipients', 'local_obf'),
-    get_string('exportissuedon', 'local_obf'), get_string('exportexpiresby', 'local_obf'),
+$headers = array(
+    get_string('exportbadgename', 'local_obf'), 
+    get_string('exportrecipients', 'local_obf'),
+    get_string('exportissuedon', 'local_obf'), 
+    get_string('exportexpiresby', 'local_obf'),
+    get_string('exportissuer', 'local_obf'),
     get_string('exportissuedfrom', 'local_obf'));
 
 // Initialize CSV file.
@@ -90,20 +94,17 @@ $csvfile->add_data($headers);
 foreach ($history as $assertion) {
     $users = $history->get_assertion_users($assertion);
     $logs = $assertion->get_log_entry('course_id');
+    $activity = $assertion->get_log_entry('activity_name');
     $courses = '';
     $coursefullname = '';
     if (!empty($logs)) {
-        $course = $DB->get_record('course', array('id' => $courseid), '*');
-        if (is_bool($course)) {
-            $coursefullname = '';
-        } else {
-            $coursefullname = $course->fullname;
-        }
-        $activity = $assertion->get_log_entry('activity_name');
-
+        $course = $DB->get_record('course', ['id' => $logs], '*');
+        $coursefullname = $course ? $course->fullname : '';
         if (!empty($activity)) {
             $coursefullname .= ' (' . $activity . ')';
         }
+    } else {
+        $coursefullname = 'Manual issuing';
     }
 
     $recipients = array();
@@ -120,8 +121,14 @@ foreach ($history as $assertion) {
     }
 
     if ((isset($courseid) && $courseid == $logs) || empty($courseid)) {
-        $rowdata = array($assertion->get_badge()->get_name(), implode(', ', $recipients),
-            userdate($assertion->get_issuedon(), get_string('dateformatdate', 'local_obf')), $assertion->get_expires(), $coursefullname);
+        $rowdata = array(
+            $assertion->get_badge()->get_name(), // Badge name
+            implode(', ', $recipients), // Recipients
+            userdate($assertion->get_issuedon(), get_string('dateformatdate', 'local_obf')), // Issued on
+            userdate($assertion->get_expires(), get_string('dateformatdate', 'local_obf')), // Expires by
+            $issuername = $assertion->get_issuer_name_used_in_assertion(), // Issuer
+            $coursefullname // Issued from
+        );
 
         // Add a record to the CSV file.
         $csvfile->add_data($rowdata);

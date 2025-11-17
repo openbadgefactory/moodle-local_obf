@@ -124,6 +124,12 @@ $offset = optional_param('offset', 0, PARAM_INT);
 $assertion = obf_assertion::get_instance_by_id($eventid, $client, $offset);
 $assertion->get_revoked($client);
 $badge = $assertion->get_badge();
+$details = $assertion->get_issuer_details_used_in_assertion();
+$badge->get_issuer()
+    ->set_name($details['name'])
+    ->set_url($details['url'])
+    ->set_description($details['description'])
+    ->set_email($details['email']);
 
 $content = $OUTPUT->header();
 

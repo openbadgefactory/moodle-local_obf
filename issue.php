@@ -125,6 +125,9 @@ if ($issuerform->is_cancelled()) {
 
     $badge->set_expires($data->expiresby);
     $assertion = obf_assertion::get_instance()->set_badge($badge);
+    $clientaliasid = $data->clientaliasid ?? ''; // If not set, use empty string.
+    $clientaliasid = $clientaliasid !== '' ? $clientaliasid : null; // If clientaliasid missing or passed as empty string, normalise.
+    $assertion->set_client_alias_id($clientaliasid);
     $assertion->set_issuedon($data->issuedon)->set_recipients($recipients);
     $assertion->set_criteria_addendum($criteriaaddendum);
     $assertion->get_email_template()->set_subject($data->emailsubject)->set_footer($data->emailfooter)->set_body($data->emailbody)

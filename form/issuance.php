@@ -95,6 +95,19 @@ class obf_issuance_form extends local_obf_form_base {
         $mform->addElement('static', 'badgedescription',
             get_string('badgedescription', 'local_obf'),
             s($this->badge->get_description()));
+        // Dropdown for selecting badge issuer.
+        $aliases = $this->badge->get_client_aliases();
+        if (!empty($aliases)) {
+            $options = [];
+            $options[''] = s($this->badge->get_issuer()->get_name());
+            foreach ($aliases as $alias) {
+                $options[$alias['id']] = s($alias['name']);
+            }
+            $mform->addElement('select', 'clientaliasid', get_string('choosebadgeissuer', 'local_obf'), $options);
+            $mform->addHelpButton('clientaliasid', 'choosebadgeissuer', 'local_obf');
+            $mform->setType('clientaliasid', PARAM_ALPHANUMEXT);
+            $mform->setDefault('clientaliasid', '');
+        }
         $mform->addElement('date_selector', 'issuedon',
             get_string('issuedon', 'local_obf'),
             array('stopyear' => date('Y') + 1));

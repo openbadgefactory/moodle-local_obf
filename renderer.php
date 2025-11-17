@@ -660,6 +660,17 @@ class local_obf_renderer extends plugin_renderer_base {
         $badgedetails .= $this->print_heading('issuerdetails');
         $badgedetails .= $this->render_issuer_details($issuer);
 
+        // Sub-organisation (aka aliases) section.
+        $aliases = $badge->get_client_aliases();
+        foreach ($aliases ?? [] as $alias) {
+            $alias_names[] = html_writer::tag('dd', $alias['name']);
+        }
+
+        if (!empty($alias_names)) {
+            $badgedetails .= $this->print_heading('suborganization');
+            $badgedetails .= html_writer::tag('dd', implode('', $alias_names));
+        }
+
         $boxes .= local_obf_html::div($badgedetails, 'obf-badgedetails');
         $html .= local_obf_html::div($boxes, 'obf-badgewrapper');
 
@@ -676,10 +687,12 @@ class local_obf_renderer extends plugin_renderer_base {
         $url = $issuer->get_url();
         $description = $issuer->get_description();
         $issuerurl = empty($url) ? '' : html_writer::link($url, s($url));
-        $html = $this->render_definition_list(array(get_string('issuername', 'local_obf') => s($issuer->get_name()),
+        $html = $this->render_definition_list(array(
+            get_string('issuername', 'local_obf') => s($issuer->get_name()),
             get_string('issuerurl', 'local_obf') => $issuerurl,
             get_string('issuerdescription', 'local_obf') => empty($description) ? '-' : s($description),
-            get_string('issueremail', 'local_obf') => s($issuer->get_email())));
+            get_string('issueremail', 'local_obf') => s($issuer->get_email())
+        ));
 
         return $html;
     }
@@ -823,7 +836,9 @@ class local_obf_renderer extends plugin_renderer_base {
                 $criterioncourse = obf_criterion_item::get_instance($criterioncourseid);
             }
 
-            $criterionform = new obf_coursecriterion_form($url, array('criterioncourse' => $criterioncourse));
+            $criterionform = new obf_coursecriterion_form(
+                $url, array('criterioncourse' => $criterioncourse, 'badgeid' => $badge->get_id())
+            );
 
             // Deleting the rule is done via cancel-button.
             if ($criterionform->is_cancelled()) {
@@ -861,7 +876,9 @@ class local_obf_renderer extends plugin_renderer_base {
                 if ($pickingtype) {
                     if (!is_null($courseid)) {
 
-                        $criterionform = new obf_coursecriterion_form($url, array('criterioncourse' => $criterioncourse));
+                        $criterionform = new obf_coursecriterion_form(
+                            $url, array('criterioncourse' => $criterioncourse, 'badgeid' => $badge->get_id())
+                        );
                     }
                 } else { // Saving the rule.
                     if (!$criterioncourse->exists()) {
@@ -1115,6 +1132,7 @@ class local_obf_renderer extends plugin_renderer_base {
             $headingrow[] = new local_obf_table_header('recipients');
             $headingrow[] = new local_obf_table_header('issuedon');
             $headingrow[] = new local_obf_table_header('expiresby');
+            $headingrow[] = new local_obf_table_header('issuer');
             $headingrow[] = new local_obf_table_header('issuedfrom');
             $headingrow[] = new html_table_cell();
             $historytable->head = $headingrow;
@@ -1192,6 +1210,7 @@ class local_obf_renderer extends plugin_renderer_base {
         $row->cells[] = $recipienthtml;
         $row->cells[] = userdate($assertion->get_issuedon(), get_string('dateformatdate', 'local_obf'));
         $row->cells[] = $expirationdate;
+        $row->cells[] = s($assertion->get_issuer_name_used_in_assertion());
         $row->cells[] = $courses;
         $row->cells[] = html_writer::link(new moodle_url('/local/obf/event.php',
             array('id' => $assertion->get_id(), 'clientid' => $this->get_client_id(), 'course_id' => $logs)),

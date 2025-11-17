@@ -691,6 +691,21 @@ class obf_client {
             throw new Exception("Invalid badge response");
         }
 
+        // Get all alias objects for the client.
+        $url_aliases = $this->obf_url() . '/v2/client/' . $this->client_id() . '/alias';
+        $res_aliases = $this->request('get', $url_aliases);
+        $data_aliases = json_decode($res_aliases, true);
+        $result_aliases = $data_aliases['result'] ?? [];
+
+        // Filter alias objects that are available for this badge.
+        $available_aliases = [];
+
+        foreach ($result_aliases as $alias) {
+            if (in_array($alias['id'], $badge['client_alias_id'] ?? [])) {
+                $available_aliases[] = $alias;
+            }
+        }
+
         $content = $badge['content'][0] ?? [];
 
         return [
@@ -701,7 +716,6 @@ class obf_client {
             'language' => $badge['primary_language'] ?? '',
             'tags' => $content['tag'] ?? [],
             'alignment' => $content['alignment'] ?? [],
-            'client_alias_id' => $badge['client_alias_id'] ?? [], // Not used yet.
             'creator_id' => $badge['creator']['id'] ?? null, // Not used yet.
             'intent' => $badge['intent'] ?? '',
             'email_subject' => $badge['email_message']['subject'] ?? '',
@@ -728,7 +742,9 @@ class obf_client {
             'copy_of' => null,
             'image_small' => null,
             'deleted' => 0,
-            'lastmodifiedby' => null
+            'lastmodifiedby' => null,
+            'client_aliases' => $available_aliases,
+            'client_alias_id' => $badge['client_alias_id'] ?? [], // Not used, client_alias_id's are part of client_aliases objects.
         ];
     }
 
@@ -839,6 +855,7 @@ class obf_client {
                     $log_entry = json_decode($event['log_entry'], true);
                 }
 
+
                 $out[] = array(
                     'id' => $event['id'],
                     'name' => $event['name'] ?? '',
@@ -850,7 +867,8 @@ class obf_client {
                     'revoked' => [],
                     'log_entry' => $log_entry ?? [],
                     'timestamp' => $event['ctime'] ?? null,
-                    '_total' => $data['total']
+                    '_total' => $data['total'],
+                    'client_alias_id' => $event['client_alias_id'] ?? null
                 );
 
                 $rec_begin = min($rec_begin, $event['ctime']);
@@ -1049,7 +1067,7 @@ class obf_client {
             'mtime' => $event['mtime'] ?? 0,
             'timestamp' => $event['mtime'] ?? $event['issued_on'] ?? 0,
             'client_id' => $this->client_id(),
-            'client_alias' => $event['client_alias_id'] ?? '',
+            'client_alias_id' => $event['client_alias_id'] ?? '',
             'api_consumer_id' => $event['api_consumer_id'] ?? '',
             'log_entry' => $log_entry ?? [],
             'earnable_application_id' => $event['earnable_application_id'] ?? '',
@@ -1215,9 +1233,12 @@ class obf_client {
      * @param int $issuedon The issuance date as a Unix timestamp
      * @param string $email The email to send (template).
      * @param string $criteriaaddendum The criteria addendum.
+     * @param string $course The course name.
+     * @param string $activity The activity name.
+     * @param string|null $client_alias_id
      */
 
-    public function issue_badge(obf_badge $badge, $recipients, $issuedon, $email, $criteriaaddendum, $course, $activity) {
+    public function issue_badge(obf_badge $badge, $recipients, $issuedon, $email, $criteriaaddendum, $course, $activity, $client_alias_id = null) {
         global $CFG, $DB;
 
         // Before doing anything we test connection.
@@ -1408,6 +1429,11 @@ class obf_client {
                 'wwwroot' => $CFG->wwwroot
             ]
         ];
+
+        // Add client alias id to the params if provided
+        if (!empty($client_alias_id)) {
+            $params['client_alias_id'] = $client_alias_id;
+        }
 
         if (!is_null($email)) {
             $params['email_message'] = [

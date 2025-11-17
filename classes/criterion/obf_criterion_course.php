@@ -32,6 +32,7 @@ use moodle_database;
 use MoodleQuickForm;
 use stdClass;
 use type;
+use classes\obf_badge;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -61,6 +62,18 @@ class obf_criterion_course extends obf_criterion_item {
      * @var array[] Params cache.
      */
     protected $params = null;
+
+    /** 
+     * @var string $requiredparam Required param prefix 
+     * used in save_params() regex 
+     */
+    protected $requiredparam = 'course';    
+
+    /**
+     * @var string[] $optionalparams Optional params to be saved.
+     * @see obf_criterion_course::save_params
+     */
+    protected $optionalparams = array('completedby', 'mingrade', 'clientaliasid');
 
     /**
      * Get the instance of this class by id.
@@ -425,7 +438,6 @@ class obf_criterion_course extends obf_criterion_item {
      * @param mixed& $obj Form object.
      */
     public function get_options(&$mform, &$obj) {
-        $criterioncourseid = $this->get_id();
         $courseid = $this->get_courseid();
         $grade = $this->get_grade();
         $completedby = $this->get_completedby();
@@ -460,6 +472,9 @@ class obf_criterion_course extends obf_criterion_item {
         if ($this->has_completion_date()) {
             $mform->setDefault('completedby_' . $courseid, $completedby);
         }
+
+        /* Select issuer section */
+        $this->add_issuer_selector_section($mform, $obj);
     }
 
     /**
@@ -575,6 +590,7 @@ class obf_criterion_course extends obf_criterion_item {
         );
         if ($this->has_courseid()) {
             $fields[] = 'completedby_' . $this->get_courseid();
+            $fields[] = 'clientaliasid_' . $this->get_courseid();
         }
         return $fields;
     }
@@ -665,6 +681,66 @@ class obf_criterion_course extends obf_criterion_item {
         }
 
         return $coursecompleted;
+    }
+
+    /**
+     * Add "Select issuer" section for criterion.
+     *
+     * @param MoodleQuickForm $mform
+     * @param mixed $obj Form object, used to read badgeid if criterion is not yet set
+     */
+    public function add_issuer_selector_section($mform, $obj) {
+        $badgeid = '';
+        $crit = $this->get_criterion();
+        if ($crit) {
+            $badgeid = $crit->get_badgeid();
+        } else if (is_object($obj) && method_exists($obj, 'get_badgeid')) {
+            $badgeid = $obj->get_badgeid();
+        }
+
+        if ($badgeid === '') {
+            return;
+        }
+
+        $badge = obf_badge::get_instance($badgeid);
+        $aliases = $badge->get_client_aliases(); // Array of alias objects for this badge
+
+        if (empty($aliases)) {
+            return;
+        }
+
+        $courseid = $this->get_courseid();
+        // Unique header name belonging to specific course and specific badge
+        $headername = 'header_select_issuer_' . $courseid . '_' . $badgeid;
+        $mform->addElement('header', $headername, get_string('selectissuerheader', 'local_obf'));
+        $mform->setExpanded($headername, true);
+
+        $params = $this->get_params();
+        // Get 'clientaliasid' from optionalparams if exists, if not set empty string for main org
+        $issuer = isset($params[$courseid]['clientaliasid']) ? $params[$courseid]['clientaliasid'] : '';
+
+        // Options, add main org as first option
+        $options = array('' => $badge->get_issuer()->get_name());
+        foreach ($aliases as $alias) {
+            $id = $alias['id'] ?? '';
+            $name = $alias['name'] ?? '';
+            if ($id !== '') {
+                // Set aliases to options
+                $options[$id] = $name;
+            }
+        }
+
+        $fieldname = 'clientaliasid_' . $courseid;
+        $mform->addElement('select', $fieldname, get_string('choosebadgeissuer', 'local_obf'), $options);
+        $mform->addHelpButton($fieldname, 'choosebadgeissuer', 'local_obf');
+        $mform->setDefault($fieldname, $issuer);
+        $mform->setType($fieldname, PARAM_ALPHANUMEXT);
+
+        // Freeze if already used to issue badges.
+        $crit = $this->get_criterion();
+        if ($crit && method_exists($crit, 'is_met') && $crit->is_met()) {
+            $mform->freeze($fieldname);
+        }
     }
 
     /**
