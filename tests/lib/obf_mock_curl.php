@@ -35,6 +35,9 @@ class obf_mock_curl {
 
     private $testscenario = [];
 
+    /**
+     * New methods for future integration tests and fixtures.
+     */
     public function set_test_scenario(array $scenario) {
         $this->testscenario = $scenario;
     }
@@ -72,76 +75,6 @@ class obf_mock_curl {
         return $this->info ?? ['http_code' => 200];
     }
 
-    /** Old mockbuilder */
-    public static function get_mock_curl($self) {
-        // Create the mock object.
-        $curl = $self
-            ->getMockBuilder(curl::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['post', 'get', 'delete'])
-            ->getMock();
-
-        // Mock HTTP POST.
-        $curl->info = array('http_code' => 200);
-        return $curl;
-    }
-
-    public static function add_client_test_methods($self, &$curl) {
-        $curl->expects($self->once())->method(
-            'post')->with($self->stringEndsWith('/test/'), $self->anything(),
-            $self->anything())->will(
-            $self->returnValue(json_encode(array('post' => 'works!'))));
-
-        // Mock HTTP GET.
-        $curl->expects($self->any())->method('get')->with($self->logicalOr(
-            $self->stringEndsWith('/test/'),
-            $self->stringEndsWith('/doesnotexist/')),
-            $self->anything(), $self->anything())->will($self->returnCallback(
-            function($path, $arg1, $arg2) {
-                // This url exists, return a success message.
-                if ($path == "/test/") {
-                    return json_encode(array('get' => 'works!'));
-                }
-
-                return false; // Return false on failure (invalid url).
-            }));
-
-        // Mock HTTP DELETE.
-        $curl->expects($self->once())->method('delete')->with(
-            $self->stringEndsWith('/test/'), $self->anything(), $self->anything()
-        )->will($self->returnValue(json_encode(array(
-            'delete' => 'works!'
-        ))));
-    }
-
-    public static function add_get_badge($self, &$curl, $clientid, $badge) {
-        $curl->expects($self->once())->method('get')->with(
-            $self->stringEndsWith('/badge/' . $clientid . '/' . $badge->get_id()),
-            $self->anything(), $self->anything()
-        )->will($self->returnValue(json_encode(array(
-            'id' => $badge->get_id(),
-            'badge_id' => $badge->get_id(),
-            'description' => $badge->get_description(),
-            'image' => $badge->get_image(),
-            'name' => $badge->get_name()
-        ))));
-    }
-
-    public static function add_issue_badge($self, &$curl, $clientid) {
-        // Mock HTTP POST.
-        $curl->info = array('http_code' => 200);
-        $curl->expects($self->any())->method(
-            'post')->with(
-            $self->anything(),
-            $self->anything(),
-            $self->anything())->will(
-                $self->returnValue(json_encode(array(
-                    'post' => 'works!'
-            ))));
-        $curl->rawresponse = array('Location: https://localhost.localdomain/v1/event/PHPUNIT/PHPUNITEVENTID');
-
-    }
-
     /**
      * Create mock token for oauth2.
      */
@@ -160,5 +93,69 @@ class obf_mock_curl {
         // Make sure there is only one row.
         $DB->delete_records('local_obf_oauth2', []);
         $DB->insert_record('local_obf_oauth2', $row);
+    }
+
+    /** 
+     * Old methods refactored PHPUnit11 compatable
+     **/
+    public static function add_client_test_methods($self, &$curl) {
+        $curl->info = ['http_code' => 200];
+        // Mock HTTP POST.
+        $curl->method('post')
+            ->willReturnCallback(function($url, $params = null, $options = null) {
+                if (str_ends_with($url, '/test/')) {
+                    return json_encode(['post' => 'works!']);
+                }
+                return false;
+            });
+
+        // Mock HTTP GET.
+        $curl->method('get')
+            ->willReturnCallback(function($path, $arg1 = null, $arg2 = null) {
+                if ($path === '/test/' || str_ends_with($path, '/test/')) {
+                    return json_encode(['get' => 'works!']);
+                }
+                if ($path === '/doesnotexist/' || str_ends_with($path, '/doesnotexist/')) {
+                    return false;
+                }
+                return false;
+            });
+
+        // Mock HTTP DELETE.
+        $curl->method('delete')
+            ->willReturnCallback(function($url, $params = null, $options = null) {
+                if ($url === '/test/' || str_ends_with($url, '/test/')) {
+                    return json_encode(['delete' => 'works!']);
+                }
+                return false;
+            });
+    }
+
+    public static function add_get_badge($self, &$curl, $clientid, $badge) {
+        $pathsuffix = '/badge/' . $clientid . '/' . $badge->get_id();
+
+        $curl->method('get')
+            ->willReturnCallback(function($url, $params = null, $options = null) use ($pathsuffix, $badge) {
+                if (str_ends_with($url, $pathsuffix)) {
+                    return json_encode([
+                        'id' => $badge->get_id(),
+                        'badge_id' => $badge->get_id(),
+                        'description' => $badge->get_description(),
+                        'image' => $badge->get_image(),
+                        'name' => $badge->get_name(),
+                    ]);
+                }
+                return false;
+            });
+    }
+
+    public static function add_issue_badge($self, &$curl, $clientid) {
+        // Mock HTTP POST.
+        $curl->info = ['http_code' => 200];
+        $curl->rawresponse = [
+            'Location: https://localhost.localdomain/v1/event/' . $clientid . '/PHPUNITEVENTID'
+        ];
+        $curl->method('post')
+            ->willReturn(json_encode(['post' => 'works!']));
     }
 }

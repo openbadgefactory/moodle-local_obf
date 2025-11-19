@@ -35,7 +35,7 @@ require_once(__DIR__ . '/../classes/blacklist.php');
  * @copyright  2013-2020, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class local_obf_blacklist_testcase extends advanced_testcase {
+class local_obf_blacklist_test extends advanced_testcase {
     /**
      * Test blacklist saving, adding and removing.
      */
