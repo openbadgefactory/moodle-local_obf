@@ -42,7 +42,7 @@ require_once(__DIR__ . '/../classes/criterion/obf_criterion_activity.php');
  * @copyright  2013-2020, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class local_obf_criterion_testcase extends advanced_testcase {
+class local_obf_criterion_test extends advanced_testcase {
     /**
      * Test creation of criterion.
      */
@@ -125,7 +125,10 @@ class local_obf_criterion_testcase extends advanced_testcase {
         require_once(__DIR__ . '/../classes/event.php');
         require_once(__DIR__ . '/lib/obf_mock_curl.php');
         $this->resetAfterTest();
-        $curl = obf_mock_curl::get_mock_curl($this);
+        $curl = $this->getMockBuilder(curl::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['post', 'get', 'delete'])
+            ->getMock();
         set_config('obfclientid', 'PHPUNIT', 'local_obf');
 
         $client = obf_client::get_instance($curl);

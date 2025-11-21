@@ -34,7 +34,7 @@ use classes\obf_issuer;
  * @copyright  2013-2020, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class local_obf_assertion_collection_testcase extends advanced_testcase {
+class local_obf_assertion_collection_test extends advanced_testcase {
     /**
      * Test assertion collection.
      */

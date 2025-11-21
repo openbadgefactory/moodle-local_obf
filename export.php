@@ -121,11 +121,13 @@ foreach ($history as $assertion) {
     }
 
     if ((isset($courseid) && $courseid == $logs) || empty($courseid)) {
+        $expires = $assertion->get_expires();
+        $expiresby = $expires ? userdate($expires, get_string('dateformatdate', 'local_obf')) : '-';
         $rowdata = array(
             $assertion->get_badge()->get_name(), // Badge name
             implode(', ', $recipients), // Recipients
             userdate($assertion->get_issuedon(), get_string('dateformatdate', 'local_obf')), // Issued on
-            userdate($assertion->get_expires(), get_string('dateformatdate', 'local_obf')), // Expires by
+            $expiresby, // Expires by
             $issuername = $assertion->get_issuer_name_used_in_assertion(), // Issuer
             $coursefullname // Issued from
         );

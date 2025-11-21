@@ -39,7 +39,7 @@ class local_obf_badge_test extends advanced_testcase {
     /**
      * Simple provider of badge data.
      */
-    public function badgeprovider() {
+    public static function badgeprovider() {
         return array(
             array(
                 array(

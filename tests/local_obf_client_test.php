@@ -30,7 +30,7 @@ require_once(__DIR__ . '/../classes/client.php');
  * @copyright  2013-2020, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class local_obf_client_testcase extends advanced_testcase {
+class local_obf_client_test extends advanced_testcase {
     /**
      * Test API request.
      */
@@ -38,7 +38,10 @@ class local_obf_client_testcase extends advanced_testcase {
         $this->resetAfterTest();
 
         require_once(__DIR__ . '/lib/obf_mock_curl.php');
-        $curl = obf_mock_curl::get_mock_curl($this);
+        $curl = $this->getMockBuilder(curl::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['post', 'get', 'delete'])
+            ->getMock();
         obf_mock_curl::add_client_test_methods($this, $curl);
         obf_mock_curl::mock_oauth2_db();
 
