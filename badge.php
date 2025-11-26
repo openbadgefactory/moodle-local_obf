@@ -45,10 +45,6 @@ $context = empty($courseid) ? context_system::instance() : context_course::insta
 
 $url = new moodle_url('/local/obf/badge.php', array('action' => $action));
 
-if (!empty($clientid)) {
-    $url->param('clientid', $clientid);
-}
-
 if (!empty($badgeid)) {
     $url->param('id', $badgeid);
 }
