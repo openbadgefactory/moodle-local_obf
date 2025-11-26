@@ -922,5 +922,16 @@ function xmldb_local_obf_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025031800, 'local', 'obf');
     }
 
+    if ($oldversion < 2025102901) {
+        $table = new xmldb_table('local_obf_oauth2');
+
+        // Expire existing APIv1 OAuth2 access tokens to enable getting new APIv2 OAuth2 access tokens.
+        if ($dbman->table_exists($table)) {
+            $DB->execute("UPDATE {local_obf_oauth2} SET token_expires = 0");
+        }
+
+        // local_obf savepoint reached
+        upgrade_plugin_savepoint(true, 2025102901, 'local', 'obf');
+    }
     return true;
 }
