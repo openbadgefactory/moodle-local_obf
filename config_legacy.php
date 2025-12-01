@@ -60,76 +60,22 @@ switch ($action) {
         }
 
         $form = new obf_config_form($FULLME, array('client' => $client));
-        if (!empty(get_config('local_obf', 'obfclientid'))) {
-            $settings = new stdClass();
-            $settings->disableassertioncache = get_config('local_obf', 'disableassertioncache');
-            $settings->coursereset = get_config('local_obf', 'coursereset');
-            $settings->usersdisplaybadges = get_config('local_obf', 'usersdisplaybadges');
-            $settings->apidataretrieve = get_config('local_obf', 'apidataretrieve');
-            $settingsform = new obf_settings_form($FULLME, array('settings' => $settings));
-        }
 
         if (!is_null($data = $form->get_data())) {
             // Deauthentication.
             if (isset($data->deauthenticate) && $data->deauthenticate == 1) {
-                $client->deauthenticate();
+
+                unset_config('obfclientid', 'local_obf');
+                unset_config('apiurl', 'local_obf');
+
                 redirect(new moodle_url('/local/obf/config.php'), get_string('deauthenticationsuccess', 'local_obf'));
-            } else if (!empty($data->obftoken) && !empty($data->url)) {
-                // OBF request token is set, (re)do authentication.
-                try {
-
-                    $client->authenticate($data->obftoken, $data->url);
-
-                    try {
-                        $clientinfo = $client->get_client_info();
-                        $images = array('verified_by', 'issued_by');
-                        set_config('verified_client', $clientinfo['verified'] == 1, 'local_obf');
-                        foreach ($images as $imagename) {
-                            $imageurl = $client->get_branding_image_url($imagename);
-                            set_config($imagename . '_image_url', $imageurl, 'local_obf');
-                        }
-                    } catch (Exception $ex) {
-                        debugging(var_export($ex, true));
-                    }
-                    if ($badgesupport) {
-                        require_once($CFG->libdir . '/badgeslib.php');
-
-                        $badges = array_merge(badges_get_badges(BADGE_TYPE_COURSE), badges_get_badges(BADGE_TYPE_SITE));
-
-                        // Redirect to page where the user can export existing
-                        // badges to OBF and change some settings.
-                        redirect(new moodle_url('/local/obf/config.php', array('action' => 'exportbadges')));
-                    }
-
-                    // No local badges, no need to export.
-                    redirect(new moodle_url('/local/obf/config.php',
-                        array('msg' => get_string('authenticationsuccess', 'local_obf'))));
-                } catch (Exception $e) {
-                    $content .= $OUTPUT->notification($e->getMessage());
-                }
-            } else {
+            }
+            else {
                 redirect(new moodle_url('/local/obf/config_legacy.php'));
             }
         }
 
-        if (!empty($msg)) {
-            $content .= $OUTPUT->notification(s($msg), 'notifysuccess');
-        }
-
-        echo $OUTPUT->notification(get_string('upgradelegacyapi', 'local_obf'), 'redirectmessage');
-
         $content .= $PAGE->get_renderer('local_obf')->render($form);
-
-        if (isset($settingsform)) {
-            if (!is_null($data = $settingsform->get_data())) {
-                set_config('disableassertioncache', $data->disableassertioncache, 'local_obf');
-                set_config('coursereset', $data->coursereset, 'local_obf');
-                set_config('usersdisplaybadges', $data->usersdisplaybadges, 'local_obf');
-                set_config('apidataretrieve', $data->apidataretrieve, 'local_obf');
-                redirect(new moodle_url('/local/obf/config.php', array('msg' => get_string('settingssaved', 'local_obf'))));
-            }
-            $content .= $PAGE->get_renderer('local_obf')->render($settingsform);
-        }
 
         break;
 
@@ -204,15 +150,7 @@ switch ($action) {
                 set_config('displaymoodlebadges', $data->displaymoodlebadges, 'local_obf');
             }
 
-            if (empty(get_config('local_obf', 'obfclientid'))) {
-                // OAuth2 API auth in use
-                redirect(new moodle_url('/local/obf/config.php'));
-            }
-            else {
-                // Legacy API auth in use
-                $url->param('action', 'authenticate');
-                redirect($url);
-            }
+            redirect(new moodle_url('/local/obf/config.php'));
         }
 
         $content .= $PAGE->get_renderer('local_obf')->render_badge_exporter($exportform);

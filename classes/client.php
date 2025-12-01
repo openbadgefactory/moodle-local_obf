@@ -44,7 +44,7 @@ require_once(__DIR__ . '/../lib.php');
 require_once($CFG->libdir . '/filelib.php');
 
 /**
- * Class for handling the communication to Open Badge Factory API using legacy authentication.
+ * Class for handling the communication to Open Badge Factory API v2.
  *
  * @copyright  2013-2021, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -148,17 +148,11 @@ class obf_client {
 
         $ok = true;
 
-        $legacyid = get_config('local_obf', 'obfclientid');
         $available = self::get_available_clients($user);
 
-        if (empty($legacyid) && empty($available)) {
+        if (empty($available)) {
             // No connection available.
             $ok = false;
-        } else if ($legacyid) {
-            // Legacy connection.
-            if ($id) {
-                $ok = $id === $legacyid;
-            }
         } else if (!is_null($user)) {
             // OAuth2 connections.
             $ok = is_null($id) ? !empty($available) : isset($available[$id]);
@@ -1507,23 +1501,6 @@ class obf_client {
         }
     }
 
-    /**
-     * Returns the expiration date of the OBF certificate as a unix timestamp.
-     *
-     * @return mixed The expiration date or false if the certificate is missing.
-     */
-    public function get_certificate_expiration_date() {
-        $certfile = $this->get_cert_filename();
-
-        if (!file_exists($certfile)) {
-            return false;
-        }
-
-        $cert = file_get_contents($certfile);
-        $ssl = openssl_x509_parse($cert);
-
-        return $ssl['validTo_time_t'];
-    }
 
     /**
      * Get absolute path of certificate directory.

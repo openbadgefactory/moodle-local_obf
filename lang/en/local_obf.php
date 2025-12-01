@@ -136,7 +136,7 @@ $string['confirmcriteriondeletion'] = 'Are you sure you want to delete this awar
 $string['confirmrevokation'] = 'Are you sure you want to revoke the users badge?';
 $string['connect'] = 'Connect {$a}';
 $string['connectionerror'] = "A connection error occurred. This may be due to a revoked subscription or unreachable servers. If the issue persists, please contact support.";
-$string['connectionisworking'] = 'OBF connection is up and working. The client certificate expires in <strong>{$a}</strong>.';
+$string['legacyconnectionunavailable'] = 'Legacy API connection is no longer available. Please disconnect and authenticate again with OAuth2 keys.';
 $string['connectionstatus'] = 'Connection status';
 $string['coursealreadyincriterion'] =
     'The rule of automatic awarding of this badge in this course cannot be edited, because this course/badge -combination already exists in another rule containing multiple courses.';
