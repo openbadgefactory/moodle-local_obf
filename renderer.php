@@ -1184,22 +1184,25 @@ class local_obf_renderer extends plugin_renderer_base {
         }
 
         $recipienthtml = '';
-        $badgeid = $this->page->url->get_param('id');
-        $logs = $assertion->get_log_entry('course_id');
+        $logcourseid = $assertion->get_log_entry('course_id');
         $activity = $assertion->get_log_entry('activity_name');
+        // Default: course_id value is not empty and not numeric.
+        $issuedfrom = '';
 
-        if (!empty($logs)) {
-            $courses = $this->get_course_name($logs);
+        // Manual issuing: course_id value is null or empty string.
+        if ($logcourseid === null || $logcourseid === '') {
+            $issuedfrom = 'Manual issuing';
+        // Course issuing: course_id value is number or numeric string.
+        } else if (is_numeric($logcourseid)) {
+            $issuedfrom = $this->get_course_name((int)$logcourseid) ?? '';
             if (!empty($activity)) {
-                $courses .= ' (' . $activity . ')';
+                $issuedfrom .= ' (' . $activity . ')';
             }
-        } else {
-            $courses = 'Manual issuing';
         }
 
         if (!$users || count($users) === 0) {
             $recipienthtml .= html_writer::tag('p', '-');
-        }
+        } 
         else if ($assertion->get_recipient_count() > 1) {
             $recipienthtml .= html_writer::tag('p', get_string('historyrecipients', 'local_obf', $assertion->get_recipient_count()),
                 array('title' => $this->render_userlist($users, false)));
@@ -1211,10 +1214,19 @@ class local_obf_renderer extends plugin_renderer_base {
         $row->cells[] = userdate($assertion->get_issuedon(), get_string('dateformatdate', 'local_obf'));
         $row->cells[] = $expirationdate;
         $row->cells[] = s($assertion->get_issuer_name_used_in_assertion());
-        $row->cells[] = $courses;
-        $row->cells[] = html_writer::link(new moodle_url('/local/obf/event.php',
-            array('id' => $assertion->get_id(), 'clientid' => $this->get_client_id(), 'course_id' => $logs)),
-            get_string('showassertion', 'local_obf'));
+        $row->cells[] = $issuedfrom;
+        $linkparams = [
+            'id' => $assertion->get_id(), 
+            'clientid' => $this->get_client_id()
+        ];
+        // Include courseid param if numeric value available.
+        if (is_numeric($logcourseid)) {
+            $linkparams['course_id'] = $logcourseid;
+        }
+        $row->cells[] = html_writer::link(
+            new moodle_url('/local/obf/event.php', $linkparams),
+            get_string('showassertion', 'local_obf')
+        );
 
         return $row;
     }
@@ -1267,18 +1279,23 @@ class local_obf_renderer extends plugin_renderer_base {
             }
 
             $data['expires'] = $expires;
-            $course = $assertion->get_log_entry("course_id");
-            $coursename = $this->get_course_name($course);
+            $courseid = $assertion->get_log_entry("course_id");
             $activity = $assertion->get_log_entry('activity_name');
-
-            if ($coursename !== null) {
-                $data['course'] = $coursename;
+            // Default: course_id value is not empty and not numeric.
+            $issuedfrom = '';
+            
+            // Manual issuing: course_id value is null or empty string.
+            if ($courseid === null || $courseid === '') {
+                $issuedfrom = 'Manual issuing';
+            // Course issuing: course_id value is number or numeric string.
+            } else if (is_numeric($courseid)) {
+                $issuedfrom = $this->get_course_name((int)$courseid);
                 if (!empty($activity)) {
-                    $data['course'] .= ' (' . $activity . ')';
+                    $issuedfrom .= ' (' . $activity . ')';
                 }
-            } else {
-                $data['course'] = 'Manual issuing';
             }
+            // Add issued from to data
+            $data['course'] = $issuedfrom;
             fputcsv($file, $data);
         }
         fclose($file);

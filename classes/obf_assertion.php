@@ -816,19 +816,7 @@ class obf_assertion {
             return null;
         }
 
-        $value = $this->logentry[$key];
-        // If value is an array, return first non-empty scalar value or null.
-        if (is_array($value)) {
-            foreach ($value as $v) {
-                if (is_scalar($v) && $v !== '') {
-                    return $v;
-                }
-            }
-            return null;
-        }
-
-        // Return scalar value or null.
-        return is_scalar($value) ? $value : null;
+        return $this->logentry[$key];
     }
 
     /**

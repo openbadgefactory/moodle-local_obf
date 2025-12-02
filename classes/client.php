@@ -1416,18 +1416,25 @@ class obf_client {
 
         $coursename = $badge->get_course_name($course);
 
+        // Always add wwwroot to log entry.
+        $logentry = ['wwwroot' => $CFG->wwwroot];
+
+        // Add course and activity info to log entry if provided.
+        if (!empty($course)) {
+            $logentry['course_id'] = (string)$course;
+            $logentry['course_name'] = $coursename;
+            if (!empty($activity)) {
+                $logentry['activity_name'] = $activity;
+            }
+        }
+
         $params = [
             'recipient' => $recipientsnameemail,
             'issued_on' => $issuedon,
             'api_consumer_id' => OBF_API_CONSUMER_ID,
             'send_email' => true,
             'show_report' => true,
-            'log_entry' => [
-                'course_id' => (string)$course,
-                'course_name' => $coursename,
-                'activity_name' => $activity,
-                'wwwroot' => $CFG->wwwroot
-            ]
+            'log_entry' => $logentry
         ];
 
         // Add client alias id to the params if provided

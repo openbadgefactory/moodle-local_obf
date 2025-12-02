@@ -93,18 +93,21 @@ $csvfile->add_data($headers);
 // Write history data to the CSV file.
 foreach ($history as $assertion) {
     $users = $history->get_assertion_users($assertion);
-    $logs = $assertion->get_log_entry('course_id');
+    $logcourseid = $assertion->get_log_entry('course_id');
     $activity = $assertion->get_log_entry('activity_name');
-    $courses = '';
-    $coursefullname = '';
-    if (!empty($logs)) {
-        $course = $DB->get_record('course', ['id' => $logs], '*');
-        $coursefullname = $course ? $course->fullname : '';
+    // Default: course_id value is not empty and not numeric.
+    $issuedfrom = '';
+
+    // Manual issuing: course_id value is null or empty string.
+    if ($logcourseid === null || $logcourseid === '') {
+        $issuedfrom = 'Manual issuing';
+    // Course issuing: course_id value is number or numeric string and matches optional param.
+    } else if (is_numeric($logcourseid) && (isset($courseid) && $courseid == $logcourseid)) {
+        $course = $DB->get_record('course', ['id' => (int)$logcourseid], '*');
+        $issuedfrom = $course ? $course->fullname : '';
         if (!empty($activity)) {
-            $coursefullname .= ' (' . $activity . ')';
+                $issuedfrom .= ' (' . $activity . ')';
         }
-    } else {
-        $coursefullname = 'Manual issuing';
     }
 
     $recipients = array();
@@ -120,21 +123,19 @@ foreach ($history as $assertion) {
         }
     }
 
-    if ((isset($courseid) && $courseid == $logs) || empty($courseid)) {
-        $expires = $assertion->get_expires();
-        $expiresby = $expires ? userdate($expires, get_string('dateformatdate', 'local_obf')) : '-';
-        $rowdata = array(
-            $assertion->get_badge()->get_name(), // Badge name
-            implode(', ', $recipients), // Recipients
-            userdate($assertion->get_issuedon(), get_string('dateformatdate', 'local_obf')), // Issued on
-            $expiresby, // Expires by
-            $issuername = $assertion->get_issuer_name_used_in_assertion(), // Issuer
-            $coursefullname // Issued from
-        );
+    $expires = $assertion->get_expires();
+    $expiresby = $expires ? userdate($expires, get_string('dateformatdate', 'local_obf')) : '-';
+    $rowdata = array(
+    $assertion->get_badge()->get_name(), // Badge name
+        implode(', ', $recipients), // Recipients
+        userdate($assertion->get_issuedon(), get_string('dateformatdate', 'local_obf')), // Issued on
+        $expiresby, // Expires by
+        $issuername = $assertion->get_issuer_name_used_in_assertion(), // Issuer
+        $issuedfrom // Issued from
+    );
 
-        // Add a record to the CSV file.
-        $csvfile->add_data($rowdata);
-    }
+    // Add a record to the CSV file.
+    $csvfile->add_data($rowdata);
 }
 
 // Close the CSV file.
