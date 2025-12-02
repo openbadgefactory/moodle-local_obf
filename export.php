@@ -101,8 +101,8 @@ foreach ($history as $assertion) {
     // Manual issuing: course_id value is null or empty string.
     if ($logcourseid === null || $logcourseid === '') {
         $issuedfrom = 'Manual issuing';
-    // Course issuing: course_id value is number or numeric string and matches optional param.
-    } else if (is_numeric($logcourseid) && (isset($courseid) && $courseid == $logcourseid)) {
+    // Course issuing: course_id value is number or numeric string.
+    } else if (is_numeric($logcourseid)) {
         $course = $DB->get_record('course', ['id' => (int)$logcourseid], '*');
         $issuedfrom = $course ? $course->fullname : '';
         if (!empty($activity)) {

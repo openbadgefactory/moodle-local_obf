@@ -669,6 +669,7 @@ class obf_client {
         foreach ($oauth2 as $o2) {
             $this->set_oauth2($o2);
             $out = array_merge($out, $this->get_badges($categories, $query));
+            usleep(100000); // Sleep 0.1s to avoid hitting rate limits.
         }
         $this->set_oauth2($prevoauth2);
 
@@ -1122,6 +1123,7 @@ class obf_client {
             }
 
             $offset += $limit;
+            usleep(100000); // Sleep 0.1s to avoid hitting rate limits.
         } while ($total !== null && $offset < (int)$total);
 
         return ['revoked' => $map];
@@ -1166,6 +1168,7 @@ class obf_client {
             if (isset($badge['id']) && !empty($badge['id'])) {
                 try {
                     $this->delete_badge($badge['id']);
+                    usleep(100000); // Sleep 0.1s to avoid hitting rate limits.
                 } catch (Exception $e) {
                     error_log("Failed to delete badge with ID {$badge['id']}: " . $e->getMessage());
                 }
