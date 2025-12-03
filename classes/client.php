@@ -663,6 +663,7 @@ class obf_client {
         foreach ($oauth2 as $o2) {
             $this->set_oauth2($o2);
             $out = array_merge($out, $this->get_badges($categories, $query));
+            usleep(100000); // Sleep 0.1s to avoid hitting rate limits.
         }
         $this->set_oauth2($prevoauth2);
 
@@ -1116,6 +1117,7 @@ class obf_client {
             }
 
             $offset += $limit;
+            usleep(100000); // Sleep 0.1s to avoid hitting rate limits.
         } while ($total !== null && $offset < (int)$total);
 
         return ['revoked' => $map];
@@ -1160,6 +1162,7 @@ class obf_client {
             if (isset($badge['id']) && !empty($badge['id'])) {
                 try {
                     $this->delete_badge($badge['id']);
+                    usleep(100000); // Sleep 0.1s to avoid hitting rate limits.
                 } catch (Exception $e) {
                     error_log("Failed to delete badge with ID {$badge['id']}: " . $e->getMessage());
                 }
@@ -1410,18 +1413,25 @@ class obf_client {
 
         $coursename = $badge->get_course_name($course);
 
+        // Always add wwwroot to log entry.
+        $logentry = ['wwwroot' => $CFG->wwwroot];
+
+        // Add course and activity info to log entry if provided.
+        if (!empty($course)) {
+            $logentry['course_id'] = (string)$course;
+            $logentry['course_name'] = $coursename;
+            if (!empty($activity)) {
+                $logentry['activity_name'] = $activity;
+            }
+        }
+
         $params = [
             'recipient' => $recipientsnameemail,
             'issued_on' => $issuedon,
             'api_consumer_id' => OBF_API_CONSUMER_ID,
             'send_email' => true,
             'show_report' => true,
-            'log_entry' => [
-                'course_id' => (string)$course,
-                'course_name' => $coursename,
-                'activity_name' => $activity,
-                'wwwroot' => $CFG->wwwroot
-            ]
+            'log_entry' => $logentry
         ];
 
         // Add client alias id to the params if provided

@@ -811,7 +811,12 @@ class obf_assertion {
      * @return mixed
      */
     public function get_log_entry($key) {
-        return isset($this->logentry[$key]) ? $this->logentry[$key] : null;
+        // Check that logentry is an array and key exists.
+        if (!is_array($this->logentry) || !array_key_exists($key, $this->logentry)) {
+            return null;
+        }
+
+        return $this->logentry[$key];
     }
 
     /**
@@ -819,6 +824,11 @@ class obf_assertion {
      * @return $this
      */
     public function set_log_entry($logentry) {
+        // Ensure logentry is an array.
+        if (!is_array($logentry)) {
+            $this->logentry = [];
+            return $this;
+        }
         $this->logentry = $logentry;
         return $this;
     }
