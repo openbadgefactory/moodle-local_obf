@@ -671,6 +671,19 @@ class obf_client {
     }
 
     /**
+     * Get all client aliases.
+     *
+     * @return array The alias data.
+     * @throws Exception If the request fails
+     */
+    public function get_aliases() {
+        $url = $this->obf_url() . '/v2/client/' . $this->client_id() . '/alias';
+        $res = $this->request('get', $url);
+        $data = json_decode($res_aliases, true);
+        return $data['result'] ?? [];
+    }
+
+    /**
      * Get a single badge from the API.
      *
      * @param string $badgeid
@@ -687,10 +700,7 @@ class obf_client {
         }
 
         // Get all alias objects for the client.
-        $url_aliases = $this->obf_url() . '/v2/client/' . $this->client_id() . '/alias';
-        $res_aliases = $this->request('get', $url_aliases);
-        $data_aliases = json_decode($res_aliases, true);
-        $result_aliases = $data_aliases['result'] ?? [];
+        $result_aliases = $this->get_aliases();
 
         // Filter alias objects that are available for this badge.
         $available_aliases = [];

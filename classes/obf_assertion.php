@@ -1007,6 +1007,8 @@ class obf_assertion {
      * @return string
      */
     public function get_issuer_name_used_in_assertion() {
+        static $lookup = [];
+
         $badge = $this->get_badge();
         $default = $badge->get_issuer()->get_name();
         $clientaliasid = $this->client_alias_id;
@@ -1016,31 +1018,18 @@ class obf_assertion {
             return $default;
         }
 
-        // Get badge's client's aliases.
-        $clientaliases = $badge->get_client_aliases();
-        // If no aliases found, try requesting badge and getting its aliases.
-        if (empty($clientaliases)) {
+        if (empty($lookup)) {
             try {
-                $res = $badge->get_client()->get_badge($badge->get_id());
-                if (!empty($res['client_aliases'])) {
-                    $badge->set_client_aliases($res['client_aliases']);
-                    $clientaliases = $badge->get_client_aliases();
+                $aliases = $badge->get_client()->get_aliases();
+                foreach ($aliases as $a) {
+                    $lookup[$a['id']] = $a['name'];
                 }
             } catch (\Throwable $e) {
-                // Request failed, return default issuer name.
-                return $default;
+                $lookup[$clientaliasid] = $default;
             }
         }
 
-        // Find the alias matching client alias id.
-        foreach ($clientaliases as $alias) {
-            if (!empty($alias['id']) && $alias['id'] == $clientaliasid) {
-                return $alias['name'];
-            }
-        }
-
-        // Fallback to default issuer name.
-        return $default;
+        return $lookup[$clientaliasid] ?? $default;
     }
 
     /**
