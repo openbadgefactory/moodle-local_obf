@@ -1007,7 +1007,7 @@ class obf_assertion {
      * @return string
      */
     public function get_issuer_name_used_in_assertion() {
-        static $lookup = [];
+        static $lookup = null;
 
         $badge = $this->get_badge();
         $default = $badge->get_issuer()->get_name();
@@ -1018,15 +1018,14 @@ class obf_assertion {
             return $default;
         }
 
-        if (empty($lookup)) {
+        if (is_null($lookup)) {
+            $lookup = [];
             try {
                 $aliases = $badge->get_client()->get_aliases();
                 foreach ($aliases as $a) {
                     $lookup[$a['id']] = $a['name'];
                 }
-            } catch (\Throwable $e) {
-                $lookup[$clientaliasid] = $default;
-            }
+            } catch (\Throwable $e) { }
         }
 
         return $lookup[$clientaliasid] ?? $default;

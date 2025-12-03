@@ -679,7 +679,7 @@ class obf_client {
     public function get_aliases() {
         $url = $this->obf_url() . '/v2/client/' . $this->client_id() . '/alias';
         $res = $this->request('get', $url);
-        $data = json_decode($res_aliases, true);
+        $data = json_decode($res, true);
         return $data['result'] ?? [];
     }
 
