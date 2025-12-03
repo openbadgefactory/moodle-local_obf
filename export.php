@@ -69,6 +69,8 @@ if (!empty($badgeid)) {
     $searchparams['badge_id'] = $badgeid;
 }
 
+$courselookup = $DB->get_records_menu('course', null, '', 'id, fullname');
+
 $history = obf_assertion::get_assertions($client, $badge, null, -1, false, $searchparams);
 
 // CSV output filename.
@@ -103,8 +105,7 @@ foreach ($history as $assertion) {
         $issuedfrom = 'Manual issuing';
     // Course issuing: course_id value is number or numeric string.
     } else if (is_numeric($logcourseid)) {
-        $course = $DB->get_record('course', ['id' => (int)$logcourseid], '*');
-        $issuedfrom = $course ? $course->fullname : '';
+        $issuedfrom = $courselookup[$logcourseid] ?? '';
         if (!empty($activity)) {
                 $issuedfrom .= ' (' . $activity . ')';
         }
