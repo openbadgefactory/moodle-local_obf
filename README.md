@@ -7,6 +7,14 @@ With the local_obf plugin you can issue Open Badges created in Open Badge Factor
 [https://openbadgefactory.com](https://openbadgefactory.com) (You can register for free, see
 [https://openbadgefactory.com/en/pricing/](https://openbadgefactory.com/en/pricing/) for details about different service levels).
 
+**IMPORTANT WARNING**
+
+A Pro-level subscription is required for plugin versions 2.0.0 and newer.
+Organisations on Basic or Premium plans should not upgrade to this version.
+
+This plugin no longer uses the OBF APIv1. OAuth2-based API keys are now required.
+Obsolete legacy API keys (APIv1 client-side certificates) must be replaced with new keys.
+To continue using the plugin, ensure your OBF account is on the Pro level and that you have access to OAuth2 keys.
 
 How to install
 --------------
@@ -31,16 +39,31 @@ Post install
 
 To connect to Open Badge Factory, the plugin needs an API key.
 
-To generate the required API key, log in to Open Badge Factory. When logged in, navigate to `Admin tools > API`.
-
-OAuth2 key:
-
-Pro level clients can also connect with OAuth2. This supports multiple clients on one Moodle installation.
+To generate the required OAuth2 API key, log in to Open Badge Factory. When logged in, navigate to `Admin tools > API`.
 
 On the API key page click on `Generate new client secret` for OAuth2 Client Credentials. Give a description for the key and copy the client id and secret values into OBF Moodle plugin settings, in `Site administration > Open Badges > Settings`.
 
+This plugin supports multiple clients on one Moodle installation.
+
 Changelog
 ------------------
+
+2.0.0
+
+- Pro level subscription required.
+
+- New features:
+  - Switch to OBF API v2 on the backend. See documentation here: https://openbadgefactory.com/obf-api-v2/
+  - Support sub-organisations for badge issuing.
+
+- CSV export bug fixes improvements:
+  - CSV exports can now handle large issuing histories (1,000+ badge issuing events).
+  - CSV exports now include Issuer and Issued from fields.
+
+- PHPUnit test fixes and PHPUnit test support for Moodle 5.1.
+
+- Minor bug fixes and improvements.
+
 
 1.1.4
 
