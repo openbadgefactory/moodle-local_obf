@@ -603,7 +603,7 @@ class obf_client {
 
                 // Remove primary language from alt_language list.
                 $primary = $badge['primary_language'] ?? '';
-                $languages = $badge['languages'] ?? [];
+                $languages = $badge['language'] ?? $badge['languages'] ?? [];
                 $alt_languages = array_values(array_filter($languages, function ($lang) use ($primary) {
                     return $lang !== $primary && $lang !== '';
                 }));
