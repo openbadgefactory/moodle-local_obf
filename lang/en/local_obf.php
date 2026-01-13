@@ -487,3 +487,6 @@ $string['choosebadgeissuer_help'] = 'Main or sub-organisation associated with th
 $string['suborganization'] = 'Available sub-organisations';
 $string['invalidalias'] = 'Selected issuer is not available for this badge.';
 $string['selectissuerheader'] = 'Select badge issuer';
+
+$string['exportcsv'] = 'Export to CSV';
+$string['manualissuing'] = 'Manual issuing';

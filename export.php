@@ -102,7 +102,7 @@ foreach ($history as $assertion) {
 
     // Manual issuing: course_id value is null or empty string.
     if ($logcourseid === null || $logcourseid === '') {
-        $issuedfrom = 'Manual issuing';
+        $issuedfrom = get_string('manualissuing', 'local_obf');
     // Course issuing: course_id value is number or numeric string.
     } else if (is_numeric($logcourseid)) {
         $issuedfrom = $courselookup[$logcourseid] ?? '';
