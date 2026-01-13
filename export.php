@@ -78,12 +78,12 @@ $filename = 'badge_history.csv';
 
 // CSV headers.
 $headers = array(
-    get_string('exportbadgename', 'local_obf'), 
-    get_string('exportrecipients', 'local_obf'),
-    get_string('exportissuedon', 'local_obf'), 
-    get_string('exportexpiresby', 'local_obf'),
-    get_string('exportissuer', 'local_obf'),
-    get_string('exportissuedfrom', 'local_obf'));
+    get_string('badgename', 'local_obf'), 
+    get_string('recipients', 'local_obf'),
+    get_string('issuedon', 'local_obf'), 
+    get_string('expiresby', 'local_obf'),
+    get_string('issuer', 'local_obf'),
+    get_string('issuedfrom', 'local_obf'));
 
 // Initialize CSV file.
 $csvfile = new \csv_export_writer();
