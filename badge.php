@@ -49,6 +49,10 @@ if (!empty($badgeid)) {
     $url->param('id', $badgeid);
 }
 
+if (!empty($clientid)) {
+    $url->param('clientid', $clientid);
+}
+
 // Site context.
 if (empty($courseid)) {
     require_login();
