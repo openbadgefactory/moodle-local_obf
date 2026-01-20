@@ -186,6 +186,7 @@ class obf_criterion_activity extends obf_criterion_course {
         $cmrecords = $DB->get_records_sql($sql);
         foreach ($cmrecords as $cmrecord) {
             $modulename = $DB->get_field('modules', 'name', array('id' => $cmrecord->module));
+            $modulename_localised = get_string('modulename', 'mod_' . $modulename);
             $section = $DB->get_record_sql('SELECT * FROM {course_sections} WHERE id = ?', array('id' => $cmrecord->section));
 
             $activities[$cmrecord->id]['sectionid'] = $section->id;
@@ -207,7 +208,7 @@ class obf_criterion_activity extends obf_criterion_course {
             $activities[$cmrecord->id]['name'] =
                 $imageicon . ' ' .
                 '<span class="modulename">'
-                . $modulename .
+                . $modulename_localised .
                 ' - ' . $DB->get_field($modulename, 'name', array('id' => $cmrecord->instance));
         }
 

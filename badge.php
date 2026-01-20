@@ -49,6 +49,10 @@ if (!empty($badgeid)) {
     $url->param('id', $badgeid);
 }
 
+if (!empty($clientid)) {
+    $url->param('clientid', $clientid);
+}
+
 // Site context.
 if (empty($courseid)) {
     require_login();
@@ -83,7 +87,7 @@ switch ($action) {
                 'api_consumer_id' => OBF_API_CONSUMER_ID,
                 'limit' => 20,
                 'offset' => $currpage * 20,
-                'order_by' => 'asc'
+                'order_by' => 'desc'
             );
 
             $history = obf_assertion::get_assertions($client, null, null, -1, false, $searchparams);
@@ -213,7 +217,7 @@ switch ($action) {
                         'badge_id' => $badgeid,
                         'limit' => 20,
                         'offset' => $page * 20,
-                        'order_by' => 'asc'
+                        'order_by' => 'desc'
                     );
 
                     $history = obf_assertion::get_assertions($client, null, null, -1, false, $searchparams);

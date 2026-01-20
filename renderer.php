@@ -1075,7 +1075,7 @@ class local_obf_renderer extends plugin_renderer_base {
             if ($badge != null) {
                 $html .= "<input type='hidden' name='badgeid' value='" . s($badge->get_id()) . "'>";
             }
-            $html .= '<button type="submit" class="btn btn-secondary">Export to CSV</button>';
+            $html .= '<button type="submit" class="btn btn-secondary">' . get_string('exportcsv', 'local_obf') . '</button>';
             $html .= '</form>';
             $html .= '</div>';
 
@@ -1191,7 +1191,7 @@ class local_obf_renderer extends plugin_renderer_base {
 
         // Manual issuing: course_id value is null or empty string.
         if ($logcourseid === null || $logcourseid === '') {
-            $issuedfrom = 'Manual issuing';
+            $issuedfrom = get_string('manualissuing', 'local_obf');
         // Course issuing: course_id value is number or numeric string.
         } else if (is_numeric($logcourseid)) {
             $issuedfrom = $this->get_course_name((int)$logcourseid) ?? '';

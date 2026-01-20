@@ -112,7 +112,15 @@ if (!$hasrevokepermission && $action == 'revoke') {
 }
 $client = obf_client::get_instance();
 
-$PAGE->set_url(new moodle_url('/local/obf/event.php', array('id' => $eventid)));
+$url = new moodle_url('/local/obf/event.php', array('id' => $eventid));
+if (!empty($clientid)) {
+    $url->param('clientid', $clientid);
+}
+if (!empty($courseid)) {
+    $url->param('course_id', $courseid);
+}
+$PAGE->set_url($url);
+
 $PAGE->set_context(context_system::instance());
 $PAGE->set_pagelayout('admin');
 $PAGE->set_title(get_string('obf', 'local_obf'));
