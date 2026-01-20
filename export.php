@@ -57,7 +57,7 @@ $badge = empty($badgeid) ? null : obf_badge::get_instance($badgeid);
 
 $searchparams = array(
     'api_consumer_id' => OBF_API_CONSUMER_ID,
-    'order_by' => 'asc'
+    'order_by' => 'desc'
 );
 
 if (!empty($courseid)) {

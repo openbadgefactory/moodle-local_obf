@@ -94,7 +94,7 @@ switch ($action) {
             'log_entry' => 'course_id:' . (string)$courseid,
             'limit' => 20,
             'offset' => $currpage * 20,
-            'order_by' => 'asc'
+            'order_by' => 'desc'
         );
 
         $history = obf_assertion::get_assertions($client, null, null, -1, false, $searchparams);
