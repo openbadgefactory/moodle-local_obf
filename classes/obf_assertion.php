@@ -439,12 +439,6 @@ class obf_assertion {
             }
         }
 
-        // Sort the assertions by date...
-        usort($assertions,
-            function (obf_assertion $a1, obf_assertion $a2) {
-                return $a1->get_issuedon() - $a2->get_issuedon();
-            });
-
         // ... And limit the result set if that's what we want.
         if ($limit > 0) {
             $assertions = array_slice($assertions, 0, $limit);
@@ -488,11 +482,6 @@ class obf_assertion {
                 }
             }
         }
-
-        // Sort the assertions by date...
-        usort($assertions, function(obf_assertion $a1, obf_assertion $a2) {
-            return $a1->get_issuedon() - $a2->get_issuedon();
-        });
 
         return new obf_assertion_collection($assertions);
     }
@@ -544,10 +533,6 @@ class obf_assertion {
                 $assertions[] = $assertion;
             }
         }
-        // Sort the assertions by date...
-        usort($assertions, function(obf_assertion $a1, obf_assertion $a2) {
-            return $a1->get_issuedon() - $a2->get_issuedon();
-        });
 
         // ... And limit the result set if that's what we want.
         if ($limit > 0) {

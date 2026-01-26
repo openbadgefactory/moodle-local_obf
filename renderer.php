@@ -1017,6 +1017,8 @@ class local_obf_renderer extends plugin_renderer_base {
                 $method = $criterion->get_completion_method() == obf_criterion::CRITERIA_COMPLETION_ALL ? 'all' : 'any';
                 $criterionhtml .= html_writer::tag('p', get_string('criteriacompletedwhen' . $method, 'local_obf'));
             }
+
+            $attributelist = array_values(array_unique($attributelist, SORT_STRING));
             $criterionhtml .= html_writer::alist($attributelist);
 
             $html .= $this->output->box($criterionhtml, 'generalbox service');
