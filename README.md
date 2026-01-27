@@ -48,6 +48,12 @@ This plugin supports multiple clients on one Moodle installation.
 Changelog
 ------------------
 
+2.0.1
+
+- Awarding histories show the most recent badge issuing events first.
+- Translation fixes.
+- Minor bug fixes and improvements.
+
 2.0.0
 
 - Pro level subscription required.
