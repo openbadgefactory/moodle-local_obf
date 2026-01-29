@@ -143,11 +143,12 @@ class obf_criterion_form extends local_obf_form_base implements renderable {
         }
         foreach ($toadd as $key => $paramtype) {
             if (($pos = strpos($key, '[]')) === false) {
-                $mform->addElement('hidden', $key, $_REQUEST[$key]);
+                $value = optional_param($key, '', $paramtype);
+                $mform->addElement('hidden', $key, $value);
             } else {
                 $simplekey = substr($key, 0, $pos);
                 if (!in_array($simplekey, $elementnames) && !in_array($key, $elementnames)) {
-                    $values = array_key_exists($simplekey, $_REQUEST) ? $_REQUEST[$simplekey] : array();
+                    $values = optional_param_array($simplekey, [], $paramtype);
                     $values = array_filter($values);
                     $addedkeys = false;
                     foreach ($values as $key => $value) {
