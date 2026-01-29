@@ -41,10 +41,8 @@ $badge = obf_badge::get_instance($badgeid);
 
 $criteriacss = $badge->get_criteria_css();
 $badgehascss = !empty($criteriacss);
-$xhrrequest = (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest');
 
-if (!$xhrrequest) {
-    ?>
+?>
     <html>
     <head>
         <title><?php echo get_string('criteriapreview', 'local_obf') ?></title>
@@ -75,7 +73,3 @@ if (!$xhrrequest) {
     <?php echo $badge->get_criteria_html(); ?>
     </body>
     </html>
-    <?php
-} else {
-    echo $badge->get_criteria_html();
-}
