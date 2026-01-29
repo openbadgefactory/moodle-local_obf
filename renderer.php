@@ -937,7 +937,6 @@ class local_obf_renderer extends plugin_renderer_base {
         $html = '';
         $file = '/local/obf/criterion.php';
         $url = new moodle_url($file, array('clientid' => $this->get_client_id(), 'badgeid' => $badge->get_id(), 'action' => 'new'));
-        $options = array();
         $criteria = $badge->get_completion_criteria();
 
         if (count($criteria) === 0) {
@@ -949,35 +948,20 @@ class local_obf_renderer extends plugin_renderer_base {
         }
 
         foreach ($criteria as $id => $criterion) {
-
             $criterionhtml = '';
-            $attributelist = array();
-            $criteriontype = 'courseset';
             $criterionitems = $criterion->get_items();
-            $multiplecourseactivities = 0;
-
-            if (count($criterionitems) == 1) {
-                $criteriontype = obf_criterion_item::get_criterion_type_text($criterionitems[0]->get_criteriatype());
+            
+            if (count($criterionitems) === 0) {
+                continue;
             }
-
-            // If activities from multiple courses.
-            if (count($criterionitems) > 1 && get_class($criterionitems[0]) == "obf_criterion_activity") {
-                $criteriontype = obf_criterion_item::get_criterion_type_text($criterionitems[0]->get_criteriatype());
-                $multiplecourseactivities = 1;
-            }
+            
+            // Determine criterion type
+            $criteriontype = obf_criterion_item::get_criterion_type_text($criterionitems[0]->get_criteriatype());
 
             $groupname = get_string('criteriatype' . $criteriontype, 'local_obf');
 
             if ($criterionitems[0]->get_criteriatype() == obf_criterion_item::CRITERIA_TYPE_TOTARA_CERTIF) {
                 $groupname = get_string('criteriatypetotaracertif', 'local_obf');
-            }
-
-            if ($multiplecourseactivities) {
-                $attributelist = $criterionitems[0]->get_text_array();
-            } else {
-                foreach ($criterionitems as $item) {
-                    $attributelist = array_merge($attributelist, $item->get_text_array());
-                }
             }
 
             // The criterion can be edited if the criterion hasn't already been met.
@@ -997,29 +981,72 @@ class local_obf_renderer extends plugin_renderer_base {
 
             $criterionhtml .= $this->output->heading(local_obf_html::div($heading), 3);
 
-            if ($multiplecourseactivities) {
-                global $DB;
-                foreach ($criterionitems as $item) {
-                    $course = $DB->get_record('course', array('id' => $courseid = $item->get_courseid()));
-                    $criterionhtml .= $this->output->heading(local_obf_html::div($course->fullname), 5);
-                }
-            } else if ($criteriontype == "activity") {
-                global $DB;
-                $course = $DB->get_record('course', array('id' => $courseid = $item->get_courseid()));
-                $criterionhtml .= $this->output->heading(local_obf_html::div($course->fullname), 5);
-            }
-
             if (!$canedit) {
                 $criterionhtml .= $this->output->notification(get_string('cannoteditcriterion', 'local_obf'));
             }
 
-            if (count($criterionitems) > 1 && !$multiplecourseactivities) {
+            // If awarding rule has multiple criterias, specify that all of those should be met.
+            if (count($criterionitems) > 1) {
+                // Should always be 'all'.
                 $method = $criterion->get_completion_method() == obf_criterion::CRITERIA_COMPLETION_ALL ? 'all' : 'any';
-                $criterionhtml .= html_writer::tag('p', get_string('criteriacompletedwhen' . $method, 'local_obf'));
+                if ($criteriontype === 'activity') {
+                    $criterionhtml .= html_writer::tag('p', get_string('criteriacompletedwhen' . $method . 'activity', 'local_obf'));
+                } else {
+                    $criterionhtml .= html_writer::tag('p', get_string('criteriacompletedwhen' . $method, 'local_obf'));
+                }
             }
 
-            $attributelist = array_values(array_unique($attributelist, SORT_STRING));
-            $criterionhtml .= html_writer::alist($attributelist);
+            // On site level, always group activities by course.
+            if ($criteriontype === 'activity') {
+                global $DB;
+                $activitiesbycourse = array();
+                foreach ($criterionitems as $item) {
+                    $courseid = (int)$item->get_courseid();
+                    
+                    if (!isset($activitiesbycourse[$courseid])) {
+                        $activitiesbycourse[$courseid] = array();
+                    }
+
+                    // Find all modules related to this criterion item
+                    foreach ($item->get_params() as $param) {
+                        if (array_key_exists('module', $param)) {
+                            $modid = $param['module'];
+                            // Check which course this module belongs to
+                            $cm = $DB->get_record('course_modules', array('id' => $modid), 'id, course');      
+                            // Only include if it belongs to this item's course
+                            if ($cm && $cm->course == $courseid) {
+                                $name = $item->get_activityname($modid);
+                                if (empty($name)) {
+                                    $name = '';
+                                }
+                                $html_text = html_writer::tag('strong', $name);      
+                                if (array_key_exists('completedby', $param)) {
+                                    $html_text .= ' ' . get_string('completedbycriterion', 'local_obf',
+                                            userdate($param['completedby'], get_string('dateformatdate', 'local_obf')));
+                                }
+                                $activitiesbycourse[$courseid][] = $html_text;
+                            }
+                        }
+                    }
+                }
+
+                // Display each course with its activities
+                foreach ($activitiesbycourse as $courseid => $texts) {
+                    $course = $DB->get_record('course', array('id' => $courseid), 'id, fullname', MUST_EXIST);
+                    $criterionhtml .= $this->output->heading(local_obf_html::div($course->fullname), 5);
+                    
+                    $texts = array_values(array_unique($texts, SORT_STRING));
+                    $criterionhtml .= html_writer::alist($texts);
+                }
+            // Show single list for other types.
+            } else {
+                $attributelist = array();
+                foreach ($criterionitems as $item) {
+                    $attributelist = array_merge($attributelist, $item->get_text_array());
+                }
+                $attributelist = array_values(array_unique($attributelist, SORT_STRING));
+                $criterionhtml .= html_writer::alist($attributelist);
+            }
 
             $html .= $this->output->box($criterionhtml, 'generalbox service');
         }
@@ -1028,7 +1055,7 @@ class local_obf_renderer extends plugin_renderer_base {
 
         return $html;
     }
-
+    
     /**
      * Renders the OBF settings form
      * NOT USED BUT DO NOT REMOVE THIS IS AOTOMATICALLY LOAD
