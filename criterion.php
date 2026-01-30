@@ -133,7 +133,7 @@ switch ($action) {
             if (count($items) == 0) {
                 if (!empty($criteriatype) && $criteriatype !== obf_criterion_item::CRITERIA_TYPE_UNKNOWN) {
                     $item = obf_criterion_item::build_type($criteriatype);
-                    if (!$item->requires_field('courseid') && $item->is_createable_with_params($_REQUEST)) {
+                    if (!$item->requires_field('courseid') && $item->is_createable_with_params($data)) {
                         $items[] = $item;
                     }
                 }
@@ -164,7 +164,7 @@ switch ($action) {
 
             $itemscreateable = true;
             foreach ($items as $item) {
-                if (!$item->is_createable_with_params($_REQUEST)) {
+                if (!$item->is_createable_with_params($data)) {
                     $itemscreateable = false;
                 }
             }

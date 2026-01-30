@@ -869,7 +869,7 @@ class local_obf_renderer extends plugin_renderer_base {
                     $criterioncourse->set_courseid((int) $courseid);
                 }
 
-                $pickingtype = ((!$criterioncourse->exists() && !$criterioncourse->is_createable_with_params($_REQUEST)) ||
+                $pickingtype = ((!$criterioncourse->exists() && !$criterioncourse->is_createable_with_params($data)) ||
                     $criterioncourse->get_criteriatype() == obf_criterion_item::CRITERIA_TYPE_UNKNOWN ||
                     property_exists($data, 'picktype') && $data->picktype === 'yes');
 
