@@ -332,6 +332,7 @@ class obf_assertion {
         }
 
         $obj->set_issuedon($arr['issued_on'])->set_id($arr['id'])->set_name($arr['name']);
+        $obj->set_expires($arr['expires'] ?? null);
         $obj->set_recipients($arr['recipient'])->set_badge(obf_badge::get_instance($arr['badge_id'], $client));
         $clientid = $arr['client_id'];
         $obj->set_client_id($clientid); // Set client id for the assertion.
