@@ -1459,11 +1459,11 @@ class obf_client {
         }
 
         if (!empty($criteriaaddendum)) {
-            $payload['criteria_add'] = $criteriaaddendum;
+            $params['criteria_add'] = $criteriaaddendum;
         }
 
         if (!is_null($badge->get_expires()) && $badge->get_expires() > 0) {
-            $payload['expires_on'] = $badge->get_expires();
+            $params['expires_on'] = $badge->get_expires();
         }
 
         $url = $this->obf_url() . '/v2/event/' . $this->client_id() . '/' . $badge->get_id() . '/issue';
