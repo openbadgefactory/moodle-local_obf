@@ -48,6 +48,10 @@ This plugin supports multiple clients on one Moodle installation.
 Changelog
 ------------------
 
+2.0.2
+
+- Badge expiration date bug fixes.
+
 2.0.1
 
 - Awarding histories show the most recent badge issuing events first.
