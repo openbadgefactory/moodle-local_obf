@@ -302,6 +302,7 @@ class local_obf_renderer extends plugin_renderer_base {
             get_string('issuedon', 'local_obf') => $issuedon);
 
         $expiresby = $assertion->get_expires();
+        $expiresby = is_numeric($expiresby) && $expiresby > 0 ? userdate($expiresby, get_string('dateformatdate', 'local_obf')) : '';
         $assertionitems = array_merge($assertionitems, array(get_string('badgeexpiresby', 'local_obf') => $expiresby));
 
         if (count($assertion->get_recipients()) > 0) {
