@@ -108,13 +108,8 @@ class local_obf_badge_test extends advanced_testcase {
      * 
      */
     public function test_get_badges_from_fixture() {
-
-        $ref = new \ReflectionClass(\classes\obf_badge::class);
-
         // Empty cache before test.
-        $prop = $ref->getProperty('badgecache');
-        $prop->setAccessible(true);
-        $prop->setValue([]);
+        \classes\obf_badge::clear_cache();
 
         $this->resetAfterTest();
 

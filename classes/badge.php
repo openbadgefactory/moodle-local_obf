@@ -193,6 +193,10 @@ class obf_badge {
         return $obj;
     }
 
+    public static function clear_cache() {
+        self::$badgecache = array();
+    }
+
     /**
      * Check if the badge roughly equals another badge
      *
