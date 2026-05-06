@@ -48,6 +48,11 @@ This plugin supports multiple clients on one Moodle installation.
 Changelog
 ------------------
 
+2.0.3
+
+- Awarding rule display improvements.
+- Minor bug fixes and improvements.
+
 2.0.2
 
 - Badge expiration date bug fixes.
