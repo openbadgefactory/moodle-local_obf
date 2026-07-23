@@ -887,6 +887,8 @@ class local_obf_renderer extends plugin_renderer_base {
                         // Object doesn't exist yet, let's create the criterion.
                         $criterion->save();
                         $criterioncourse->set_criterionid($criterion->get_id());
+                    } else {
+                        $criterion->update();
                     }
 
                     $midgrades = property_exists($data, 'mingrade') ? $data->mingrade : array();
