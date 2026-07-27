@@ -189,8 +189,10 @@ switch ($action) {
             } else { // Then add the selected courses.
                 foreach ($items as $item) {
                     $item->set_criterionid($criterion->get_id());
-                    if (!empty($courseid) && array_key_exists($courseid, $completedbys)) {
-                        $item->set_completedby($completedbys[$courseid]);
+                    $itemcourseid = $item->get_courseid();
+                    // Check completion dates of all courses
+                    if (!empty($itemcourseid) && array_key_exists($itemcourseid, $completedbys)) {
+                        $item->set_completedby($completedbys[$itemcourseid]);
                     }
                     $item->save_params($data);
                 }
