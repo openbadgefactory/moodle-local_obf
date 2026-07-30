@@ -48,6 +48,10 @@ This plugin supports multiple clients on one Moodle installation.
 Changelog
 ------------------
 
+2.0.4
+
+- Minor awarding rule bug fixes and improvements.
+
 2.0.3
 
 - Awarding rule display improvements.
