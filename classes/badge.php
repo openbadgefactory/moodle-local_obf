@@ -671,34 +671,32 @@ class obf_badge {
         $criteria = obf_criterion::get_course_criterion($courseid);
         $badges = array();
 
-        // TODO: It appears that the categories are not returned in the simple API request.
-        //  "Single badge by ID: GET /v1/badge/{client_id}/{badge_id}".
-        //  In the meantime, this piece of code serves as a workaround.
-        //  but it would be desirable to have the categories at the correct level.
-        // If any rules are define on site we will prevent issue badge
-        // in case there is no rule for current categ badge and at last one define on site.
+        // If any category rules are defined, only include course badges that
+        // are available through the active OBF connection.
         $anyrulesdefinesql = "SELECT * FROM {local_obf_rulescateg}";
         $anyrules = $DB->get_records_sql($anyrulesdefinesql);
 
-        foreach ($criteria as $criterion) {
-            if ($clientid && $clientid !== $criterion->get_clientid()) {
-                continue;
-            }
+        $criteria = array_filter($criteria, function ($criterion) use ($clientid) {
+            return !$clientid || $clientid === $criterion->get_clientid();
+        });
 
-            if (!empty($anyrules)) {
-
-                $client = obf_client::get_instance();
-                $badgeslist = $client->get_badges();
-
-                foreach ($badgeslist as $badge) {
-                    if ($badge['id'] == $criterion->get_badge()->get_id()) {
-                        $allowdisplay = true;
-                    }
+        // Retrieve the remote badge list once per page request. Previously this
+        // happened once per criterion and could trigger the OBF API rate limit.
+        $availablebadgeids = null;
+        if (!empty($anyrules) && !empty($criteria)) {
+            $availablebadgeids = array();
+            $badgeslist = obf_client::get_instance()->get_badges();
+            foreach ($badgeslist as $badge) {
+                if (!empty($badge['id'])) {
+                    $availablebadgeids[$badge['id']] = true;
                 }
             }
+        }
 
-            if (isset($allowdisplay) || empty($anyrules)) {
-                $badges[] = $criterion->get_badge();
+        foreach ($criteria as $criterion) {
+            $badge = $criterion->get_badge();
+            if ($availablebadgeids === null || isset($availablebadgeids[$badge->get_id()])) {
+                $badges[] = $badge;
             }
         }
 
