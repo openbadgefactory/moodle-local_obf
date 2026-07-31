@@ -64,6 +64,32 @@ class local_obf_observer {
     }
 
     /**
+     * Re-checks badge criteria when a grade is written: 
+     * handles the case where course completion fires before a grade is entered
+     * 
+     * @param \core\event\user_graded $event
+     * @return bool
+     */
+    public static function user_graded(\core\event\user_graded $event) {
+        global $CFG;
+        require_once($CFG->libdir . '/completionlib.php');
+        $userid = $event->relateduserid;
+        $courseid = $event->courseid;
+        if (empty($courseid) || $courseid <= 0) {
+            return true;
+        }
+        $course = get_course($courseid);
+        $completioninfo = new completion_info($course);
+        if (!$completioninfo->is_course_complete($userid)) {
+            return true;
+        }
+        $eventdata = new stdClass();
+        $eventdata->userid = $userid;
+        $eventdata->course = $courseid;
+        return self::course_user_completion_review($eventdata);
+    }
+
+    /**
      * Reviews the badge criteria and issues the badges (if necessary) when
      * a course is completed.
      *

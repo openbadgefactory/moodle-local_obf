@@ -658,7 +658,8 @@ class obf_criterion_course extends obf_criterion_item {
 
         // Check completion date.
         if ($this->has_completion_date()) {
-            if ($completedat <= $this->get_completedby()) {
+            // Compare calendar days: any time of the "Completed by" date counts.
+            if (strtotime('midnight', $completedat) <= strtotime('midnight', $this->get_completedby())) {
                 $datepassed = true;
             }
         } else {
