@@ -832,7 +832,8 @@ class obf_criterion {
 
         // Check completion date.
         if ($criterioncourse->has_completion_date()) {
-            if ($completedat <= $criterioncourse->get_completedby()) {
+            // Compare calendar days: any time of the "Completed by" date counts.
+            if (strtotime('midnight', $completedat) <= strtotime('midnight', $criterioncourse->get_completedby())) {
                 $datepassed = true;
             }
         } else {
@@ -890,8 +891,8 @@ class obf_criterion {
         // Check completion date.
 
         if ($criterionprogram->has_completion_date()) {
-
-            if ($completiondate <= $criterionprogram->get_completedby()) {
+            // Compare calendar days: any time of the "Completed by" date counts.
+            if (strtotime('midnight', $completiondate) <= strtotime('midnight', $criterionprogram->get_completedby())) {
                 $datepassed = true;
             }
         } else {
