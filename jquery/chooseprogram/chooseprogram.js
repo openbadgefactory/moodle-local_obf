@@ -3,6 +3,11 @@
   */
 
  jQuery(document).ready(function($) {
+    // Only run on Totara program forms that have id_program_* radio buttons.
+    if ($("input[id^=id_program_]").length === 0) {
+        return;
+    }
+
     console.log("load");
     $("input[id^=id_completedby_]").prop('disabled', true);
    

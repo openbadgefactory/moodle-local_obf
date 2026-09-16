@@ -49,4 +49,8 @@ $observers = array(
         'eventname' => '\totara_program\event\program_completed',
         'callback' => 'local_obf_observer::program_completed',
     ),
+    array(
+        'eventname' => '\core\event\user_graded',
+        'callback'  => 'local_obf_observer::user_graded',
+    ),
 );
