@@ -501,7 +501,7 @@ class obf_client {
     public function get_badges(array $categories = array(), $query = '') {
         global $DB;
 
-        $params = array('draft' => 0, 'external' => 1);
+        $params = array('draft' => 0);
 
         // Checks rules.
         // Add categories to request if special rules are set.
