@@ -345,6 +345,9 @@ class obf_assertion {
         if (array_key_exists('revoked', $arr)) {
             $obj->set_revoked($arr['revoked']);
         }
+        if (isset($arr['log_entry'])) {
+            $obj->set_log_entry($arr['log_entry']);
+        }
 
         /** 
          * New fields for getting more recipients 

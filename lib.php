@@ -188,13 +188,20 @@ function local_obf_add_course_event_history_link(&$branch) {
  * @param type& $branch
  */
 function local_obf_add_course_admin_link(&$branch) {
-    global $COURSE;
+    global $COURSE, $PAGE;
 
     if (has_capability('local/obf:issuebadge',
         context_course::instance($COURSE->id))) {
-        $obfnode = navigation_node::create(get_string('obf', 'local_obf'),
-            new moodle_url('/local/obf/badge.php',
-                array('action' => 'list', 'courseid' => $COURSE->id)));
+        $params = ['action' => 'list', 'courseid' => $COURSE->id];
+        $clientid = optional_param('clientid', null, PARAM_ALPHANUM);
+        // Add clientid to the URL parameters if provided in course badge list.
+        if (!empty($clientid) &&
+            $PAGE->pagetype === 'local-obf-badge' &&
+            optional_param('action', 'list', PARAM_ALPHANUM) === 'list') {
+            $params['clientid'] = $clientid;
+        }
+        $url = new moodle_url('/local/obf/badge.php', $params);
+        $obfnode = navigation_node::create(get_string('obf', 'local_obf'), $url);
         $branch->add_node($obfnode);
     }
 }

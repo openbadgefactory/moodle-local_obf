@@ -49,6 +49,7 @@ if (!empty($badgeid)) {
     $url->param('id', $badgeid);
 }
 
+// Add clientid to the URL parameters if provided.
 if (!empty($clientid)) {
     $url->param('clientid', $clientid);
 }
