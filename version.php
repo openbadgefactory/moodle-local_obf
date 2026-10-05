@@ -24,8 +24,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2026090801; // YYYYMMDD.
+$plugin->version = 2026100500; // YYYYMMDD.
 $plugin->requires = 2022112800; // Moodle 4.1 version check.
+$plugin->supported = [405, 503]; // Moodle 4.5 to 5.3.
 $plugin->component = 'local_obf';
 $plugin->maturity = MATURITY_STABLE;
 $plugin->release = '2.0.5';
