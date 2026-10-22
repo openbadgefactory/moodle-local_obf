@@ -39,7 +39,7 @@ This plugin supports multiple clients on one Moodle installation.
 Changelog
 ------------------
 
-2.0.6.
+2.0.6
 
 - New feature: 
   - Teachers can view badge issuing events in their own courses. 
