@@ -118,12 +118,11 @@ switch ($action) {
                 $content .= $PAGE->get_renderer('local_obf')->render_badgelist($badges,
                     $hasissuecapability, $context, $message);
             } else {
-                // "Badges related to the course" lists badges that are associated with the course.
-                // "All badges" lists only the badges allowed by the category rules in the course.
-                $availablebadges = obf_badge::get_badges(null, false);
-                $badges = obf_badge::filter_by_category_rules($availablebadges, $courseid);
+                // "All badges" lists all the badges allowed by the client's category rules.
+                // "Badges related to the course" lists badges that have awarding rules in the course and are allowed by the client's category rules.
+                $badges = obf_badge::filter_by_category_rules(obf_badge::get_badges(), $courseid);
                 $content .= $PAGE->get_renderer('local_obf')->render_badgelist_course($badges,
-                    $hasissuecapability, $context, $message, $availablebadges);
+                    $hasissuecapability, $context, $message);
             }
         } catch (Exception $e) {
             $content .= $OUTPUT->notification($e->getMessage(), 'notifyproblem');

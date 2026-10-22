@@ -100,6 +100,7 @@ $string['badgehistory'] = 'Awarding history';
 $string['badgeimage'] = 'Badge';
 $string['badgeissued'] = 'Badge was successfully issued.';
 $string['badgeissuedwhen'] = 'This badge is automatically awarded when any of the following rule is met:';
+$string['badgenotallowedbycategoryrules'] = 'The badge category is not allowed in this course.';
 $string['badgelist'] = 'Badge list';
 $string['badgelisttitle'] = 'All badges';
 $string['badgename'] = 'Name';

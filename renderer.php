@@ -100,14 +100,14 @@ class local_obf_renderer extends plugin_renderer_base {
     /**
      * Renders the list of badges in course context
      *
-     * @param obf_badge[] $badges The badges allowed by the client category rules in the course ("All badges").
+     * @param obf_badge[] $badges The badges allowed by the client category rules in the course, keyed by badge id.
+     *  "All badges" lists all of them, "Badges related to this course" lists badges with awarding rules in the course.
      * @param bool $hasissuecapability
      * @param context $context
      * @param string $message
-     * @param obf_badge[]|null $availablebadges All badges of the connection, not filtered by category rules, for "Badges related to this course". Defaults to $badges.
      * @return string
      */
-    public function render_badgelist_course($badges, $hasissuecapability, context $context, $message = '', $availablebadges = null) {
+    public function render_badgelist_course($badges, $hasissuecapability, context $context, $message = '') {
         $html = '';
 
         if (!empty($message)) {
@@ -115,7 +115,7 @@ class local_obf_renderer extends plugin_renderer_base {
         }
 
         $html .= $this->render_badge_categories($badges);
-        $badgesincourse = obf_badge::get_badges_in_course($context->instanceid, $availablebadges ?? $badges);
+        $badgesincourse = obf_badge::get_badges_in_course($context->instanceid, $badges);
         $html .= $this->print_heading('coursebadgelisttitle', 2);
 
         if (count($badgesincourse) == 0) {

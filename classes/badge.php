@@ -219,13 +219,69 @@ class obf_badge {
     }
 
     /**
-     * Returns the badge categories that are set as issuable in the system.
-     *
-     * @return string[] The available categories.
+     * Returns the badge categories that are allowed for this client in the context.
+     * @param int|null $courseid The course, or null outside course context (site admin).
+     * @param obf_client|null $client The client instance.
+     * @return string[]|null The available categories:
+     *  - [] = all categories are allowed
+     *  - null = no categories are allowed
+     *  - ['cat1', 'cat2'] = only these categories are allowed
      */
-    public static function get_available_categories() {
-        $categorystr = get_config('local_obf', 'availablecategories');
-        $categories = !empty($categorystr) ? explode(',', trim($categorystr)) : array();
+    public static function get_available_categories($courseid = null, ?obf_client $client = null) {
+        global $DB;
+
+        // Outside course context (site admin) = all categories are allowed.
+        if (!$courseid) {
+            return [];
+        }
+
+        $client = is_null($client) ? obf_client::get_instance() : $client;
+        $categories = [];
+
+        $course = get_course($courseid);
+
+        $categoryid = $course->category;
+
+        // Get the category path.
+        $categorypath = $DB->get_field('course_categories', 'path', ['id' => $categoryid]);
+
+        // Split the category path into an array of category IDs.
+        $categoryids = explode('/', trim($categorypath, '/'));
+
+        // Add the current category ID to the array.
+        $categoryids[] = $categoryid;
+
+        // Prepare the placeholders for the SQL query.
+        $placeholders = implode(',', array_fill(0, count($categoryids), '?'));
+
+        // Check if there are any category rules for the current OAuth2 connection.
+        $oauth2 = $client->get_oauth2id();
+        $oauth2id = isset($oauth2->id) ? $oauth2->id : 0;
+        $anyrules = $DB->record_exists('local_obf_rulescateg', ['oauth2_id' => $oauth2id]);
+
+        // Construct the SQL query.
+        $sql = "SELECT * FROM {local_obf_rulescateg} WHERE oauth2_id = ? AND (coursecategorieid IN ($placeholders))";
+        $args = [$oauth2id];
+        $args = array_merge($args, $categoryids);
+        $rules = $DB->get_records_sql($sql, $args);
+        // Connection has category rules, but none cover the course category.
+        if (empty($rules) && $anyrules) {
+            // = no categories are allowed.
+            return null;
+        }
+
+        foreach ($rules as $rule) {
+            // OBF category "All" ('0') or no OBF category selected (null).
+            if ($rule->badgecategoriename === '0' || $rule->badgecategoriename === null) {
+                // = all categories are allowed.
+                return [];
+            }
+
+            // Allowed categories are collected in the $categories array.
+            if (!in_array($rule->badgecategoriename, $categories)) {
+                $categories[] = $rule->badgecategoriename;
+            }
+        }
 
         return $categories;
     }
@@ -234,12 +290,11 @@ class obf_badge {
      * Gets and returns the badges from OBF.
      *
      * @param obf_client|null $client The client instance.
-     * @param bool $applycategoryrules Filter badges by the category rules of the course in the page url.
      * @return obf_badge[] The badges.
      */
-    public static function get_badges(?obf_client $client = null, $applycategoryrules = true) {
+    public static function get_badges(?obf_client $client = null) {
         $client = is_null($client) ? obf_client::get_instance() : $client;
-        $badgearr = $client->get_badges(self::get_available_categories(), '', $applycategoryrules);
+        $badgearr = $client->get_badges();
 
         foreach ($badgearr as $badgedata) {
             if ($badgedata['readyforissuing']) {
@@ -260,8 +315,7 @@ class obf_badge {
      * @return obf_badge[] The allowed badges.
      */
     public static function filter_by_category_rules(array $badges, $courseid, ?obf_client $client = null) {
-        $client = is_null($client) ? obf_client::get_instance() : $client;
-        $categories = $client->get_allowed_categories($courseid, self::get_available_categories());
+        $categories = self::get_available_categories($courseid, $client);
         if (is_null($categories)) {
             return array();
         }
@@ -486,7 +540,6 @@ class obf_badge {
      * @param string $criteriaaddendum The criterai addendum.
      */
     public function issue(array $recipients, $issuedon, $email, $criteriaaddendum = '', $items = null, $clientaliasid = null) {
-        global $DB;
 
         if (empty($this->id)) {
             throw new Exception('Invalid or missing badge id');
@@ -501,28 +554,6 @@ class obf_badge {
             }
         }
 
-        // TODO: It appears that the categories are not returned in the simple API request.
-        //  "Single badge by ID: GET /v1/badge/{client_id}/{badge_id}".
-        //  In the meantime, this piece of code serves as a workaround.
-        //  but it would be desirable to have the categories at the correct level.
-        // If any rules are define on site we will prevent issue badge
-        // in case there is no rule for current categ badge and at last one define on site.
-        $anyrulesdefinesql = "SELECT * FROM {local_obf_rulescateg}";
-        $anyrules = $DB->get_records_sql($anyrulesdefinesql);
-        if (!empty($anyrules)) {
-
-            $badges = $this->get_client()->get_badges();
-
-            foreach ($badges as $badge) {
-                if ($badge['id'] == $this->get_id()) {
-                    $allowissue = true;
-                }
-            }
-
-            if (!isset($allowissue)) {
-                return true;
-            }
-        }
 
         $this->get_client()->set_enable_raw_response(true);
         $this->get_client()->issue_badge($this, $recipients, $issuedon,
@@ -686,10 +717,10 @@ class obf_badge {
      *
      * Only badges that are neither hidden (OBF API) nor draft in $availablebadges are returned.
      * Hidden: OBF "Visible in external tools" unchecked. Draft: OBF "Ready for issuing" unchecked.
-     * Category rules are not applied.
+     * Category rules are applied by the caller: pass the badges filtered by filter_by_category_rules().
      *
      * @param int $courseid
-     * @param obf_badge[] $availablebadges The badges of the client, keyed by badge id.
+     * @param obf_badge[] $availablebadges The badges allowed in the course, keyed by badge id.
      * @return obf_badge[] The badges, keyed by badge id, that are associated with the course.
      */
     public static function get_badges_in_course($courseid, array $availablebadges) {

@@ -492,73 +492,6 @@ class obf_client {
         }
     }
 
-    /**
-     * Returns the badge categories allowed by the category rules of this connection in a course.
-     *
-     * @param int|null $courseid The course, or null outside course context.
-     * @param string[] $categories Legacy parameter, always empty, no UI.
-     *      TODO: Remove the $categories parameter together with obf_badge::get_available_categories() and the 'availablecategories' setting. 
-     *          Consider removing $categories parameter of get_badges() and get_badges_all(), 
-     *          the calls in obf_badge::get_badges() and obf_badge::filter_by_category_rules(), 
-     *          and the filter in renderer::render_badge_categories() at the same time.
-     * @return string[]|null The allowed categories:
-     *  - [] = all categories are allowed
-     *  - null = no categories are allowed
-     *  - ['cat1', 'cat2'] = only these categories are allowed
-     */
-    public function get_allowed_categories($courseid, array $categories = array()) {
-        global $DB;
-
-        if (!$courseid) {
-            return $categories;
-        }
-
-        $course = get_course($courseid);
-
-        $categoryid = $course->category;
-
-        // Get the category path.
-        $categorypath = $DB->get_field('course_categories', 'path', ['id' => $categoryid]);
-
-        // Split the category path into an array of category IDs.
-        $categoryids = explode('/', trim($categorypath, '/'));
-
-        // Add the current category ID to the array.
-        $categoryids[] = $categoryid;
-
-        // Prepare the placeholders for the SQL query.
-        $placeholders = implode(',', array_fill(0, count($categoryids), '?'));
-
-        // Check if there are any category rules for the current OAuth2 connection.
-        $oauth2id = isset($this->oauth2->id) ? $this->oauth2->id : 0;
-        $anyrules = $DB->record_exists('local_obf_rulescateg', ['oauth2_id' => $oauth2id]);
-
-        // Construct the SQL query.
-        $sql = "SELECT * FROM {local_obf_rulescateg} WHERE oauth2_id = ? AND (coursecategorieid IN ($placeholders))";
-        $args = [$oauth2id];
-        $args = array_merge($args, $categoryids);
-        $rules = $DB->get_records_sql($sql, $args);
-        // Connection has category rules, but none cover the course category. 
-        // return null = no categories are allowed.
-        if (empty($rules) && $anyrules) {
-            return null;
-        }
-
-        foreach ($rules as $rule) {
-            // OBF category "All" ('0') or with no OBF category selected (null).
-            // return [] = all categories are allowed.
-            if ($rule->badgecategoriename === '0' || $rule->badgecategoriename === null) {
-                return [];
-            }
-
-            // Allowed categories are collected in the $categories array.
-            if (!in_array($rule->badgecategoriename, $categories)) {
-                $categories[] = $rule->badgecategoriename;
-            }
-        }
-
-        return $categories;
-    }
 
     /**
      * Checks whether a badge belongs to any of the given categories.
@@ -574,21 +507,12 @@ class obf_client {
     /**
      * Get all the badges from the API.
      *
-     * @param string[] $categories Filter badges by categories.
+     * @param string[] $categories Filter badges by categories, [] = no filtering.
      * @param string $query Filter badges by name.
-     * @param bool $applycategoryrules Filter badges by the category rules of the course in the page url.
      * @return array The badges data.
      */
-    public function get_badges(array $categories = array(), $query = '', $applycategoryrules = true) {
+    public function get_badges(array $categories = array(), $query = '') {
         $params = array('draft' => 0);
-
-        if ($applycategoryrules) {
-            $categories = $this->get_allowed_categories(optional_param('courseid', null, PARAM_INT), $categories);
-            if (is_null($categories)) {
-                // No categories are allowed, return empty array.
-                return [];
-            }
-        }
 
         if (!empty($query)) {
             $query = mb_strtolower($query);
@@ -749,6 +673,7 @@ class obf_client {
             'image' => $badge['image'] ?? '',
             'language' => $badge['primary_language'] ?? '',
             'tags' => $content['tag'] ?? [],
+            'category' => $badge['category'] ?? [],
             'alignment' => $content['alignment'] ?? [],
             'creator_id' => $badge['creator']['id'] ?? null, // Not used yet.
             'intent' => $badge['intent'] ?? '',
@@ -1552,9 +1477,9 @@ class obf_client {
 
 
     /**
-     * Get absolute path of certificate directory.
-     *
-     * @return object
+     * Returns the current OAuth2 connection.
+     * 
+     * @return object|null The local_obf_oauth2 table row, or null with legacy API key setup.
      */
     public function get_oauth2id() {
         return $this->oauth2;
