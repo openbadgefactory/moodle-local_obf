@@ -492,69 +492,27 @@ class obf_client {
         }
     }
 
+
+    /**
+     * Checks whether a badge belongs to any of the given categories.
+     *
+     * @param mixed $badgecategories The categories of the badge.
+     * @param string[] $categories The allowed categories, [] means all categories.
+     * @return bool
+     */
+    public static function badge_in_categories($badgecategories, array $categories) {
+        return empty($categories) || (is_array($badgecategories) && !empty(array_intersect($badgecategories, $categories)));
+    }
+
     /**
      * Get all the badges from the API.
      *
-     * @param string[] $categories Filter badges by these categories.
+     * @param string[] $categories Filter badges by categories, [] = no filtering.
+     * @param string $query Filter badges by name.
      * @return array The badges data.
      */
     public function get_badges(array $categories = array(), $query = '') {
-        global $DB;
-
-        $params = array('draft' => 0, 'external' => 1);
-
-        // Checks rules.
-        // Add categories to request if special rules are set.
-        $courseid = optional_param('courseid', null, PARAM_INT);
-        if ($courseid) {
-            $course = get_course($courseid);
-
-            $categoryid = $course->category;
-
-            // Get the category path.
-            $categorypath = $DB->get_field('course_categories', 'path', ['id' => $categoryid]);
-
-            // Split the category path into an array of category IDs.
-            $categoryids = explode('/', trim($categorypath, '/'));
-
-            // Add the current category ID to the array.
-            $categoryids[] = $categoryid;
-
-            // Prepare the placeholders for the SQL query.
-            $placeholders = implode(',', array_fill(0, count($categoryids), '?'));
-
-            // If any rules are define on site we will prevent display categories in case there is no rule for current categ.
-            $anyrulesdefinesql = "SELECT * FROM {local_obf_rulescateg}";
-            $anyrules = $DB->get_records_sql($anyrulesdefinesql);
-
-            // Construct the SQL query.
-            $sql = "SELECT * FROM {local_obf_rulescateg} WHERE oauth2_id = ? AND (coursecategorieid IN ($placeholders))";
-            $args = [obf_client::get_instance()->oauth2->id];
-            $args = array_merge($args, $categoryids);
-
-            $rules = $DB->get_records_sql($sql, $args);
-
-            $haszero = false; // Variable to track if at least one occurrence of zero is found.
-
-            foreach ($rules as $rule) {
-                if ($rule->badgecategoriename === '0' || $rule->badgecategoriename === null) {
-                    $haszero = true; // An occurrence of zero is found.
-                    break; // Exit the loop as soon as an occurrence is found.
-                }
-
-                if (!in_array($rule->badgecategoriename, $categories)) {
-                    $categories[] = $rule->badgecategoriename;
-                }
-            }
-
-            if ($haszero) {
-                $categories = []; // Reset $categories to null if an occurrence of zero is found.
-            }
-        }
-
-        if (empty($rules) && !empty($anyrules)) {
-            return [];
-        }
+        $params = array('draft' => 0);
 
         if (!empty($query)) {
             $query = mb_strtolower($query);
@@ -583,13 +541,8 @@ class obf_client {
             // Handle the response data to align with badge.php expectations.
             foreach ($batch as $badge) {
                 // Filter badges by categories if categories are provided.
-                if (!empty($categories)) {
-                    if (
-                        !isset($badge['category']) || !is_array($badge['category']) ||
-                        !array_intersect($badge['category'], $categories)
-                    ) {
-                        continue;
-                    }
+                if (!self::badge_in_categories($badge['category'] ?? null, $categories)) {
+                    continue;
                 }
 
                 // Filter badges by query if query is provided.
@@ -720,6 +673,7 @@ class obf_client {
             'image' => $badge['image'] ?? '',
             'language' => $badge['primary_language'] ?? '',
             'tags' => $content['tag'] ?? [],
+            'category' => $badge['category'] ?? [],
             'alignment' => $content['alignment'] ?? [],
             'creator_id' => $badge['creator']['id'] ?? null, // Not used yet.
             'intent' => $badge['intent'] ?? '',
@@ -1523,9 +1477,9 @@ class obf_client {
 
 
     /**
-     * Get absolute path of certificate directory.
-     *
-     * @return object
+     * Returns the current OAuth2 connection.
+     * 
+     * @return object|null The local_obf_oauth2 table row, or null with legacy API key setup.
      */
     public function get_oauth2id() {
         return $this->oauth2;

@@ -35,6 +35,7 @@ require_once(__DIR__ . '/../classes/issuer.php');
  * @copyright  2013-2020, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+#[\PHPUnit\Framework\Attributes\Group('obf')]
 class local_obf_issuer_test extends advanced_testcase {
     /**
      * Test issuer population from array.

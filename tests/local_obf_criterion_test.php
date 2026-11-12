@@ -42,6 +42,7 @@ require_once(__DIR__ . '/../classes/criterion/obf_criterion_activity.php');
  * @copyright  2013-2020, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+#[\PHPUnit\Framework\Attributes\Group('obf')]
 class local_obf_criterion_test extends advanced_testcase {
     /**
      * Test creation of criterion.
@@ -119,8 +120,11 @@ class local_obf_criterion_test extends advanced_testcase {
     }
 
     /**
+     * Test profile criterion.
+     *
      * @group profile
      */
+    #[\PHPUnit\Framework\Attributes\Group('profile')]
     public function test_profile_criterion() {
         require_once(__DIR__ . '/../classes/event.php');
         require_once(__DIR__ . '/lib/obf_mock_curl.php');
@@ -175,7 +179,7 @@ class local_obf_criterion_test extends advanced_testcase {
         $this->assertCount(0, $criterionevents);
 
         $user->phone1 = '0401234567';
-        user_update_user($user, false, true);
+        $this->update_user($user);
 
         $criterionevents = obf_issue_event::get_criterion_events($criterion);
         $this->assertCount(0, $criterionevents, 'All aggregation fired event');
@@ -184,10 +188,27 @@ class local_obf_criterion_test extends advanced_testcase {
         $this->assertCount(0, $criterionevents, 'No event should fire automatically without calling review logic');
 
         $user->city = 'Oulu';
-        user_update_user($user, false, true);
+        $this->update_user($user);
 
         $criterionevents = obf_issue_event::get_criterion_events($criterion);
         $this->assertCount(0, $criterionevents, 'Event should not fire without explicit review');
 
+    }
+
+    /**
+     * Update a user record without changing the password, triggering the user_updated event.
+     *
+     * Uses \core\user::update_user() on Moodle 5.3+ and falls back to user_update_user() on older versions.
+     *
+     * @param stdClass $user
+     */
+    private function update_user(stdClass $user): void {
+        global $CFG;
+        if (method_exists(\core\user::class, 'update_user')) {
+            \core\user::update_user($user, false, true);
+        } else {
+            require_once($CFG->dirroot . '/user/lib.php');
+            user_update_user($user, false, true);
+        }
     }
 }

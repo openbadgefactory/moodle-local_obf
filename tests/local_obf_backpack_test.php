@@ -31,6 +31,7 @@ require_once(__DIR__ . '/../classes/backpack.php');
  * @copyright  2013-2020, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+#[\PHPUnit\Framework\Attributes\Group('obf')]
 class local_obf_backpack_test extends advanced_testcase {
     /**
      * Test backpack.
@@ -81,7 +82,7 @@ class local_obf_backpack_test extends advanced_testcase {
             ->onlyMethods(['connect_to_backpack'])
             ->getMock();
         $stub->expects($this->any())->method(
-            $this->equalTo('connect_to_backpack'))->will($this->returnValue(false));
+            $this->equalTo('connect_to_backpack'))->willReturn(false);
 
         try {
             $email = 'doesnotexist@example.com';
@@ -106,7 +107,7 @@ class local_obf_backpack_test extends advanced_testcase {
         $mock = $this->getMockBuilder(curl::class)
                     ->onlyMethods(['post'])
                     ->getMock();
-        $mock->expects($this->any())->method('post')->will($this->returnCallback(
+        $mock->expects($this->any())->method('post')->willReturnCallback(
             function($url, $params) use ($email, $assertion) {
                 $obj = json_decode($params);
 
@@ -115,7 +116,7 @@ class local_obf_backpack_test extends advanced_testcase {
                 }
 
                 return json_encode(array('status' => 'failure', 'reason' => 'You failed.'));
-            }));
+            });
 
         $backpack = new \classes\obf_backpack($mock);
         $this->assertEquals($email, $backpack->verify($assertion));

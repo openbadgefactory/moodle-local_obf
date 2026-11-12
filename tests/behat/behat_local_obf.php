@@ -15,200 +15,98 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Behat.
+ * Behat steps for local_obf.
  *
  * @package    local_obf
- * @copyright  2013-2020, Open Badge Factory Oy
+ * @copyright  2013-2026, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use Behat\Behat\Context\Step\Given;
-use Behat\Gherkin\Node\TableNode;
-use Behat\Mink\Driver\Selenium2Driver;
-use Behat\Mink\Session;
-use classes\obf_client;
+// NOTE: no MOODLE_INTERNAL test here, this file may be required by behat before including /config.php.
+
+require_once(__DIR__ . '/../../../../lib/behat/behat_base.php');
+
+use Behat\Mink\Exception\ExpectationException;
 
 /**
- * Behat functions.
+ * Behat steps for local_obf.
  *
- * Currently requires modification to ienteravalidrequesttokento, and usage
- * of demo OBF accounts as tests delete all badges on OBF after running.
+ * The Behat site talks to a mock OBF API ({@see local_obf_behat_mock_obf_api}), whose
+ * organisation has the badges "Behat Test Badge" and "Second Behat Badge".
  *
- * @copyright  2013-2020, Open Badge Factory Oy
+ * @copyright  2013-2026, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class behat_local_obf extends behat_base {
 
     /**
-     * Teardown feature. Tries to delete all badges in OBF.
+     * Convert page names to URLs for steps like 'When I am on the "local_obf > [page name]" page'.
      *
-     * Deletion will succeed if behat has entered the request token/API key.
+     * Recognised page names are:
+     * | Settings        | OAuth2 API connections |
+     * | Badge list      | All badges of the site |
+     * | Awarding history | Site awarding history |
      *
-     * @param FeatureEvent $event
-     * @AfterFeature
+     * @param string $page name of the page.
+     * @return moodle_url the corresponding URL.
      */
-    public static function teardownfeature() {
-        require_once(__DIR__ . '/../../classes/client.php');
-        try {
-            obf_client::get_instance()->delete_badges();
-        } catch (Exception $e) {
-            0 + 0; // Suppressing a PHP_CodeSniffer error message.
-        }
-
-    }
-
-    /**
-     * Create pki dir, as install.php can't create it for behat_dataroot.
-     */
-    private static function icreatepkidir() {
-        global $CFG;
-        $newpkidir = $CFG->behat_dataroot . '/local_obf/pki/';
-
-        if (!is_dir($newpkidir)) {
-            mkdir($newpkidir, $CFG->directorypermissions, true);
+    protected function resolve_page_url(string $page): moodle_url {
+        switch (core_text::strtolower($page)) {
+            case 'settings':
+                return new moodle_url('/local/obf/config.php');
+            case 'badge list':
+                return new moodle_url('/local/obf/badge.php', ['action' => 'list']);
+            case 'awarding history':
+                return new moodle_url('/local/obf/badge.php', ['action' => 'history']);
+            default:
+                throw new Exception('Unrecognised local_obf page "' . $page . '."');
         }
     }
 
     /**
-     * Entering a valid request token/API key to the settings.
+     * Convert page names to URLs for steps like 'When I am on the "[identifier]" "local_obf > [page type]" page'.
      *
-     * Beware that using your real credentials here might cause you
-     * to delete all of the badges you have created on OBF.
+     * Recognised page names are:
+     * | pagetype         | identifier  | description                       |
+     * | Badge            | Badge name  | Badge details                     |
+     * | Awarding rules   | Badge name  | Awarding rules of the badge       |
+     * | Badge history    | Badge name  | Awarding history of the badge     |
+     * | Course badges    | Course name | Badges in the course              |
      *
-     * @param string $fieldname
-     * @Given /^I enter a valid request token to "([^"]*)"$/
+     * @param string $type identifies which type of page this is.
+     * @param string $identifier identifies the particular page.
+     * @return moodle_url the corresponding URL.
      */
-    public function ienteravalidrequesttokento($fieldname) {
-        self::icreatepkidir();
-        $session = $this->getSession();
-        $seleniumsession = new Session(new Selenium2Driver());
-        $seleniumsession->start();
-
-        $seleniumsession->visit('https://elvis.discendum.com/obf/');
-        $seleniumsession->getPage()->fillField('username', 'behat@example.com');
-        $seleniumsession->getPage()->fillField('password', 'behat');
-        $seleniumsession->getPage()->pressButton('Login');
-        $seleniumsession->getPage()->clickLink('Admin tools');
-        $seleniumsession->wait(1000);
-        $seleniumsession->getPage()->clickLink('API key');
-        $seleniumsession->wait(1000);
-        $seleniumsession->getPage()->clickLink('Generate certificate signing request token');
-
-        $seleniumsession->wait(5000, "$('#csrtoken-out textarea').length > 0");
-
-        $textarea = $seleniumsession->getPage()->find('css', '#csrtoken-out textarea');
-        $token = $textarea->get_value();
-        $seleniumsession->stop();
-
-        $session->getPage()->fillField($fieldname, $token);
-    }
-
-    /**
-     * Check that list of badges exist.
-     *
-     * @param TableNode $badgetable
-     * @Given /^the following badges exist:$/
-     */
-    public function thefollowingbadgesexist(TableNode $badgetable) {
-        $steps = array();
-
-        foreach ($badgetable->getHash() as $hash) {
-
-            $name = $hash['Name'];
-            $desc = $hash['Description'];
-            $issuer = $hash['issuername'];
-            $table = new TableNode(<<<TABLE
-                | Name        | $name   |
-                | Description | $desc   |
-                | issuername  | $issuer |
-TABLE
-            );
-
-            $steps[] = new Given('I expand "Site administration" node');
-            $steps[] = new Given('I expand "Badges" node');
-            $steps[] = new Given('I follow "Add a new badge"');
-            $steps[] = new Given('I fill the moodle form with:', $table);
-            $steps[] = new Given('I upload "' . $hash['image'] . '" file to "Image" filepicker');
-            $steps[] = new Given('I press "Create badge"');
+    protected function resolve_page_instance_url(string $type, string $identifier): moodle_url {
+        switch (core_text::strtolower($type)) {
+            case 'badge':
+                return $this->badge_url($identifier, 'details');
+            case 'awarding rules':
+                return $this->badge_url($identifier, 'criteria');
+            case 'badge history':
+                return $this->badge_url($identifier, 'history');
+            case 'course badges':
+                return new moodle_url('/local/obf/badge.php',
+                    ['action' => 'list', 'courseid' => $this->get_course_id($identifier)]);
+            default:
+                throw new Exception('Unrecognised local_obf page type "' . $type . '."');
         }
+    }
 
-        $steps[] = new Given('I expand "Open Badges" node');
-        $steps[] = new Given('I follow "Settings"');
-        $steps[] = new Given('I enter a valid request token to "obftoken"');
-        $steps[] = new Given('I press "Save changes"');
-
-        foreach ($badgetable->getHash() as $hash) {
-            $steps[] = new Given('I check "' . $hash['Name'] . '"');
+    /**
+     * URL of a badge page.
+     *
+     * @param string $name Badge name in the mock OBF API.
+     * @param string $show Tab of the badge page.
+     * @return moodle_url
+     */
+    private function badge_url(string $name, string $show): moodle_url {
+        require_once(__DIR__ . '/../fixtures/behat_mock_obf_api.php');
+        foreach (local_obf_behat_mock_obf_api::default_badges() as $badge) {
+            if ($badge['content'][0]['name'] === $name) {
+                return new moodle_url('/local/obf/badge.php', ['action' => 'show', 'id' => $badge['id'], 'show' => $show]);
+            }
         }
-
-        $steps[] = new Given('I check "Make exported badges visible by default"');
-        $steps[] = new Given('I press "Continue"');
-
-        return $steps;
-    }
-
-    /**
-     * Go to badge list.
-     *
-     * @Given /^I go to badge list$/
-     */
-    public function igotobadgelist() {
-        return array(
-            new Given('I am on homepage'),
-            new Given('I expand "Site administration" node'),
-            new Given('I expand "Open Badges" node'),
-            new Given('I follow "Badge list"')
-        );
-    }
-
-    /**
-     * Set a criterion to be completed when an Assignment is completed.
-     *
-     * @param stdClass $course
-     * @param stdClass $assignment
-     * @Given /^I set "([^"]*)" to be completed when assignment "([^"]*)" is completed$/
-     */
-    public function isettobecompletedwhenassignmentiscompleted($course, $assignment) {
-        return array(
-            new Given('I am on homepage'),
-            new Given('I follow "' . $course . '"'),
-            new Given('I follow "Edit settings"'),
-            new Given('I fill the moodle form with:',
-                new TableNode(<<<TABLE
-                | Enable completion tracking | Yes |
-TABLE
-                )),
-            new Given('I press "Save changes"'),
-            new Given('I turn editing mode on'),
-            new Given('I add a "Assignment" to section "1" and I fill the form with:',
-                new TableNode(<<<TABLE
-                | Assignment name                     | $assignment            |
-                | Description                         | Assignment description |
-                | assignsubmission_onlinetext_enabled | 1                      |
-TABLE
-                )),
-            new Given('I follow "Course completion"'),
-            new Given('I select "2" from "id_overall_aggregation"'),
-            new Given('I click on "Condition: Activity completion" "link"'),
-            new Given('I check "Assign - ' . $assignment . '"'),
-            new Given('I press "Save changes"'));
-    }
-
-    /**
-     * Mark an assignment as complete.
-     *
-     * @param stdClass $assignment
-     * @param stdClass $course
-     * @param stdClass $user
-     * @Given /^I mark "([^"]*)" of "([^"]*)" completed by "([^"]*)"$/
-     */
-    public function imarkofcompletedby($assignment, $course, $user) {
-        return array(
-            new Given('I log in as "' . $user . '"'),
-            new Given('I follow "' . $course . '"'),
-            new Given('I press "Mark as complete: ' . $assignment . '"'),
-            new Given('I wait "3" seconds'),
-            new Given('I log out')
-        );
+        throw new ExpectationException('The mock OBF API has no badge "' . $name . '"', $this->getSession());
     }
 }

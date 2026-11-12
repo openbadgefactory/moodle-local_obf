@@ -103,7 +103,12 @@ if ($issuerform->is_cancelled()) {
     }
     redirect($returnurl);
 } else if (!is_null($data = $issuerform->get_data())) { // Issuance form was submitted.
-    $users = user_get_users_by_id($data->recipientlist);
+    // Moodle 5.3 deprecated user_get_users_by_id().
+    if (method_exists(\core\user::class, 'get_users_by_id')) {
+        $users = \core\user::get_users_by_id($data->recipientlist);
+    } else {
+        $users = user_get_users_by_id($data->recipientlist);
+    }
     $recipients = array();
     $userids = array();
 

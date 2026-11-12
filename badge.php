@@ -49,6 +49,7 @@ if (!empty($badgeid)) {
     $url->param('id', $badgeid);
 }
 
+// Add clientid to the URL parameters if provided.
 if (!empty($clientid)) {
     $url->param('clientid', $clientid);
 }
@@ -112,12 +113,14 @@ switch ($action) {
         $content .= $PAGE->get_renderer('local_obf')->render_client_selector($url, $clientid);
 
         try {
-            $badges = obf_badge::get_badges();
-
             if ($context instanceof context_system) {
+                $badges = obf_badge::get_badges();
                 $content .= $PAGE->get_renderer('local_obf')->render_badgelist($badges,
                     $hasissuecapability, $context, $message);
             } else {
+                // "All badges" lists all the badges allowed by the client's category rules.
+                // "Badges related to the course" lists badges that have awarding rules in the course and are allowed by the client's category rules.
+                $badges = obf_badge::filter_by_category_rules(obf_badge::get_badges(), $courseid);
                 $content .= $PAGE->get_renderer('local_obf')->render_badgelist_course($badges,
                     $hasissuecapability, $context, $message);
             }

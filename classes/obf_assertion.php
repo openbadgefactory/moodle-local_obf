@@ -174,6 +174,16 @@ class obf_assertion {
      */
     public function process() {
         try {
+            // Check if the badge is allowed by the category rules in the course to avoid issuing disallowed badges.
+            $allowed = obf_badge::filter_by_category_rules(
+                [$this->badge],
+                $this->badge->get_course_id(),
+                $this->badge->get_client()
+            );
+            if (empty($allowed)) {
+                throw new Exception(get_string('badgenotallowedbycategoryrules', 'local_obf'));
+            }
+
             $eventid = $this->badge->issue(
                 $this->recipients, 
                 $this->issuedon, 
@@ -344,6 +354,9 @@ class obf_assertion {
         $obj->set_source(self::ASSERTION_SOURCE_OBF);
         if (array_key_exists('revoked', $arr)) {
             $obj->set_revoked($arr['revoked']);
+        }
+        if (isset($arr['log_entry'])) {
+            $obj->set_log_entry($arr['log_entry']);
         }
 
         /** 

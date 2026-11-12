@@ -10,7 +10,7 @@ With the local_obf plugin you can issue Open Badges created in Open Badge Factor
 **IMPORTANT WARNING**
 
 A Pro-level subscription is required for plugin versions 2.0.0 and newer.
-Organisations on Basic or Premium plans should not upgrade to this version.
+Organisations on Basic or Premium plans should not upgrade to any 2.x version.
 
 This plugin no longer uses the OBF APIv1. OAuth2-based API keys are now required.
 Obsolete legacy API keys (APIv1 client-side certificates) must be replaced with new keys.
@@ -19,20 +19,11 @@ To continue using the plugin, ensure your OBF account is on the Pro level and th
 How to install
 --------------
 
-Moodle 4.1 and up:
+Moodle 4.5 and up:
 
 1. Install the zip via Moodle's plugin page. Select "local" as the type of the plugin. (alternative: unzip to moodle's local subdirectory)
 2. Update the database using the notifications page
 3. Complete the [Post install steps](README.md#post-install)
-
-Totara 11.0 and greater
-
-Totara Learn does not include an add-on installer, all additional plugins must be installed manually by server administrators.
-
-1. Download plugin from https://moodle.org/plugins/local_obf
-2. Unzip the file into the Totara installation directory.
-3. By using a site administrator account, go to Site administration → Notifications and upgrade Totara database
-4. Complete the [Post install steps](README.md#post-install)
 
 Post install
 ------------------
@@ -47,6 +38,19 @@ This plugin supports multiple clients on one Moodle installation.
 
 Changelog
 ------------------
+
+2.0.6
+
+- New feature: 
+  - Teachers can view badge issuing events in their own courses. 
+- Bug fixes and improvements:
+  - Moodle course category - Open Badge Factory badge category rules applied per client using OBF APIv2 capabilities.
+  - Course -> Open Badges -> Awarding history dropdown menu disappearing fixed.
+  - 429 error in course badge list fixed.
+- Technical changes: 
+  - Moodle 5.3 deprecation fix in manual issuing.
+  - Removal of legacy APIv1 parameter.
+  - PHPUnit and Behat tests updated to support Moodle 4.5 - 5.3, test what they claim to, and pass cleanly without warnings.
 
 2.0.5
 

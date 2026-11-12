@@ -1,30 +1,38 @@
-@local @local_obf @_only_local
-Feature: Admin can modify the OBF client settings
-  In order to get the OBF client to communicate with OBF API
+@local @local_obf
+Feature: Admin can connect Moodle to Open Badge Factory
+  In order to issue Open Badges from Moodle
   As an admin
-  I have to be able to modify the OBF client settings
+  I need to add an OAuth2 API connection to Open Badge Factory
 
   Background:
-    Given I am on homepage
-    And I log in as "admin"
+    Given I log in as "admin"
 
-  @javascript
-  Scenario: Display OBF settings page
-    Given I expand "Site administration" node
-    Then I should see "Advanced features"
-    And I follow "Advanced features"
-    And I set the field "Enable badges" to "0"
-    And I press "Save changes"
-    Then I should see "Open Badges"
-    And I expand "Open Badges" node
-    And I follow "Settings"
-    Then I should see "OBF request token"
-    And I should not see "I know it's working"
-    And I enter a valid request token to "obftoken"
-    And I press "Authenticate"
-    Then I should not see "There was an error while"
-    And I follow "Badge list"
-    Then I should not see "Open Badge Factory service request failed."
-    And I should not see "Open Badge Factory denied the request."
-    And I follow "Settings"
-    Then I should see "OBF connection is up and working"
+  Scenario: Admin adds an OAuth2 API connection
+    When I navigate to "Open Badges > Settings" in site administration
+    And I press "Add new OAuth2 API connection"
+    And I set the following fields to these values:
+      | API URL       | #wwwroot#/local/obf/tests/fixtures/mock_obf_api.php |
+      | Client ID     | XYZ1234                                             |
+      | Client secret | XYZ1234                                             |
+    And I press "Add new client"
+    Then I should see "Behat Test Organisation"
+    And I should see "XYZ1234"
+
+  Scenario: Admin cannot add a connection with an invalid client secret
+    When I am on the "local_obf > Settings" page
+    And I press "Add new OAuth2 API connection"
+    And I set the following fields to these values:
+      | API URL       | #wwwroot#/local/obf/tests/fixtures/mock_obf_api.php |
+      | Client ID     | XYZ1234                                             |
+      | Client secret | INVALIDSECRET                                       |
+    And I press "Add new client"
+    Then I should see "The client ID or secret is invalid"
+
+  Scenario: Badge list shows the badges of the connected organisation
+    Given the following "local_obf > connections" exist:
+      | client_name             |
+      | Behat Test Organisation |
+    When I navigate to "Open Badges > Badge list" in site administration
+    Then I should see "Behat Test Badge"
+    And I should see "Second Behat Badge"
+    And I should not see "The site admin needs to configure the settings of the plugin"

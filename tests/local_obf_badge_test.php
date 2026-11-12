@@ -34,7 +34,7 @@ require_once(__DIR__ . '/../classes/client.php');
  * @copyright  2013-2020, Open Badge Factory Oy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
+#[\PHPUnit\Framework\Attributes\Group('obf')]
 class local_obf_badge_test extends advanced_testcase {
     /**
      * Simple provider of badge data.
@@ -79,13 +79,14 @@ class local_obf_badge_test extends advanced_testcase {
      * @param array $badgearr
      * @dataProvider badgeprovider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('badgeprovider')]
     public function test_get_badges($badgearr) {
         $this->resetAfterTest();
 
         $stub = $this->getMockBuilder(\classes\obf_client::class)
             ->onlyMethods(['get_badges'])
             ->getMock();
-        $stub->expects($this->any())->method('get_badges')->will($this->returnValue($badgearr));
+        $stub->expects($this->any())->method('get_badges')->willReturn($badgearr);
 
         $badges = \classes\obf_badge::get_badges($stub);
 

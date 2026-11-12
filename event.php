@@ -53,18 +53,33 @@ if ($action == 'revoke') {
 }
 $msg = optional_param('msg', '', PARAM_TEXT);
 
+$client = obf_client::get_instance();
+$assertion = obf_assertion::get_instance_by_id($eventid, $client);
+
 $eventdata = new obf_issue_event($eventid, $DB);
 $syscontext = context_system::instance();
 $hasviewpermission = false;
 $hasrevokepermission = false;
+
+// Users like teachers with viewcourseevents capability may view badge events in their course context.
+$coursecontext = !empty($courseid) ? context_course::instance($courseid, IGNORE_MISSING) : false;
+if ($coursecontext && (string)$assertion->get_log_entry('course_id') === (string)$courseid
+        && has_capability('local/obf:viewcourseevents', $coursecontext)) {
+    $hasviewpermission = true;
+}
+
 if ($eventdata) {
     // Check user capabilities for different event and criteria types.
     if ($eventdata->has_userid() && $USER->id == $eventdata->get_userid()) {
         $hasviewpermission = true;
         $hasrevokepermission = true;
+    // If badge was issued manually by another user.
     } else if ($eventdata->has_userid()) {
         $context = context_user::instance($eventdata->get_userid());
-        require_capability('local/obf:viewallevents', $context);
+        // Skip the site level check if the course check above already allowed viewing.
+        if (!$hasviewpermission) {
+            require_capability('local/obf:viewallevents', $context);
+        }
         if ($action == 'revoke') {
             require_capability('local/obf:revokeallevents', $context);
         }
@@ -110,8 +125,6 @@ if (!$hasrevokepermission) {
 if (!$hasrevokepermission && $action == 'revoke') {
     require_capability('local/obf:revokeallevents', $syscontext);
 }
-$client = obf_client::get_instance();
-
 $url = new moodle_url('/local/obf/event.php', array('id' => $eventid));
 if (!empty($clientid)) {
     $url->param('clientid', $clientid);
